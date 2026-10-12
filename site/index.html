@@ -647,7 +647,7 @@
         <a href="#perguntas">Perguntas</a>
         <a href="#sugestoes">Sugestões</a>
       </nav>
-      <a class="btn btn-primary btn-small download-link" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">Baixar</a>
+      <a class="btn btn-primary btn-small download-link" data-goatcounter-click="baixar-menu" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">Baixar</a>
       <span class="progress" aria-hidden="true"></span>
     </div>
   </header>
@@ -664,7 +664,7 @@
           silencie o navegador e ajuste o microfone, tudo numa janela que some quando você não precisa.
         </p>
         <div class="cta intro" style="--i:3">
-          <a class="btn btn-primary download-link" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">
+          <a class="btn btn-primary download-link" data-goatcounter-click="baixar-topo" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
             Baixar para Windows
           </a>
@@ -834,7 +834,7 @@
       <h2>Seu som, do seu jeito.</h2>
       <p class="section-lead">Baixe o Volum e deixe o mixer do Windows a um clique de distância.</p>
       <div class="cta">
-        <a class="btn btn-primary download-link" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">
+        <a class="btn btn-primary download-link" data-goatcounter-click="baixar-final" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
           Baixar para Windows
         </a>
@@ -902,6 +902,27 @@
 
     document.getElementById('year').textContent = new Date().getFullYear();
 
+    // ---------- Estatísticas (GoatCounter: sem cookies e sem dados pessoais, não precisa de aviso) ----------
+    // Conta visitas, de onde as pessoas vieram e os cliques em "Baixar" (data-goatcounter-click nos links).
+    // Painel: https://CÓDIGO.goatcounter.com. Vazio = desligado. Não conta no computador (file:// ou localhost).
+    const GOATCOUNTER = 'esdras';
+    const gcQueue = [];
+    // Evento avulso; se o GoatCounter ainda não carregou, fica na fila
+    const track = (name) => {
+      const gc = window.goatcounter;
+      if (gc && gc.count) gc.count({ path: name, title: name, event: true });
+      else if (GOATCOUNTER) gcQueue.push(name);
+    };
+    if (GOATCOUNTER && !figma && location.protocol === 'https:') {
+      window.goatcounter = { path: () => location.pathname };   // sem o ?v=... do app: a página conta como uma só
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://gc.zgo.at/count.js';
+      s.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
+      s.addEventListener('load', () => gcQueue.splice(0).forEach(track));
+      document.head.appendChild(s);
+    }
+
     // ---------- Menu ----------
     // Fica compacto e mais sólido depois que a página começa a rolar
     const nav = document.querySelector('.nav');
@@ -947,6 +968,7 @@
     const fromApp = /^[\w.\-]{1,20}$/.test(params.get('v') || '');
     const fbVersion = fromApp ? `Volum ${params.get('v')} · Windows build ${(params.get('w') || '?').replace(/\D/g, '')}` : 'site';
     if (fromApp) {
+      track('veio-do-app');   // clicou no balão de sugestões dentro do Volum
       document.getElementById('feedbackNote').textContent = `Vai junto: ${fbVersion}. Não precisa de cadastro.`;
       addEventListener('load', () => setTimeout(() => fbMessage.focus({ preventScroll: true }), 600));
     }
@@ -985,6 +1007,7 @@
       try {
         // O Google não deixa ler a resposta (no-cors): se a rede não falhou, chegou
         await fetch(FEEDBACK.action, { method: 'POST', mode: 'no-cors', body: data });
+        track(kind === 'Bug' ? 'bug-enviado' : 'sugestao-enviada');
         fbForm.reset();
         fbForm.dispatchEvent(new Event('change'));   // volta o texto de exemplo de "Sugestão"
         fbShow('Valeu! Sua mensagem chegou.', 'ok');
@@ -1016,6 +1039,14 @@
           hint.textContent = 'Clique no ícone para abrir o Volum →';
         }, 130);
       }
+    });
+
+    // Estatística: alguém mexeu na demo (clicar no iframe tira o foco da página). Conta uma vez por visita.
+    let demoUsed = false;
+    addEventListener('blur', () => {
+      if (demoUsed || document.activeElement !== frame) return;
+      demoUsed = true;
+      track('usou-a-demo');
     });
 
     // A demo pode ter mandado a altura antes deste script existir: pede de novo
