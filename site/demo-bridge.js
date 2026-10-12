@@ -30,7 +30,8 @@
   };
 
   // ---------- Estado "do Windows" ----------
-  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: 'pt' };
+  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: 'pt',
+                     hotkey: { mods: 3, key: 86 } };   // Ctrl+Alt+V
   const model = {
     master: { volume: 0.72, muted: false },
     mic: {
@@ -173,6 +174,10 @@
       case 'setMicDevice': model.mic.id = m.id; send(state()); break;
       case 'hide': close(); break;
       case 'tick': tick(); break;
+      case 'setHotkey':   // no site não há atalho de verdade: só guarda e confirma
+        settings.hotkey = { mods: m.mods, key: m.key };
+        send(Object.assign({ type: 'hotkey', ok: true }, settings.hotkey));
+        break;
       case 'openSite':   // já estamos no site: "Site do Volum" volta para o topo; sugestões rola até o formulário
         toPage({ type: m.section === 'feedback' ? 'feedback' : 'top' });
         break;

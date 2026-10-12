@@ -25,6 +25,9 @@
       master: 'Volume geral', mic: 'Microfone', systemSounds: 'Sons do sistema',
       mute: 'Silenciar', unmute: 'Ativar som', micMute: 'Desligar microfone', micUnmute: 'Ligar microfone',
       micPick: 'Escolher microfone', site: 'Site do Volum', feedback: 'Sugestões e bugs',
+      hotkey: 'Atalho para abrir', hotkeyHint: 'Abre o mixer até no meio de um jogo', hotkeyPress: 'Pressione…',
+      hotkeyRecordHint: 'Esc cancela · Backspace desliga', hotkeyNeedMod: 'Use Ctrl ou Alt junto',
+      hotkeyBusy: 'Em uso por outro app', hotkeyOff: 'Desligado',
     },
     en: {
       settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
@@ -34,6 +37,9 @@
       master: 'Master volume', mic: 'Microphone', systemSounds: 'System sounds',
       mute: 'Mute', unmute: 'Unmute', micMute: 'Mute microphone', micUnmute: 'Unmute microphone',
       micPick: 'Choose microphone', site: 'Volum website', feedback: 'Suggestions and bugs',
+      hotkey: 'Shortcut to open', hotkeyHint: 'Opens the mixer even mid-game', hotkeyPress: 'Press keys…',
+      hotkeyRecordHint: 'Esc cancels · Backspace turns off', hotkeyNeedMod: 'Add Ctrl or Alt',
+      hotkeyBusy: 'Used by another app', hotkeyOff: 'Off',
     },
     es: {
       settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
@@ -43,6 +49,9 @@
       master: 'Volumen general', mic: 'Micrófono', systemSounds: 'Sonidos del sistema',
       mute: 'Silenciar', unmute: 'Activar sonido', micMute: 'Silenciar micrófono', micUnmute: 'Activar micrófono',
       micPick: 'Elegir micrófono', site: 'Sitio de Volum', feedback: 'Sugerencias y errores',
+      hotkey: 'Atajo para abrir', hotkeyHint: 'Abre el mezclador incluso en pleno juego', hotkeyPress: 'Pulsa las teclas…',
+      hotkeyRecordHint: 'Esc cancela · Retroceso desactiva', hotkeyNeedMod: 'Usa Ctrl o Alt',
+      hotkeyBusy: 'En uso por otra app', hotkeyOff: 'Desactivado',
     },
   };
   let lang = 'pt';
@@ -70,6 +79,8 @@
   const appCountEl = $('appCount');
   const themeSeg = $('themeSeg');
   const langSeg = $('langSeg');
+  const hotkeyBtn = $('hotkeyBtn');
+  const hotkeyHint = $('hotkeyHint');
   const root = document.documentElement;
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)');
 
@@ -345,6 +356,9 @@
     glassSupported = !!s.glass;
     setLite(!!s.lite);
     autostartEl.checked = !!s.autostart;
+    if (s.hotkey) hotkey = s.hotkey;
+    recording = false;                              // o C# já devolveu o atalho ao fechar
+    showHotkey();
     settingsEl.classList.add('instant');            // recolhe sem animação (a janela ainda vai aparecer)
     setSettingsOpen(false);                         // sempre abre com as configurações recolhidas
     void settingsEl.offsetHeight;
@@ -368,6 +382,7 @@
       case 'peaks':    applyPeaks(m);    break;
       case 'open':     replay('enter');  break;
       case 'close':    replay('leave');  break;
+      case 'hotkey':   hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey
     }
   });
 
@@ -400,6 +415,7 @@
       if (SYSTEM_NAMES[r.id]) r.nameEl.textContent = displayName(r.id, r.name);
       updateMuteUi(r);
     });
+    showHotkey();
   }
 
   // Tema efetivo (claro/escuro). "Sistema" segue o tema do Windows que o C# informa (systemDark);
@@ -453,6 +469,67 @@
 
   autostartEl.addEventListener('change', () => {
     post({ type: 'setAutostart', enabled: autostartEl.checked });
+  });
+
+  /* ---------------- Atalho para abrir ---------------- */
+  // Quem registra o atalho no Windows é o C#; aqui só mostramos o atual e gravamos um novo.
+  // Mods = soma de Alt 1, Ctrl 2, Shift 4 (como no Windows); key = código da tecla (VK); 0 = desligado.
+  let hotkey = { mods: 2 | 1, key: 86 };
+  let recording = false;
+
+  const keyName = (vk) =>
+    (vk >= 65 && vk <= 90) || (vk >= 48 && vk <= 57) ? String.fromCharCode(vk)
+      : vk >= 112 && vk <= 135 ? 'F' + (vk - 111) : '?';
+
+  const hotkeyLabel = (h) => !h.key ? t('hotkeyOff')
+    : [h.mods & 2 && 'Ctrl', h.mods & 1 && 'Alt', h.mods & 4 && 'Shift', keyName(h.key)].filter(Boolean).join(' + ');
+
+  // Tecla física → código do Windows: letras, números e F1–F24 (não depende do layout do teclado)
+  function codeToVk(code) {
+    let m = /^Key([A-Z])$/.exec(code);
+    if (m) return m[1].charCodeAt(0);
+    if ((m = /^Digit(\d)$/.exec(code))) return 48 + +m[1];
+    if ((m = /^F(\d{1,2})$/.exec(code)) && +m[1] <= 24) return 111 + +m[1];
+    return 0;
+  }
+
+  function showHotkey(hint) {
+    hotkeyBtn.textContent = recording ? t('hotkeyPress') : hotkeyLabel(hotkey);
+    hotkeyBtn.classList.toggle('recording', recording);
+    hotkeyHint.textContent = hint || t(recording ? 'hotkeyRecordHint' : 'hotkeyHint');
+  }
+
+  // Gravando, o C# solta o atalho atual (senão apertar as mesmas teclas fecharia o mixer)
+  function setRecording(on) {
+    if (recording === on) return;
+    recording = on;
+    post({ type: 'hotkeyRecord', on });
+    showHotkey();
+  }
+
+  function saveHotkey(mods, key) {
+    recording = false;
+    showHotkey();
+    post({ type: 'setHotkey', mods, key });         // o C# responde com "hotkey" (ok ou em uso)
+  }
+
+  hotkeyBtn.addEventListener('click', () => setRecording(!recording));
+  hotkeyBtn.addEventListener('blur', () => setRecording(false));
+
+  document.addEventListener('keydown', (e) => {
+    if (!recording) {
+      if (e.key === 'Escape') post({ type: 'hide' });   // Esc fecha o mixer (prático no meio de um jogo)
+      return;
+    }
+    e.preventDefault();
+    if (e.key === 'Escape') return setRecording(false);
+    if (e.key === 'Backspace' || e.key === 'Delete') return saveHotkey(0, 0);
+    const vk = codeToVk(e.code);
+    if (!vk) return;                                // só Ctrl/Alt/Shift até agora: espera a tecla
+    const mods = (e.altKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.shiftKey ? 4 : 0);
+    // Sem Ctrl ou Alt, a tecla (ou Shift + tecla) pararia de funcionar em todos os apps e jogos
+    if (!(mods & 3)) return showHotkey(t('hotkeyNeedMod'));
+    saveHotkey(mods, vk);
   });
 
   const endDrag = () => rows.forEach((r) => { r.dragging = false; r.el.classList.remove('dragging'); });

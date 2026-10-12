@@ -63,6 +63,11 @@ sealed class TrayController : IDisposable
             if (e.Button == MouseButtons.Left) Toggle();
         };
 
+        // Atalho global (padrão Ctrl+Alt+V): abre o mixer por cima de tudo, até no meio de um jogo
+        var hotkey = AppSettings.Load();
+        GlobalHotkey.Set(hotkey.HotkeyMods, hotkey.HotkeyKey);
+        GlobalHotkey.Pressed += () => Toggle(fromHotkey: true);
+
         // Atualização automática: só reinicia para atualizar quando o mixer não está aberto
         Updater.Start(
             canRestart: () => _form == null || _form.IsDisposed || !_form.IsOpen,
@@ -101,9 +106,9 @@ sealed class TrayController : IDisposable
         return _form;
     }
 
-    void Toggle()
+    void Toggle(bool fromHotkey = false)
     {
-        DevLog.Write($"clique na bandeja (form={(_form == null || _form.IsDisposed ? "nenhum" : _form.IsOpen ? "aberto" : "escondido")})");
+        DevLog.Write($"{(fromHotkey ? "atalho" : "clique na bandeja")} (form={(_form == null || _form.IsDisposed ? "nenhum" : _form.IsOpen ? "aberto" : "escondido")})");
         if (_form != null && !_form.IsDisposed)
         {
             if (_form.IsOpen)
@@ -116,7 +121,7 @@ sealed class TrayController : IDisposable
             // sem esse intervalo ele fecharia e reabriria na hora.
             if ((DateTime.UtcNow - _form.LastHiddenUtc).TotalMilliseconds < 300) return;
         }
-        EnsureForm().Open();
+        EnsureForm().Open(fromHotkey);
     }
 
     public void Dispose()

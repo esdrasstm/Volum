@@ -233,12 +233,14 @@ sealed class MixerForm : Form
         if (!_shown && !_wantOpen && !IsDisposed) await SleepAsync();
     }
 
-    public async void Open()
+    public async void Open(bool fromHotkey = false)
     {
         if (IsDisposed) return;
         _idle.Stop();
         Wake();
         _wantOpen = true;
+        // Pelo atalho, abre na tela do app que está na frente (o jogo), não onde o mouse estiver
+        _targetScreen = fromHotkey ? Screen.FromHandle(GetForegroundWindow()) : null;
 
         // A janela (vidro vazio) aparece na hora do clique; o conteúdo surge quando estiver pronto.
         // A frio (WebView2 descartado), iniciar o WebView2 leva ~1 s.
@@ -256,10 +258,15 @@ sealed class MixerForm : Form
         }
     }
 
+    Screen? _targetScreen;
+
+    [DllImport("user32.dll")]
+    static extern IntPtr GetForegroundWindow();
+
     void ShowShell()
     {
         float k = DeviceDpi / 96f;
-        var wa = Screen.FromPoint(Cursor.Position).WorkingArea;
+        var wa = (_targetScreen ?? Screen.FromPoint(Cursor.Position)).WorkingArea;
         _anchor = new Point(wa.Right - (int)(MarginDip * k), wa.Bottom - (int)(MarginDip * k));
 
         _shown = true;
@@ -437,6 +444,7 @@ sealed class MixerForm : Form
         if (IsDisposed) return;
         _audio?.Dispose();
         _audio = null;
+        GlobalHotkey.Resume();   // fechou no meio da gravação de um atalho novo: volta o antigo
         Hide();
         _shown = false;
         _closing = false;
@@ -507,7 +515,8 @@ sealed class MixerForm : Form
             glass = GlassSupported,
             lite = _settings.LightMode,
             language = Strings.Normalize(_settings.Language),
-            systemDark = WindowsIsDark()
+            systemDark = WindowsIsDark(),
+            hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey }
         });
     }
 
@@ -609,6 +618,26 @@ sealed class MixerForm : Form
                 case "setAutostart":
                     AutoStart.Set(root.GetProperty("enabled").GetBoolean());
                     break;
+
+                case "hotkeyRecord":   // começou/cancelou a gravação de um atalho novo nas configurações
+                    if (root.GetProperty("on").GetBoolean()) GlobalHotkey.Pause();
+                    else GlobalHotkey.Resume();
+                    break;
+
+                case "setHotkey":      // gravou um atalho novo (key 0 = desligar)
+                {
+                    uint mods = root.GetProperty("mods").GetUInt32(), key = root.GetProperty("key").GetUInt32();
+                    bool ok = GlobalHotkey.Set(mods, key);
+                    if (ok)
+                    {
+                        _settings.HotkeyMods = mods;
+                        _settings.HotkeyKey = key;
+                        _settings.Save();
+                    }
+                    else GlobalHotkey.Set(_settings.HotkeyMods, _settings.HotkeyKey);   // em uso por outro app: volta o antigo
+                    Post(new { type = "hotkey", ok, mods = _settings.HotkeyMods, key = _settings.HotkeyKey });
+                    break;
+                }
 
                 case "openSite":   // link "Site do Volum" ou botão de sugestões: abre no navegador padrão e fecha o mixer
                     // Sugestões: vai direto para o formulário, levando a versão do app e do Windows (ajuda nos bugs)

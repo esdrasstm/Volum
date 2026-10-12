@@ -22,6 +22,11 @@ sealed class AppSettings
     // Idioma da interface: "pt" (padrão), "en" ou "es"
     public string Language { get; set; } = "pt";
 
+    // Atalho global para abrir o mixer (ex.: no meio de um jogo). Padrão: Ctrl+Alt+V.
+    // Mods = soma de GlobalHotkey.Alt/Ctrl/Shift; Key = código da tecla do Windows (VK); Key 0 = desligado.
+    public uint HotkeyMods { get; set; } = GlobalHotkey.Ctrl | GlobalHotkey.Alt;
+    public uint HotkeyKey { get; set; } = 0x56;   // V
+
     static string Folder(string app) => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), app);
 
