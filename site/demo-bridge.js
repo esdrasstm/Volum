@@ -173,7 +173,9 @@
       case 'setMicDevice': model.mic.id = m.id; send(state()); break;
       case 'hide': close(); break;
       case 'tick': tick(); break;
-      case 'openSite': toPage({ type: 'top' }); break;   // já estamos no site: volta para o topo
+      case 'openSite':   // já estamos no site: "Site do Volum" volta para o topo; sugestões rola até o formulário
+        toPage({ type: m.section === 'feedback' ? 'feedback' : 'top' });
+        break;
     }
   }
 

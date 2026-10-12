@@ -610,8 +610,12 @@ sealed class MixerForm : Form
                     AutoStart.Set(root.GetProperty("enabled").GetBoolean());
                     break;
 
-                case "openSite":   // link "Site do Volum": abre no navegador padrão e fecha o mixer
-                    try { Process.Start(new ProcessStartInfo(SiteUrl) { UseShellExecute = true }); }
+                case "openSite":   // link "Site do Volum" ou botão de sugestões: abre no navegador padrão e fecha o mixer
+                    // Sugestões: vai direto para o formulário, levando a versão do app e do Windows (ajuda nos bugs)
+                    var url = root.TryGetProperty("section", out var sec) && sec.GetString() == "feedback"
+                        ? $"{SiteUrl}?v={Uri.EscapeDataString(Updater.Version)}&w={Environment.OSVersion.Version.Build}#sugestoes"
+                        : SiteUrl;
+                    try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
                     catch (Exception ex) { Debug.WriteLine(ex); }
                     _ = CloseAnimatedAsync();
                     break;

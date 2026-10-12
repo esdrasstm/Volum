@@ -378,6 +378,48 @@
     details[open] summary::after { transform: rotate(45deg); }
     details p { margin: 0 0 18px; color: var(--subtext); }
 
+    /* Sugestões e bugs (formulário) */
+    .feedback { display: grid; gap: 18px; max-width: 720px; padding: 26px; border-radius: var(--radius); }
+    .kind {
+      justify-self: start;
+      display: inline-flex; gap: 4px; padding: 4px;
+      border-radius: 12px; background: rgba(0, 0, 0, .25); border: 1px solid var(--border);
+    }
+    .kind input { position: absolute; opacity: 0; pointer-events: none; }
+    .kind span {
+      display: block; padding: 8px 16px; border-radius: 9px;
+      font-size: 14px; font-weight: 600; color: var(--subtext);
+      cursor: pointer; transition: background .25s, color .25s, box-shadow .25s;
+    }
+    .kind span:hover { color: var(--text); }
+    .kind input:checked + span {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      box-shadow: 0 6px 18px var(--accent-ring), inset 0 1px 0 rgba(255, 255, 255, .25);
+    }
+    .kind input:focus-visible + span { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+    .field { display: grid; gap: 8px; font-size: 14px; font-weight: 600; }
+    .field small { font-weight: 400; color: var(--muted); }
+    .field textarea, .field input {
+      width: 100%;
+      font: inherit; font-size: 15px; font-weight: 400; color: var(--text);
+      padding: 12px 14px; border-radius: 12px;
+      background: rgba(0, 0, 0, .25); border: 1px solid var(--border);
+      resize: vertical;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field textarea::placeholder, .field input::placeholder { color: var(--muted); }
+    .field textarea:focus, .field input:focus { outline: none; border-color: rgba(245, 137, 90, .6); box-shadow: 0 0 0 3px var(--accent-ring); }
+    .form-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
+    .form-note { margin: 0; font-size: 13px; color: var(--muted); }
+    .form-status { margin: 0; font-size: 14px; }
+    .form-status:empty { display: none; }
+    .form-status.ok { color: var(--meter-a); }
+    .form-status.err { color: #fca5a5; }
+    .feedback button[disabled] { opacity: .6; pointer-events: none; }
+    .alt { margin: 18px 0 0; font-size: 14px; color: var(--muted); }
+    .alt a { color: var(--subtext); }
+
     /* Chamada final */
     .final {
       text-align: center;
@@ -603,6 +645,7 @@
         <a href="#recursos">Recursos</a>
         <a href="#como-funciona">Como funciona</a>
         <a href="#perguntas">Perguntas</a>
+        <a href="#sugestoes">Sugestões</a>
       </nav>
       <a class="btn btn-primary btn-small download-link" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">Baixar</a>
       <span class="progress" aria-hidden="true"></span>
@@ -756,6 +799,36 @@
       </div>
     </section>
 
+    <!-- ===================== Sugestões e bugs =====================
+         O botão de balão no cabeçalho do app abre esta seção (index.html?v=versão&w=build#sugestoes).
+         As respostas vão para um Google Form (configuração no script, em FEEDBACK). -->
+    <section id="sugestoes">
+      <div class="eyebrow reveal">Sugestões e bugs</div>
+      <h2 class="reveal">Ajude a deixar o Volum melhor.</h2>
+      <p class="section-lead reveal">Teve uma ideia ou algo não funcionou direito? Conta aqui. Toda mensagem é lida.</p>
+
+      <form id="feedbackForm" class="feedback glass reveal zoom" novalidate>
+        <div class="kind" role="radiogroup" aria-label="Tipo de mensagem">
+          <label><input type="radio" name="kind" value="Sugestão" checked><span>Sugestão</span></label>
+          <label><input type="radio" name="kind" value="Bug"><span>Algo deu errado</span></label>
+        </div>
+        <label class="field">
+          <span>Sua mensagem</span>
+          <textarea name="message" rows="5" maxlength="4000" required placeholder="O que você gostaria que o Volum fizesse?"></textarea>
+        </label>
+        <label class="field">
+          <span>E-mail <small>(opcional, só se quiser resposta)</small></span>
+          <input type="email" name="email" autocomplete="email" placeholder="voce@email.com">
+        </label>
+        <div class="form-foot">
+          <p class="form-note" id="feedbackNote">Não precisa de cadastro.</p>
+          <button class="btn btn-primary" type="submit">Enviar</button>
+        </div>
+        <p class="form-status" id="feedbackStatus" role="status" aria-live="polite"></p>
+      </form>
+      <p class="alt reveal">Usa o GitHub? Você também pode <a href="https://github.com/esdrasstm/Volum/issues/new">abrir uma issue</a>.</p>
+    </section>
+
     <!-- ===================== Chamada final ===================== -->
     <div class="final glass reveal zoom">
       <h2>Seu som, do seu jeito.</h2>
@@ -857,6 +930,72 @@
       });
     });
 
+    // ---------- Sugestões e bugs ----------
+    // As respostas vão para um Google Form. Para ligar: no Google Form, crie as perguntas
+    // "Tipo" (múltipla escolha: Sugestão / Bug), "Mensagem", "E-mail" e "Versão" e preencha abaixo
+    // o endereço formResponse e o entry.NNN de cada pergunta.
+    // Enquanto "action" estiver vazio, o botão Enviar abre uma issue no GitHub já preenchida.
+    const FEEDBACK = {
+      action: '',   // https://docs.google.com/forms/d/e/.../formResponse
+      fields: { kind: '', message: '', email: '', version: '' },   // entry.123456789
+    };
+    const fbForm = document.getElementById('feedbackForm');
+    const fbStatus = document.getElementById('feedbackStatus');
+    const fbMessage = fbForm.elements.message;
+
+    // Quem chega pelo app traz a versão do Volum (v) e do Windows (w): ajuda a entender bugs
+    const params = new URLSearchParams(location.search);
+    const fromApp = /^[\w.\-]{1,20}$/.test(params.get('v') || '');
+    const fbVersion = fromApp ? `Volum ${params.get('v')} · Windows build ${(params.get('w') || '?').replace(/\D/g, '')}` : 'site';
+    if (fromApp) {
+      document.getElementById('feedbackNote').textContent = `Vai junto: ${fbVersion}. Não precisa de cadastro.`;
+      addEventListener('load', () => setTimeout(() => fbMessage.focus({ preventScroll: true }), 600));
+    }
+
+    // O texto de exemplo muda com o tipo
+    fbForm.addEventListener('change', () => {
+      fbMessage.placeholder = fbForm.elements.kind.value === 'Bug'
+        ? 'O que aconteceu? O que você estava fazendo na hora?'
+        : 'O que você gostaria que o Volum fizesse?';
+    });
+
+    const fbShow = (text, cls) => { fbStatus.textContent = text; fbStatus.className = 'form-status ' + cls; };
+
+    fbForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const kind = fbForm.elements.kind.value;
+      const message = fbMessage.value.trim();
+      const email = fbForm.elements.email.value.trim();
+      if (!message) { fbShow('Escreva sua mensagem antes de enviar.', 'err'); fbMessage.focus(); return; }
+
+      if (!FEEDBACK.action) {   // ainda sem Google Form: issue no GitHub
+        const title = `${kind === 'Bug' ? 'Bug' : 'Sugestão'}: ${message.split('\n')[0].slice(0, 60)}`;
+        const body = `${message}\n\n---\n${fbVersion}`;
+        open(`https://github.com/esdrasstm/Volum/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`, '_blank', 'noopener');
+        return;
+      }
+
+      const data = new URLSearchParams();
+      data.append(FEEDBACK.fields.kind, kind);
+      data.append(FEEDBACK.fields.message, message);
+      data.append(FEEDBACK.fields.email, email);
+      data.append(FEEDBACK.fields.version, fbVersion);
+      const btn = fbForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      fbShow('Enviando...', '');
+      try {
+        // O Google não deixa ler a resposta (no-cors): se a rede não falhou, chegou
+        await fetch(FEEDBACK.action, { method: 'POST', mode: 'no-cors', body: data });
+        fbForm.reset();
+        fbForm.dispatchEvent(new Event('change'));   // volta o texto de exemplo de "Sugestão"
+        fbShow('Valeu! Sua mensagem chegou.', 'ok');
+      } catch {
+        fbShow('Não deu para enviar agora. Confira a internet e tente de novo.', 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     // ---------- Demo interativa ----------
     // A demo (demo.html) avisa por postMessage: altura do conteúdo, minimizar e modo leve.
     const demo = document.getElementById('demo');
@@ -870,6 +1009,7 @@
       if (m.type === 'resize') frame.style.height = Math.ceil(m.height) + 'px';
       if (m.type === 'lite') demo.classList.toggle('lite', m.on);
       if (m.type === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });   // "Site do Volum" na demo
+      if (m.type === 'feedback') document.getElementById('sugestoes').scrollIntoView({ behavior: 'smooth' });   // balão na demo
       if (m.type === 'hide') {
         // espera a animação de saída do app terminar e "esconde a janela"
         setTimeout(() => {

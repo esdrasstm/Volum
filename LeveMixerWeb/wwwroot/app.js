@@ -24,7 +24,7 @@
       apps: 'Aplicativos', empty: 'Nenhum app usando áudio agora',
       master: 'Volume geral', mic: 'Microfone', systemSounds: 'Sons do sistema',
       mute: 'Silenciar', unmute: 'Ativar som', micMute: 'Desligar microfone', micUnmute: 'Ligar microfone',
-      micPick: 'Escolher microfone', site: 'Site do Volum',
+      micPick: 'Escolher microfone', site: 'Site do Volum', feedback: 'Sugestões e bugs',
     },
     en: {
       settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
@@ -33,7 +33,7 @@
       apps: 'Apps', empty: 'No apps playing audio right now',
       master: 'Master volume', mic: 'Microphone', systemSounds: 'System sounds',
       mute: 'Mute', unmute: 'Unmute', micMute: 'Mute microphone', micUnmute: 'Unmute microphone',
-      micPick: 'Choose microphone', site: 'Volum website',
+      micPick: 'Choose microphone', site: 'Volum website', feedback: 'Suggestions and bugs',
     },
     es: {
       settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
@@ -42,7 +42,7 @@
       apps: 'Aplicaciones', empty: 'Ninguna app está reproduciendo audio',
       master: 'Volumen general', mic: 'Micrófono', systemSounds: 'Sonidos del sistema',
       mute: 'Silenciar', unmute: 'Activar sonido', micMute: 'Silenciar micrófono', micUnmute: 'Activar micrófono',
-      micPick: 'Elegir micrófono', site: 'Sitio de Volum',
+      micPick: 'Elegir micrófono', site: 'Sitio de Volum', feedback: 'Sugerencias y errores',
     },
   };
   let lang = 'pt';
@@ -449,6 +449,7 @@
 
   $('minimizeBtn').addEventListener('click', () => post({ type: 'hide' }));
   $('siteBtn')?.addEventListener('click', () => post({ type: 'openSite' }));   // o C# abre no navegador (? = não trava se faltar)
+  $('feedbackBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));   // sugestões e bugs, no site
 
   autostartEl.addEventListener('change', () => {
     post({ type: 'setAutostart', enabled: autostartEl.checked });
