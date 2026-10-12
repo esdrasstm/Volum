@@ -931,13 +931,12 @@
     });
 
     // ---------- Sugestões e bugs ----------
-    // As respostas vão para um Google Form. Para ligar: no Google Form, crie as perguntas
-    // "Tipo" (múltipla escolha: Sugestão / Bug), "Mensagem", "E-mail" e "Versão" e preencha abaixo
-    // o endereço formResponse e o entry.NNN de cada pergunta.
-    // Enquanto "action" estiver vazio, o botão Enviar abre uma issue no GitHub já preenchida.
+    // As respostas vão para o Google Form "Sugestões Volum" (perguntas: Sugestão ou bug, Sua Mensagem, E-mail).
+    // O form não tem pergunta de versão: ela vai no fim da mensagem. Se um dia criar uma, ponha o entry em "version".
+    // Se "action" ficar vazio, o botão Enviar abre uma issue no GitHub já preenchida.
     const FEEDBACK = {
-      action: '',   // https://docs.google.com/forms/d/e/.../formResponse
-      fields: { kind: '', message: '', email: '', version: '' },   // entry.123456789
+      action: 'https://docs.google.com/forms/d/e/1FAIpQLSek83KPAAq7ooMyydv650y5zoLD3KwZCytBWOuFWJAfOs5LSg/formResponse',
+      fields: { kind: 'entry.1839313637', message: 'entry.1255922516', email: 'entry.1260834162', version: '' },
     };
     const fbForm = document.getElementById('feedbackForm');
     const fbStatus = document.getElementById('feedbackStatus');
@@ -977,9 +976,9 @@
 
       const data = new URLSearchParams();
       data.append(FEEDBACK.fields.kind, kind);
-      data.append(FEEDBACK.fields.message, message);
-      data.append(FEEDBACK.fields.email, email);
-      data.append(FEEDBACK.fields.version, fbVersion);
+      data.append(FEEDBACK.fields.message, FEEDBACK.fields.version ? message : `${message}\n\n— ${fbVersion}`);
+      data.append(FEEDBACK.fields.email, email || 'não informado');   // o E-mail é obrigatório no form
+      if (FEEDBACK.fields.version) data.append(FEEDBACK.fields.version, fbVersion);
       const btn = fbForm.querySelector('button[type="submit"]');
       btn.disabled = true;
       fbShow('Enviando...', '');
