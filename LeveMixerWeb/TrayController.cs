@@ -1,5 +1,7 @@
 using System;
+using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace Volum;
 
@@ -9,6 +11,7 @@ sealed class TrayController : IDisposable
     readonly NotifyIcon _icon;
     MixerForm? _form;
     bool _syncingMenu;
+    readonly EventWaitHandle _openSignal;
 
     public TrayController()
     {
@@ -68,6 +71,13 @@ sealed class TrayController : IDisposable
         GlobalHotkey.Set(hotkey.HotkeyMods, hotkey.HotkeyKey);
         GlobalHotkey.Pressed += () => Toggle(fromHotkey: true);
 
+        // Abriram o Volum de novo (ex.: ícone fixado no dock): a outra cópia avisa e sai.
+        // Esperar o sinal não gasta nada: o Windows acorda a thread só quando ele chega.
+        var ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+        _openSignal = new EventWaitHandle(false, EventResetMode.AutoReset, Program.OpenSignalName);
+        ThreadPool.RegisterWaitForSingleObject(_openSignal,
+            (_, _) => ui.Post(_ => Toggle(fromLaunch: true), null), null, Timeout.Infinite, false);
+
         // Atualização automática: só reinicia para atualizar quando o mixer não está aberto
         Updater.Start(
             canRestart: () => _form == null || _form.IsDisposed || !_form.IsOpen,
@@ -106,9 +116,9 @@ sealed class TrayController : IDisposable
         return _form;
     }
 
-    void Toggle(bool fromHotkey = false)
+    void Toggle(bool fromHotkey = false, bool fromLaunch = false)
     {
-        DevLog.Write($"{(fromHotkey ? "atalho" : "clique na bandeja")} (form={(_form == null || _form.IsDisposed ? "nenhum" : _form.IsOpen ? "aberto" : "escondido")})");
+        DevLog.Write($"{(fromHotkey ? "atalho" : fromLaunch ? "aberto de novo (dock/atalho)" : "clique na bandeja")} (form={(_form == null || _form.IsDisposed ? "nenhum" : _form.IsOpen ? "aberto" : "escondido")})");
         if (_form != null && !_form.IsDisposed)
         {
             if (_form.IsOpen)
@@ -119,7 +129,8 @@ sealed class TrayController : IDisposable
 
             // Clicar no ícone tira o foco do mixer (ele já começa a fechar sozinho);
             // sem esse intervalo ele fecharia e reabriria na hora.
-            if ((DateTime.UtcNow - _form.LastHiddenUtc).TotalMilliseconds < 300) return;
+            // Pelo dock o aviso chega mais tarde (a outra cópia leva um tempo para abrir e sair).
+            if ((DateTime.UtcNow - _form.LastHiddenUtc).TotalMilliseconds < (fromLaunch ? 1500 : 300)) return;
         }
         EnsureForm().Open(fromHotkey);
     }
@@ -128,5 +139,6 @@ sealed class TrayController : IDisposable
     {
         _icon.Visible = false;
         _icon.Dispose();
+        _openSignal.Dispose();
     }
 }

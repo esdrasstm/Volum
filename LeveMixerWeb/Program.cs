@@ -11,6 +11,12 @@ static class Program
     /// <summary>Volum.exe --dev : habilita F12 (DevTools), abre o mixer ao iniciar e não fecha ao perder o foco.</summary>
     internal static bool DevMode { get; private set; }
 
+    /// <summary>Sinal que uma segunda cópia do Volum manda para a que já está aberta: "abra o mixer".</summary>
+    internal const string OpenSignalName = "Volum_OpenMixer";
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    static extern bool AllowSetForegroundWindow(int processId);
+
     [STAThread]
     static void Main(string[] args)
     {
@@ -26,9 +32,20 @@ static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        // Uma única instância por vez
+        // Uma única instância por vez. Abrir o Volum de novo (ícone fixado num dock, atalho da área de
+        // trabalho, menu Iniciar) avisa o que já está rodando, que abre ou fecha o mixer.
         using var mutex = new Mutex(true, "Volum_SingleInstance", out bool created);
-        if (!created) return;
+        if (!created)
+        {
+            AllowSetForegroundWindow(-1);   // quem foi clicado pode passar a vez: o mixer vem para a frente
+            try
+            {
+                using var signal = EventWaitHandle.OpenExisting(OpenSignalName);
+                signal.Set();
+            }
+            catch { /* versão antiga aberta, sem o sinal: não faz nada, como antes */ }
+            return;
+        }
 
         // Só a versão instalada mexe sozinha no "iniciar com o Windows": a cópia de desenvolvimento
         // (pasta bin) não pode trocar o caminho para ela mesma.
