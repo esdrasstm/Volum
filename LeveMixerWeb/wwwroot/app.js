@@ -28,6 +28,8 @@
       hotkey: 'Atalho para abrir', hotkeyHint: 'Abre o mixer até no meio de um jogo', hotkeyPress: 'Pressione…',
       hotkeyRecordHint: 'Esc cancela · Backspace desliga', hotkeyNeedMod: 'Use Ctrl ou Alt junto',
       hotkeyBusy: 'Em uso por outro app', hotkeyOff: 'Desligado',
+      kbLock: 'Travar teclado para limpar',
+      newsEyebrow: 'Versão', newsTitle: 'O que tem de novo', newsOk: 'Entendi!',
     },
     en: {
       settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
@@ -40,6 +42,8 @@
       hotkey: 'Shortcut to open', hotkeyHint: 'Opens the mixer even mid-game', hotkeyPress: 'Press keys…',
       hotkeyRecordHint: 'Esc cancels · Backspace turns off', hotkeyNeedMod: 'Add Ctrl or Alt',
       hotkeyBusy: 'Used by another app', hotkeyOff: 'Off',
+      kbLock: 'Lock keyboard to clean',
+      newsEyebrow: 'Version', newsTitle: 'What’s new', newsOk: 'Got it!',
     },
     es: {
       settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
@@ -52,6 +56,8 @@
       hotkey: 'Atajo para abrir', hotkeyHint: 'Abre el mezclador incluso en pleno juego', hotkeyPress: 'Pulsa las teclas…',
       hotkeyRecordHint: 'Esc cancela · Retroceso desactiva', hotkeyNeedMod: 'Usa Ctrl o Alt',
       hotkeyBusy: 'En uso por otra app', hotkeyOff: 'Desactivado',
+      kbLock: 'Bloquear teclado para limpiar',
+      newsEyebrow: 'Versión', newsTitle: 'Novedades', newsOk: '¡Entendido!',
     },
   };
   let lang = 'pt';
@@ -364,6 +370,8 @@
     void settingsEl.offsetHeight;
     settingsEl.classList.remove('instant');
     setMicListOpen(false);                          // e com a lista de microfones fechada
+    // Novidades: só na versão que tem textos no NEWS e que a pessoa ainda não viu (a demo do site não manda versão)
+    setNewsOpen(!!s.version && s.version === NEWS.version && s.newsSeen !== s.version);
     forceResize = true;                             // o C# espera um "resize" para mostrar a janela
   }
 
@@ -416,7 +424,71 @@
       updateMuteUi(r);
     });
     showHotkey();
+    if (newsOpen) renderNews();
   }
+
+  /* ---------------- Novidades (popup depois de atualizar) ---------------- */
+  // Aparece uma vez, na primeira abertura depois de atualizar para NEWS.version.
+  // Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS.
+  const NEWS = {
+    version: '0.1.7',
+    items: [
+      { icon: 'keyboard',
+        pt: ['Trave o teclado para limpar', 'O ícone de teclado no topo trava tudo por até 10 minutos. O mouse continua livre.'],
+        en: ['Lock the keyboard to clean it', 'The keyboard icon at the top locks it for up to 10 minutes. The mouse keeps working.'],
+        es: ['Bloquea el teclado para limpiarlo', 'El ícono de teclado arriba lo bloquea hasta 10 minutos. El mouse sigue funcionando.'] },
+      { icon: 'bolt',
+        pt: ['Ctrl+Alt+V abre o Volum', 'De qualquer lugar, até no meio de um jogo em janela. Dá para trocar nas configurações.'],
+        en: ['Ctrl+Alt+V opens Volum', 'From anywhere, even mid-game in windowed mode. You can change it in settings.'],
+        es: ['Ctrl+Alt+V abre Volum', 'Desde cualquier lugar, incluso jugando en ventana. Puedes cambiarlo en la configuración.'] },
+      { icon: 'dock',
+        pt: ['Abra pelo dock', 'Fixe o Volum no dock ou na barra de tarefas e clique para abrir o mixer.'],
+        en: ['Open it from your dock', 'Pin Volum to your dock or taskbar and click it to open the mixer.'],
+        es: ['Ábrelo desde tu dock', 'Fija Volum en tu dock o barra de tareas y haz clic para abrir el mezclador.'] },
+      { icon: 'chat',
+        pt: ['Sugestões e bugs', 'O balão no topo leva ao formulário no site. Toda mensagem é lida.'],
+        en: ['Ideas and bugs', 'The speech bubble at the top opens the form on the website. Every message gets read.'],
+        es: ['Ideas y errores', 'El globo de arriba abre el formulario en el sitio. Leemos todos los mensajes.'] },
+    ],
+  };
+  const NEWS_ICONS = {
+    keyboard: '<rect x="1.75" y="4" width="12.5" height="8" rx="1.5"/><path d="M4.5 6.75h.01M7 6.75h.01M9.5 6.75h.01M12 6.75h.01M5.5 9.5h5"/>',
+    bolt: '<path d="M9 1.5L3.5 9H8l-1 5.5L12.5 7H8z" stroke-linejoin="round"/>',
+    dock: '<rect x="2" y="10" width="12" height="4" rx="1.5"/><path d="M8 2v5.5M5.5 5L8 7.5 10.5 5"/>',
+    chat: '<path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" stroke-linejoin="round"/>',
+  };
+  const newsEl = $('news');
+  let newsOpen = false;
+
+  function renderNews() {
+    if (!newsEl) return;
+    const title = $('newsTitle');
+    title.firstElementChild.textContent = `${t('newsEyebrow')} ${NEWS.version}`;
+    title.lastElementChild.textContent = t('newsTitle');
+    $('newsList').replaceChildren(...NEWS.items.map((item) => {
+      const [head, text] = item[lang] || item.pt;
+      const li = document.createElement('li');
+      li.innerHTML = '<div class="news-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.5" stroke-linecap="round">' + NEWS_ICONS[item.icon] + '</svg></div><div><b></b><span></span></div>';
+      li.querySelector('b').textContent = head;
+      li.querySelector('span').textContent = text;
+      return li;
+    }));
+  }
+
+  function setNewsOpen(on) {
+    if (!newsEl) return;                            // sem o popup no HTML (ex.: demo antiga): nada a fazer
+    newsOpen = on;
+    if (on) renderNews();
+    newsEl.hidden = !on;
+    card.classList.toggle('has-news', on);
+  }
+
+  function dismissNews() {
+    setNewsOpen(false);
+    post({ type: 'newsSeen' });                     // o C# guarda que esta versão já foi vista
+  }
+  $('newsOk')?.addEventListener('click', dismissNews);
 
   // Tema efetivo (claro/escuro). "Sistema" segue o tema do Windows que o C# informa (systemDark);
   // sem C# (a demo do site), usa o prefers-color-scheme do navegador.
@@ -466,6 +538,7 @@
   $('minimizeBtn').addEventListener('click', () => post({ type: 'hide' }));
   $('siteBtn')?.addEventListener('click', () => post({ type: 'openSite' }));   // o C# abre no navegador (? = não trava se faltar)
   $('feedbackBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));   // sugestões e bugs, no site
+  $('kbLockBtn')?.addEventListener('click', () => post({ type: 'lockKeyboard' }));   // o C# fecha o mixer e trava o teclado
 
   autostartEl.addEventListener('change', () => {
     post({ type: 'setAutostart', enabled: autostartEl.checked });
@@ -518,7 +591,10 @@
 
   document.addEventListener('keydown', (e) => {
     if (!recording) {
-      if (e.key === 'Escape') post({ type: 'hide' });   // Esc fecha o mixer (prático no meio de um jogo)
+      if (e.key === 'Escape') {
+        if (newsOpen) dismissNews();                    // com as novidades abertas, Esc fecha só o popup
+        else post({ type: 'hide' });                    // Esc fecha o mixer (prático no meio de um jogo)
+      }
       return;
     }
     e.preventDefault();

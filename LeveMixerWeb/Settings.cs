@@ -27,6 +27,10 @@ sealed class AppSettings
     public uint HotkeyMods { get; set; } = GlobalHotkey.Ctrl | GlobalHotkey.Alt;
     public uint HotkeyKey { get; set; } = 0x56;   // V
 
+    // Última versão cujas novidades a pessoa já viu (popup "O que tem de novo" no mixer).
+    // Vazio em quem atualizou de uma versão sem o popup: essas pessoas veem as novidades.
+    public string? LastSeenVersion { get; set; }
+
     static string Folder(string app) => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), app);
 

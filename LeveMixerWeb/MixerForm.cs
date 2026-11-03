@@ -516,7 +516,9 @@ sealed class MixerForm : Form
             lite = _settings.LightMode,
             language = Strings.Normalize(_settings.Language),
             systemDark = WindowsIsDark(),
-            hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey }
+            hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
+            version = Updater.Version,                 // a interface mostra as novidades se esta versão
+            newsSeen = _settings.LastSeenVersion       // ainda não foi vista
         });
     }
 
@@ -647,6 +649,16 @@ sealed class MixerForm : Form
                     try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
                     catch (Exception ex) { Debug.WriteLine(ex); }
                     _ = CloseAnimatedAsync();
+                    break;
+
+                case "newsSeen":   // fechou o popup de novidades: não mostra de novo nesta versão
+                    _settings.LastSeenVersion = Updater.Version;
+                    _settings.Save();
+                    break;
+
+                case "lockKeyboard":   // botão de teclado no cabeçalho: fecha o mixer e trava o teclado para limpar
+                    _ = CloseAnimatedAsync();
+                    KeyboardLock.Lock();
                     break;
 
                 case "hide":   // botão minimizar: fecha com animação (também no modo --dev)

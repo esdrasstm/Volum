@@ -87,6 +87,11 @@ static class Strings
         //                 pt                          en                           es
         ["autostart"] = new[] { "Iniciar com o Windows", "Start with Windows", "Iniciar con Windows" },
         ["exit"]      = new[] { "Sair", "Exit", "Salir" },
+        // Travar o teclado para limpar (menu da bandeja e aviso na tela)
+        ["kbLock"]    = new[] { "Travar teclado para limpar", "Lock keyboard to clean", "Bloquear teclado para limpiar" },
+        ["kbLocked"]  = new[] { "Teclado travado", "Keyboard locked", "Teclado bloqueado" },
+        ["kbLeft"]    = new[] { "Destrava sozinho em {0}", "Unlocks by itself in {0}", "Se desbloquea solo en {0}" },
+        ["kbUnlock"]  = new[] { "Destravar", "Unlock", "Desbloquear" },
         ["webviewError"] = new[]
         {
             "Não foi possível iniciar a interface (WebView2).\n\nVerifique se o \"WebView2 Runtime\" está instalado (vem no Windows 11).",

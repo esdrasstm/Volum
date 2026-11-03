@@ -57,6 +57,7 @@ static class Program
             {
                 AutoStart.Set(true);
                 settings.FirstRunDone = true;
+                settings.LastSeenVersion = Updater.Version;   // instalou agora: tudo é novo, sem popup de novidades
                 settings.Save();
             }
             AutoStart.RefreshPath();

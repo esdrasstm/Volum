@@ -26,9 +26,17 @@ sealed class TrayController : IDisposable
         {
             if (!_syncingMenu) AutoStart.Set(autoStart.Checked);
         };
+        // Travar o teclado para limpar (o mixer tem o mesmo botão no cabeçalho)
+        var kbLock = new ToolStripMenuItem();
+        kbLock.Click += (_, _) =>
+        {
+            if (_form != null && !_form.IsDisposed && _form.IsOpen) _ = _form.CloseAnimatedAsync();
+            KeyboardLock.Lock();
+        };
         var exit = new ToolStripMenuItem();
         exit.Click += (_, _) =>
         {
+            KeyboardLock.Unlock();
             _icon!.Visible = false;
             _form?.Dispose();
             Application.Exit();
@@ -39,6 +47,8 @@ sealed class TrayController : IDisposable
         {
             var lang = AppSettings.Load().Language;
             autoStart.Text = Strings.Get(lang, "autostart");
+            kbLock.Text = Strings.Get(lang, "kbLock");
+            kbLock.Enabled = !KeyboardLock.IsLocked;
             exit.Text = Strings.Get(lang, "exit");
             _syncingMenu = true;
             autoStart.Checked = AutoStart.IsEnabled;
@@ -51,6 +61,7 @@ sealed class TrayController : IDisposable
         menu.Items.Add(new ToolStripMenuItem($"Volum {Updater.Version}") { Enabled = false });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(autoStart);
+        menu.Items.Add(kbLock);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(exit);
 
