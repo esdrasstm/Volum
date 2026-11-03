@@ -370,8 +370,11 @@
     void settingsEl.offsetHeight;
     settingsEl.classList.remove('instant');
     setMicListOpen(false);                          // e com a lista de microfones fechada
-    // Novidades: só na versão que tem textos no NEWS e que a pessoa ainda não viu (a demo do site não manda versão)
-    setNewsOpen(!!s.version && s.version === NEWS.version && s.newsSeen !== s.version);
+    // Novidades: a partir da versão do NEWS, para quem ainda não as viu (quem já viu guardou uma versão igual
+    // ou maior). Não depende do número exato publicado. A demo do site não manda versão: nunca mostra.
+    appVersion = s.version || '';
+    setNewsOpen(!!s.version && compareVersions(s.version, NEWS.version) >= 0 &&
+      (!s.newsSeen || compareVersions(s.newsSeen, NEWS.version) < 0));
     forceResize = true;                             // o C# espera um "resize" para mostrar a janela
   }
 
@@ -459,11 +462,22 @@
   };
   const newsEl = $('news');
   let newsOpen = false;
+  let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra
+
+  // Compara versões tipo "0.1.10" e "0.1.9" número a número (negativo: a é menor)
+  function compareVersions(a, b) {
+    const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const d = (pa[i] || 0) - (pb[i] || 0);
+      if (d) return d;
+    }
+    return 0;
+  }
 
   function renderNews() {
     if (!newsEl) return;
     const title = $('newsTitle');
-    title.firstElementChild.textContent = `${t('newsEyebrow')} ${NEWS.version}`;
+    title.firstElementChild.textContent = `${t('newsEyebrow')} ${appVersion || NEWS.version}`;
     title.lastElementChild.textContent = t('newsTitle');
     $('newsList').replaceChildren(...NEWS.items.map((item) => {
       const [head, text] = item[lang] || item.pt;
