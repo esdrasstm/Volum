@@ -679,7 +679,7 @@
           <iframe id="demoFrame" src="demo.html" title="Demonstração interativa do Volum: mexa nos volumes e nas configurações"></iframe>
         </div>
         <div class="taskbar glass">
-          <span class="hint" id="demoHint">Experimente: arraste, silencie, abra a setinha ⌄</span>
+          <span class="hint" id="demoHint">Experimente: arraste e silencie os apps</span>
           <button class="tray-btn" id="trayBtn" title="Volum" aria-label="Abrir ou fechar o Volum">
             <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="url(#lg)"/><g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="#fff"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
           </button>
@@ -1032,6 +1032,11 @@
       if (m.type === 'lite') demo.classList.toggle('lite', m.on);
       if (m.type === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });   // "Site do Volum" na demo
       if (m.type === 'feedback') document.getElementById('sugestoes').scrollIntoView({ behavior: 'smooth' });   // balão na demo
+      if (m.type === 'settings') {   // engrenagem na demo: no app ela abre a janela de configurações
+        hint.textContent = 'No app, a engrenagem abre a janela de configurações';
+        clearTimeout(hint._t);
+        hint._t = setTimeout(() => { hint.textContent = 'Experimente: arraste e silencie os apps'; }, 3500);
+      }
       if (m.type === 'hide') {
         // espera a animação de saída do app terminar e "esconde a janela"
         setTimeout(() => {
@@ -1057,7 +1062,7 @@
     document.getElementById('trayBtn').addEventListener('click', () => {
       if (demo.classList.contains('min')) {
         demo.classList.remove('min');
-        hint.textContent = 'Experimente: arraste, silencie, abra a setinha ⌄';
+        hint.textContent = 'Experimente: arraste e silencie os apps';
         tellDemo('open');
       } else {
         tellDemo('close');

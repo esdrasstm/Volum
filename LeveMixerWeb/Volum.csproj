@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- Windows 10 SDK: controles de mídia do Windows (player da ilha). Roda no Windows 10 1809 ou mais novo -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -10,12 +12,13 @@
     <AssemblyName>Volum</AssemblyName>
     <Product>Volum</Product>
     <!-- Versão do app: suba a cada release (precisa bater com o -v do "vpk pack") -->
-    <Version>0.1.9</Version>
+    <Version>0.2.0</Version>
     <ApplicationIcon>Volum.ico</ApplicationIcon>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Interop.UIAutomationClient" Version="10.19041.0" />
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
     <PackageReference Include="Velopack" Version="1.2.161" />

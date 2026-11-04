@@ -1,9 +1,10 @@
 /* =========================================================
-   Volum — comportamento da interface
+   Volum — comportamento do mixer (as configurações ficam na janela própria: settings.js)
+   Textos, novidades e formatação vêm do shared.js (window.Volum).
    Fala com o C# por mensagens JSON:
-     C# -> JS : settings | state | peaks | open | close
-     JS -> C# : ready | resize | setVolume | setMute | setTheme | setAutostart
-                | setLightMode | setLanguage | setMicDevice | openSite | hide | tick
+     C# -> JS : settings | state | peaks | open | close | water
+     JS -> C# : ready | resize | setVolume | setMute | setMicDevice | openSite | openSettings
+                | lockKeyboard | waterAdd | newsSeen | hide | tick
    ========================================================= */
 (() => {
   'use strict';
@@ -12,56 +13,10 @@
   const MIC = '__mic';
   const isFixed = (id) => id === MASTER || id === MIC;   // linhas fixas do painel de cima
   const $ = (id) => document.getElementById(id);
+  const V = window.Volum;
 
-  /* ---------------- Idiomas ----------------
-     Português é o padrão. Para traduzir um texto novo: coloque data-i18n="chave" no HTML
-     (ou data-i18n-title para a dica do mouse) e a chave nos três idiomas abaixo. */
-  const I18N = {
-    pt: {
-      settings: 'Configurações', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
-      system: 'Sistema', dark: 'Escuro', light: 'Claro',
-      autostart: 'Iniciar com o Windows', lite: 'Modo leve', liteHint: 'Sem vidro e animações; usa menos memória',
-      apps: 'Aplicativos', empty: 'Nenhum app usando áudio agora',
-      master: 'Volume geral', mic: 'Microfone', systemSounds: 'Sons do sistema',
-      mute: 'Silenciar', unmute: 'Ativar som', micMute: 'Desligar microfone', micUnmute: 'Ligar microfone',
-      micPick: 'Escolher microfone', site: 'Site do Volum', feedback: 'Sugestões e bugs',
-      hotkey: 'Atalho para abrir', hotkeyHint: 'Abre o mixer até no meio de um jogo', hotkeyPress: 'Pressione…',
-      hotkeyRecordHint: 'Esc cancela · Backspace desliga', hotkeyNeedMod: 'Use Ctrl ou Alt junto',
-      hotkeyBusy: 'Em uso por outro app', hotkeyOff: 'Desligado',
-      kbLock: 'Travar teclado para limpar',
-      newsEyebrow: 'Versão', newsTitle: 'O que tem de novo', newsOk: 'Entendi!',
-    },
-    en: {
-      settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
-      system: 'System', dark: 'Dark', light: 'Light',
-      autostart: 'Start with Windows', lite: 'Lite mode', liteHint: 'No glass or animations; uses less memory',
-      apps: 'Apps', empty: 'No apps playing audio right now',
-      master: 'Master volume', mic: 'Microphone', systemSounds: 'System sounds',
-      mute: 'Mute', unmute: 'Unmute', micMute: 'Mute microphone', micUnmute: 'Unmute microphone',
-      micPick: 'Choose microphone', site: 'Volum website', feedback: 'Suggestions and bugs',
-      hotkey: 'Shortcut to open', hotkeyHint: 'Opens the mixer even mid-game', hotkeyPress: 'Press keys…',
-      hotkeyRecordHint: 'Esc cancels · Backspace turns off', hotkeyNeedMod: 'Add Ctrl or Alt',
-      hotkeyBusy: 'Used by another app', hotkeyOff: 'Off',
-      kbLock: 'Lock keyboard to clean',
-      newsEyebrow: 'Version', newsTitle: 'What’s new', newsOk: 'Got it!',
-    },
-    es: {
-      settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
-      system: 'Sistema', dark: 'Oscuro', light: 'Claro',
-      autostart: 'Iniciar con Windows', lite: 'Modo ligero', liteHint: 'Sin vidrio ni animaciones; usa menos memoria',
-      apps: 'Aplicaciones', empty: 'Ninguna app está reproduciendo audio',
-      master: 'Volumen general', mic: 'Micrófono', systemSounds: 'Sonidos del sistema',
-      mute: 'Silenciar', unmute: 'Activar sonido', micMute: 'Silenciar micrófono', micUnmute: 'Activar micrófono',
-      micPick: 'Elegir micrófono', site: 'Sitio de Volum', feedback: 'Sugerencias y errores',
-      hotkey: 'Atajo para abrir', hotkeyHint: 'Abre el mezclador incluso en pleno juego', hotkeyPress: 'Pulsa las teclas…',
-      hotkeyRecordHint: 'Esc cancela · Retroceso desactiva', hotkeyNeedMod: 'Usa Ctrl o Alt',
-      hotkeyBusy: 'En uso por otra app', hotkeyOff: 'Desactivado',
-      kbLock: 'Bloquear teclado para limpiar',
-      newsEyebrow: 'Versión', newsTitle: 'Novedades', newsOk: '¡Entendido!',
-    },
-  };
   let lang = 'pt';
-  const t = (key) => (I18N[lang] && I18N[lang][key]) || I18N.pt[key] || key;
+  const t = (key) => V.t(lang, key);
 
   // Linhas do sistema: o nome vem da tradução, não do C#
   const SYSTEM_NAMES = { __master: 'master', __mic: 'mic', __system: 'systemSounds' };
@@ -78,54 +33,32 @@
   const micListEl = $('micList');
   const micListInner = micListEl.firstElementChild;
   const emptyEl = $('empty');
-  const settingsEl = $('settings');
-  const settingsBtn = $('settingsBtn');
-  const autostartEl = $('autostart');
-  const liteEl = $('lite');
   const appCountEl = $('appCount');
-  const themeSeg = $('themeSeg');
-  const langSeg = $('langSeg');
-  const hotkeyBtn = $('hotkeyBtn');
-  const hotkeyHint = $('hotkeyHint');
   const root = document.documentElement;
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)');
 
-  const ICON_VOL =
-    '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>' +
-    '<path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11" fill="none" stroke="currentColor" ' +
-    'stroke-width="1.8" stroke-linecap="round"/></svg>';
-  const ICON_MUTE =
-    '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>' +
-    '<path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" ' +
-    'stroke-width="1.8" stroke-linecap="round"/></svg>';
-  const ICON_MIC =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' +
-    '<rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none"/>' +
-    '<path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21"/></svg>';
-  const ICON_MIC_OFF =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">' +
-    '<rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" stroke="none" opacity=".45"/>' +
-    '<path d="M5.5 11a6.5 6.5 0 0010.6 5M18.5 11a6.4 6.4 0 01-.5 2.5M12 17.5V21M4 4l16 16"/></svg>';
+  // Ícones de traço, todos com o mesmo peso (classe .ico no style.css)
+  const svg = (body) => '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + body + '</svg>';
+  const SPEAKER = '<path d="M11 5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5l4.5 4z"/>';
+  const ICON_VOL = svg(SPEAKER + '<path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8.5 8.5 0 0 1 0 11"/>');
+  const ICON_MUTE = svg(SPEAKER + '<path d="m16 9.5 5 5M21 9.5l-5 5"/>');
 
   // Ícones das linhas do sistema (não têm .exe de onde tirar o ícone)
   const SYSTEM_ICONS = {
-    // Volume geral: caixa de som
-    __master:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
-      'stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="5" y="2.5" width="14" height="19" rx="3"/>' +
-      '<circle cx="12" cy="14.5" r="3.6"/><circle cx="12" cy="7" r="1.2" fill="currentColor"/></svg>',
-    // Sons do sistema: sino de notificação
-    __system:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
-      'stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 004 0"/></svg>',
-    // Microfone: o microfone em traço
-    __mic:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" ' +
-      'stroke-linecap="round" stroke-linejoin="round">' +
-      '<rect x="8.5" y="2.5" width="7" height="12" rx="3.5"/><path d="M5 11a7 7 0 0014 0M12 18v3.5M8.5 21.5h7"/></svg>',
+    // Volume geral: fone de ouvido
+    __master: svg('<path d="M3.5 17v-5a8.5 8.5 0 0 1 17 0v5"/>' +
+      '<path d="M20.5 18a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3.5 18a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-3z"/>'),
+    // Sons do sistema: sino
+    __system: svg('<path d="M6 8.5a6 6 0 0 1 12 0c0 6.5 2.5 8.5 2.5 8.5h-17S6 15 6 8.5"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/>'),
+    // Microfone
+    __mic: svg('<rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4"/>'),
   };
+
+  // Onda do fim da linha dos apps: 7 barrinhas, cada uma num <path> para poder animar
+  const WAVE =
+    '<svg class="wave ico" viewBox="0 0 24 24" aria-hidden="true">' +
+    ['M3 11v2', 'M6 8v8', 'M9 4v16', 'M12 7v10', 'M15 10v4', 'M18 8v8', 'M21 11v2']
+      .map((d) => '<path d="' + d + '"/>').join('') + '</svg>';
 
   const rows = new Map();       // id -> { el, slider, ... }
   const iconCache = new Map();  // id -> data URI (o C# envia cada ícone uma única vez)
@@ -147,7 +80,9 @@
         '</div>' +
         '<div class="meter"><div class="meter-fill"></div></div>' +
       '</div>' +
-      '<button class="icon-btn mute"></button>';
+      // Volume geral e microfone: alto-falante (Figma). Apps: onda de 7 barrinhas que anda com o som (vira linha reta no mudo)
+      (isFixed(id) ? '<button class="icon-btn mute"></button>'
+        : '<button class="icon-btn mute wave-btn">' + WAVE + '</button>');
 
     const r = {
       id, el, name,
@@ -230,8 +165,10 @@
 
   function updateMuteUi(r) {
     const mic = r.id === MIC;
-    const html = r.muted ? (mic ? ICON_MIC_OFF : ICON_MUTE) : (mic ? ICON_MIC : ICON_VOL);
-    if (r.muteHtml !== html) { r.mute.innerHTML = html; r.muteHtml = html; }   // só troca se mudou
+    if (isFixed(r.id)) {                  // a onda (apps) só muda pelo CSS, com a classe .muted
+      const html = r.muted ? ICON_MUTE : ICON_VOL;
+      if (r.muteHtml !== html) { r.mute.innerHTML = html; r.muteHtml = html; }   // só troca se mudou
+    }
     r.mute.title = t(mic ? (r.muted ? 'micUnmute' : 'micMute') : (r.muted ? 'unmute' : 'mute'));
     r.el.classList.toggle('muted', r.muted);
   }
@@ -346,7 +283,13 @@
   function applyPeaks(p) {
     const smooth = (r, raw) => {
       r.peak = raw > r.peak ? raw : r.peak * 0.85;   // sobe rápido, desce suave
-      r.meter.style.transform = 'scaleX(' + Math.min(1, r.peak) + ')';
+      const lvl = Math.min(1, r.peak);
+      r.meter.style.transform = 'scaleX(' + lvl + ')';
+      // Onda do fim da linha: altura das barrinhas acompanha o som; parada e baixa sem som
+      if (!isFixed(r.id)) {
+        r.mute.style.setProperty('--lvl', lvl.toFixed(2));
+        r.mute.classList.toggle('sounding', lvl > 0.02);
+      }
     };
     const m = rows.get(MASTER);
     if (m) smooth(m, p.master);
@@ -361,20 +304,14 @@
     setTheme(s.theme);
     glassSupported = !!s.glass;
     setLite(!!s.lite);
-    autostartEl.checked = !!s.autostart;
-    if (s.hotkey) hotkey = s.hotkey;
-    recording = false;                              // o C# já devolveu o atalho ao fechar
-    showHotkey();
-    settingsEl.classList.add('instant');            // recolhe sem animação (a janela ainda vai aparecer)
-    setSettingsOpen(false);                         // sempre abre com as configurações recolhidas
-    void settingsEl.offsetHeight;
-    settingsEl.classList.remove('instant');
-    setMicListOpen(false);                          // e com a lista de microfones fechada
+    if (s.water) water = s.water;                   // lembrete de água: o contador de hoje
+    showWater();
+    setMicListOpen(false);                          // sempre abre com a lista de microfones fechada
     // Novidades: a partir da versão do NEWS, para quem ainda não as viu (quem já viu guardou uma versão igual
     // ou maior). Não depende do número exato publicado. A demo do site não manda versão: nunca mostra.
     appVersion = s.version || '';
-    setNewsOpen(!!s.version && compareVersions(s.version, NEWS.version) >= 0 &&
-      (!s.newsSeen || compareVersions(s.newsSeen, NEWS.version) < 0));
+    setNewsOpen(!!s.version && V.compareVersions(s.version, V.NEWS.version) >= 0 &&
+      (!s.newsSeen || V.compareVersions(s.newsSeen, V.NEWS.version) < 0));
     forceResize = true;                             // o C# espera um "resize" para mostrar a janela
   }
 
@@ -393,116 +330,29 @@
       case 'peaks':    applyPeaks(m);    break;
       case 'open':     replay('enter');  break;
       case 'close':    replay('leave');  break;
-      case 'hotkey':   hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey
+      case 'water':    water = m.water; showWater(); break;   // contador mudou por fora ("Bebi um copo" no aviso)
     }
   });
 
-  /* ---------------- Configurações ---------------- */
-
-  // Marca a opção escolhida num seletor (tema ou idioma); a pílula desliza até ela
-  function selectSegment(seg, value) {
-    [...seg.querySelectorAll('button')].forEach((b, i) => {
-      const on = b.dataset.value === value;
-      b.setAttribute('aria-checked', String(on));
-      if (on) seg.style.setProperty('--seg-i', i);
-    });
-  }
+  /* ---------------- Tema e idioma (escolhidos na janela de configurações) ---------------- */
 
   function setTheme(mode) {
     root.dataset.theme = mode;
-    selectSegment(themeSeg, mode);
     applyScheme();
   }
 
-  // Troca todos os textos da interface para o idioma escolhido
+  // Troca todos os textos do mixer para o idioma escolhido
   function setLanguage(value) {
-    lang = I18N[value] ? value : 'pt';
-    root.lang = { pt: 'pt-BR', en: 'en', es: 'es' }[lang];
-    selectSegment(langSeg, lang);
-    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
-    document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
-    document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    lang = V.I18N[value] ? value : 'pt';
+    root.lang = V.langTag(lang);
+    V.applyI18n(lang);
     rows.forEach((r) => {
       if (SYSTEM_NAMES[r.id]) r.nameEl.textContent = displayName(r.id, r.name);
       updateMuteUi(r);
     });
-    showHotkey();
+    showWater();
     if (newsOpen) renderNews();
   }
-
-  /* ---------------- Novidades (popup depois de atualizar) ---------------- */
-  // Aparece uma vez, na primeira abertura depois de atualizar para NEWS.version.
-  // Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS.
-  const NEWS = {
-    version: '0.1.7',
-    items: [
-      { icon: 'keyboard',
-        pt: ['Trave o teclado para limpar', 'O ícone de teclado no topo trava tudo por até 10 minutos. O mouse continua livre.'],
-        en: ['Lock the keyboard to clean it', 'The keyboard icon at the top locks it for up to 10 minutes. The mouse keeps working.'],
-        es: ['Bloquea el teclado para limpiarlo', 'El ícono de teclado arriba lo bloquea hasta 10 minutos. El mouse sigue funcionando.'] },
-      { icon: 'bolt',
-        pt: ['Ctrl+Alt+V abre o Volum', 'De qualquer lugar, até no meio de um jogo em janela. Dá para trocar nas configurações.'],
-        en: ['Ctrl+Alt+V opens Volum', 'From anywhere, even mid-game in windowed mode. You can change it in settings.'],
-        es: ['Ctrl+Alt+V abre Volum', 'Desde cualquier lugar, incluso jugando en ventana. Puedes cambiarlo en la configuración.'] },
-      { icon: 'dock',
-        pt: ['Abra pelo dock', 'Fixe o Volum no dock ou na barra de tarefas e clique para abrir o mixer.'],
-        en: ['Open it from your dock', 'Pin Volum to your dock or taskbar and click it to open the mixer.'],
-        es: ['Ábrelo desde tu dock', 'Fija Volum en tu dock o barra de tareas y haz clic para abrir el mezclador.'] },
-      { icon: 'chat',
-        pt: ['Sugestões e bugs', 'O balão no topo leva ao formulário no site. Toda mensagem é lida.'],
-        en: ['Ideas and bugs', 'The speech bubble at the top opens the form on the website. Every message gets read.'],
-        es: ['Ideas y errores', 'El globo de arriba abre el formulario en el sitio. Leemos todos los mensajes.'] },
-    ],
-  };
-  const NEWS_ICONS = {
-    keyboard: '<rect x="1.75" y="4" width="12.5" height="8" rx="1.5"/><path d="M4.5 6.75h.01M7 6.75h.01M9.5 6.75h.01M12 6.75h.01M5.5 9.5h5"/>',
-    bolt: '<path d="M9 1.5L3.5 9H8l-1 5.5L12.5 7H8z" stroke-linejoin="round"/>',
-    dock: '<rect x="2" y="10" width="12" height="4" rx="1.5"/><path d="M8 2v5.5M5.5 5L8 7.5 10.5 5"/>',
-    chat: '<path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z" stroke-linejoin="round"/>',
-  };
-  const newsEl = $('news');
-  let newsOpen = false;
-  let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra
-
-  // Compara versões tipo "0.1.10" e "0.1.9" número a número (negativo: a é menor)
-  function compareVersions(a, b) {
-    const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-      const d = (pa[i] || 0) - (pb[i] || 0);
-      if (d) return d;
-    }
-    return 0;
-  }
-
-  function renderNews() {
-    if (!newsEl) return;
-    const title = $('newsTitle');
-    title.firstElementChild.textContent = `${t('newsEyebrow')} ${appVersion || NEWS.version}`;
-    title.lastElementChild.textContent = t('newsTitle');
-    $('newsList').replaceChildren(...NEWS.items.map((item) => {
-      const [head, text] = item[lang] || item.pt;
-      const li = document.createElement('li');
-      li.innerHTML = '<div class="news-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" ' +
-        'stroke-width="1.5" stroke-linecap="round">' + NEWS_ICONS[item.icon] + '</svg></div><div><b></b><span></span></div>';
-      li.querySelector('b').textContent = head;
-      li.querySelector('span').textContent = text;
-      return li;
-    }));
-  }
-
-  function setNewsOpen(on) {
-    if (!newsEl) return;                            // sem o popup no HTML (ex.: demo antiga): nada a fazer
-    newsOpen = on;
-    if (on) renderNews();
-    newsEl.hidden = !on;
-    card.classList.toggle('has-news', on);
-  }
-
-  function dismissNews() {
-    setNewsOpen(false);
-    post({ type: 'newsSeen' });                     // o C# guarda que esta versão já foi vista
-  }
-  $('newsOk')?.addEventListener('click', dismissNews);
 
   // Tema efetivo (claro/escuro). "Sistema" segue o tema do Windows que o C# informa (systemDark);
   // sem C# (a demo do site), usa o prefers-color-scheme do navegador.
@@ -518,108 +368,89 @@
   // Vidro só quando o Windows suporta e o modo leve está desligado
   let glassSupported = false;
   function setLite(on) {
-    liteEl.checked = on;
     root.classList.toggle('lite', on);
     root.classList.toggle('glass', glassSupported && !on);
   }
 
-  liteEl.addEventListener('change', () => {
-    setLite(liteEl.checked);
-    post({ type: 'setLightMode', enabled: liteEl.checked });
-  });
+  /* ---------------- Novidades (popup depois de atualizar) ---------------- */
+  // Aparece uma vez, na primeira abertura depois de atualizar para V.NEWS.version (textos no shared.js).
+  const newsEl = $('news');
+  let newsOpen = false;
+  let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra
 
-  // A animação é do CSS (.settings.open); o ResizeObserver acompanha a altura e a janela cresce junto.
-  function setSettingsOpen(open) {
-    settingsEl.classList.toggle('open', open);
-    settingsEl.inert = !open;                       // fechada: sem foco por teclado nos controles
-    settingsBtn.setAttribute('aria-expanded', String(open));
+  function renderNews() {
+    if (!newsEl) return;
+    const title = $('newsTitle');
+    title.firstElementChild.textContent = `${t('newsEyebrow')} ${appVersion || V.NEWS.version}`;
+    title.lastElementChild.textContent = t('newsTitle');
+    $('newsList').replaceChildren(...V.newsItems(lang));
+    fitNews();
   }
 
-  settingsBtn.addEventListener('click', () => {
-    setSettingsOpen(!settingsEl.classList.contains('open'));
+  // O mixer cresce o bastante para o popup caber inteiro (com poucos apps, o "Entendi!" ficava fora da janela)
+  function fitNews() {
+    if (newsOpen) card.style.setProperty('--news-h', (newsEl.firstElementChild.offsetHeight + 28) + 'px');
+  }
+
+  function setNewsOpen(on) {
+    if (!newsEl) return;                            // sem o popup no HTML (ex.: demo antiga): nada a fazer
+    newsOpen = on;
+    newsEl.hidden = !on;
+    if (on) renderNews();
+    card.classList.toggle('has-news', on);
+  }
+
+  function dismissNews() {
+    setNewsOpen(false);
+    post({ type: 'newsSeen' });                     // o C# guarda que esta versão já foi vista
+  }
+  $('newsOk')?.addEventListener('click', dismissNews);
+
+  /* ---------------- Água bebida hoje ---------------- */
+  // Quem lembra e guarda o contador é o C# (Water.cs). As opções ficam na janela de configurações.
+  const waterEl = $('water');
+  let water = { enabled: false, goalMl: 2000, intervalMin: 60, cupMl: 250, todayMl: 0 };
+  const fmtMl = (ml) => V.fmtMl(ml, lang).replace(' ', '');   // compacto como no Figma: "2L", "150ml"
+
+  function showWater() {
+    if (!waterEl) return;                           // sem o contador no HTML (ex.: demo antiga)
+    waterEl.hidden = !water.enabled;
+    const done = water.todayMl >= water.goalMl;
+    const amount = $('waterAmount');
+    amount.textContent = done
+      ? t('waterDone').replace('{0}', fmtMl(water.todayMl))
+      : t('waterOf').replace('{0}', fmtMl(water.todayMl)).replace('{1}', fmtMl(water.goalMl));
+    amount.classList.toggle('done', done);
+    $('waterFill').style.width = Math.min(100, (water.todayMl / water.goalMl) * 100) + '%';
+    $('waterPlus').textContent = '+ ' + fmtMl(water.cupMl);
+    $('waterMinus').disabled = water.todayMl <= 0;
+  }
+
+  $('waterPlus')?.addEventListener('click', () => {
+    water.todayMl += water.cupMl;
+    showWater();
+    post({ type: 'waterAdd', ml: water.cupMl });
+    post({ type: 'tick' });                         // o mesmo "tic" do volume, para confirmar
   });
 
-  themeSeg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    setTheme(b.dataset.value);
-    post({ type: 'setTheme', mode: b.dataset.value });
-  }));
+  $('waterMinus')?.addEventListener('click', () => {
+    const ml = Math.min(water.cupMl, water.todayMl);
+    if (!ml) return;
+    water.todayMl -= ml;
+    showWater();
+    post({ type: 'waterAdd', ml: -ml });
+  });
 
-  langSeg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    setLanguage(b.dataset.value);
-    post({ type: 'setLanguage', lang: b.dataset.value });
-  }));
-
+  /* ---------------- Botões do cabeçalho ---------------- */
+  $('settingsBtn').addEventListener('click', () => post({ type: 'openSettings' }));   // o C# abre a janela de configurações
   $('minimizeBtn').addEventListener('click', () => post({ type: 'hide' }));
-  $('siteBtn')?.addEventListener('click', () => post({ type: 'openSite' }));   // o C# abre no navegador (? = não trava se faltar)
   $('feedbackBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));   // sugestões e bugs, no site
   $('kbLockBtn')?.addEventListener('click', () => post({ type: 'lockKeyboard' }));   // o C# fecha o mixer e trava o teclado
 
-  autostartEl.addEventListener('change', () => {
-    post({ type: 'setAutostart', enabled: autostartEl.checked });
-  });
-
-  /* ---------------- Atalho para abrir ---------------- */
-  // Quem registra o atalho no Windows é o C#; aqui só mostramos o atual e gravamos um novo.
-  // Mods = soma de Alt 1, Ctrl 2, Shift 4 (como no Windows); key = código da tecla (VK); 0 = desligado.
-  let hotkey = { mods: 2 | 1, key: 86 };
-  let recording = false;
-
-  const keyName = (vk) =>
-    (vk >= 65 && vk <= 90) || (vk >= 48 && vk <= 57) ? String.fromCharCode(vk)
-      : vk >= 112 && vk <= 135 ? 'F' + (vk - 111) : '?';
-
-  const hotkeyLabel = (h) => !h.key ? t('hotkeyOff')
-    : [h.mods & 2 && 'Ctrl', h.mods & 1 && 'Alt', h.mods & 4 && 'Shift', keyName(h.key)].filter(Boolean).join(' + ');
-
-  // Tecla física → código do Windows: letras, números e F1–F24 (não depende do layout do teclado)
-  function codeToVk(code) {
-    let m = /^Key([A-Z])$/.exec(code);
-    if (m) return m[1].charCodeAt(0);
-    if ((m = /^Digit(\d)$/.exec(code))) return 48 + +m[1];
-    if ((m = /^F(\d{1,2})$/.exec(code)) && +m[1] <= 24) return 111 + +m[1];
-    return 0;
-  }
-
-  function showHotkey(hint) {
-    hotkeyBtn.textContent = recording ? t('hotkeyPress') : hotkeyLabel(hotkey);
-    hotkeyBtn.classList.toggle('recording', recording);
-    hotkeyHint.textContent = hint || t(recording ? 'hotkeyRecordHint' : 'hotkeyHint');
-  }
-
-  // Gravando, o C# solta o atalho atual (senão apertar as mesmas teclas fecharia o mixer)
-  function setRecording(on) {
-    if (recording === on) return;
-    recording = on;
-    post({ type: 'hotkeyRecord', on });
-    showHotkey();
-  }
-
-  function saveHotkey(mods, key) {
-    recording = false;
-    showHotkey();
-    post({ type: 'setHotkey', mods, key });         // o C# responde com "hotkey" (ok ou em uso)
-  }
-
-  hotkeyBtn.addEventListener('click', () => setRecording(!recording));
-  hotkeyBtn.addEventListener('blur', () => setRecording(false));
-
   document.addEventListener('keydown', (e) => {
-    if (!recording) {
-      if (e.key === 'Escape') {
-        if (newsOpen) dismissNews();                    // com as novidades abertas, Esc fecha só o popup
-        else post({ type: 'hide' });                    // Esc fecha o mixer (prático no meio de um jogo)
-      }
-      return;
-    }
-    e.preventDefault();
-    if (e.key === 'Escape') return setRecording(false);
-    if (e.key === 'Backspace' || e.key === 'Delete') return saveHotkey(0, 0);
-    const vk = codeToVk(e.code);
-    if (!vk) return;                                // só Ctrl/Alt/Shift até agora: espera a tecla
-    const mods = (e.altKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.shiftKey ? 4 : 0);
-    // Sem Ctrl ou Alt, a tecla (ou Shift + tecla) pararia de funcionar em todos os apps e jogos
-    if (!(mods & 3)) return showHotkey(t('hotkeyNeedMod'));
-    saveHotkey(mods, vk);
+    if (e.key !== 'Escape') return;
+    if (newsOpen) dismissNews();                    // com as novidades abertas, Esc fecha só o popup
+    else post({ type: 'hide' });                    // Esc fecha o mixer (prático no meio de um jogo)
   });
 
   const endDrag = () => rows.forEach((r) => { r.dragging = false; r.el.classList.remove('dragging'); });

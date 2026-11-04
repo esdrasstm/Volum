@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!-- Ilha do Volum (estilo Dynamic Island), aberta pelo IslandForm.cs, grudada no topo da tela.
+     A janela é transparente: a pílula preta (.shape) é desenhada aqui e cresce/encolhe com o CSS.
+     Fechada: bateria (ou a capa, com música), hora e onda de áudio. Recolhida: um risquinho.
+     Aberta: data e hora, páginas Player e Água (setas ‹ › e bolinhas) e os avisos do Volum. -->
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volum</title>
+  <link rel="stylesheet" href="island.css">
+</head>
+<body>
+  <div id="island" class="island closed">
+    <div class="shape" aria-hidden="true"></div>
+
+    <!-- Fechada -->
+    <div class="mini">
+      <span class="mini-left">
+        <img id="miniCover" class="mini-cover" alt="" hidden>
+        <span class="battery" id="miniBattery" hidden></span>
+      </span>
+      <b id="clock" class="clock">--:--</b>
+      <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    </div>
+
+    <!-- Aviso do Volum: faixa fina, da altura da ilha (ex.: lembrete de água) -->
+    <div class="noticebar" id="notice" hidden>
+      <span class="notice-icon" id="noticeIcon"></span>
+      <span class="notice-text"><b id="noticeTitle"></b><span id="noticeBody"></span></span>
+      <button id="noticeAction" class="notice-action" hidden></button>
+      <button id="noticeClose" class="notice-close" title="Fechar" aria-label="Fechar">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <!-- Aberta -->
+    <div class="full" id="full">
+      <div class="status">
+        <span class="battery" id="battery" hidden></span>
+        <span class="when"><span id="date"></span> <b id="time"></b></span>
+        <span class="wave" id="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </div>
+
+      <div class="pages">
+        <button class="page-arrow left" id="pagePrev" aria-label="‹">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <!-- Página: player -->
+        <section class="page" data-page="media">
+          <div class="track" id="track">
+            <div class="cover">
+              <img id="cover" alt="" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zm10-2a3 3 0 1 1-3-3 3 3 0 0 1 3 3z"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="meta">
+              <b id="title" data-i18n="islandNothing">Nada tocando agora</b>
+              <span id="subtitle"></span>
+            </div>
+          </div>
+          <div class="progress" id="progress">
+            <span id="elapsed">0:00</span>
+            <div class="bar"><span id="barFill"></span></div>
+            <span id="remaining">-0:00</span>
+          </div>
+          <div class="controls">
+            <button class="side" id="waterQuick" title="Água" aria-label="Água">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5c3.4 4.1 5.8 7.3 5.8 10.3a5.8 5.8 0 0 1-11.6 0c0-3 2.4-6.2 5.8-10.3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 11v5M9.5 13.5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+            <button id="prev" title="Anterior" data-i18n-title="islandPrev">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6v12L3 12zM21 6v12l-8.5-6z" fill="currentColor"/></svg>
+            </button>
+            <button id="play" class="play" title="Tocar / pausar" data-i18n-title="islandPlay">
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15L19.5 12z" fill="currentColor"/></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/></svg>
+            </button>
+            <button id="next" title="Próxima" data-i18n-title="islandNext">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 6v12L21 12zM3 6v12l8.5-6z" fill="currentColor"/></svg>
+            </button>
+            <button class="side" id="openMixer" title="Volum" aria-label="Volum">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <!-- Página: água (só com o lembrete ligado) -->
+        <section class="page" data-page="water" hidden>
+          <div class="water">
+            <svg class="drop" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c3.6 4.4 6.2 7.8 6.2 11a6.2 6.2 0 0 1-12.4 0c0-3.2 2.6-6.6 6.2-11z"/></svg>
+            <div class="water-text">
+              <b data-i18n="water">Água hoje</b>
+              <span id="waterAmount"></span>
+              <div class="water-bar"><span id="waterFill"></span></div>
+            </div>
+          </div>
+          <div class="water-buttons">
+            <button class="water-minus" id="waterMinus" aria-label="−">−</button>
+            <button class="water-add" id="waterPlus"></button>
+          </div>
+        </section>
+
+        <button class="page-arrow right" id="pageNext" aria-label="›">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="dots" id="dots"></div>
+
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="island.js"></script>
+</body>
+</html>

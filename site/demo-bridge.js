@@ -178,6 +178,7 @@
         settings.hotkey = { mods: m.mods, key: m.key };
         send(Object.assign({ type: 'hotkey', ok: true }, settings.hotkey));
         break;
+      case 'openSettings': toPage({ type: 'settings' }); break;   // no site não há janela de configurações: a página avisa
       case 'openSite':   // já estamos no site: "Site do Volum" volta para o topo; sugestões rola até o formulário
         toPage({ type: m.section === 'feedback' ? 'feedback' : 'top' });
         break;

@@ -87,11 +87,24 @@ static class Strings
         //                 pt                          en                           es
         ["autostart"] = new[] { "Iniciar com o Windows", "Start with Windows", "Iniciar con Windows" },
         ["exit"]      = new[] { "Sair", "Exit", "Salir" },
+        ["settings"]  = new[] { "Configurações", "Settings", "Configuración" },
         // Travar o teclado para limpar (menu da bandeja e aviso na tela)
         ["kbLock"]    = new[] { "Travar teclado para limpar", "Lock keyboard to clean", "Bloquear teclado para limpiar" },
         ["kbLocked"]  = new[] { "Teclado travado", "Keyboard locked", "Teclado bloqueado" },
         ["kbLeft"]    = new[] { "Destrava sozinho em {0}", "Unlocks by itself in {0}", "Se desbloquea solo en {0}" },
         ["kbUnlock"]  = new[] { "Destravar", "Unlock", "Desbloquear" },
+        // Aviso de que o Volum foi atualizado (perto da bandeja, uma vez por versão)
+        ["updTitle"]  = new[] { "Volum atualizado", "Volum updated", "Volum actualizado" },
+        ["updText"]   = new[] { "Versão {0}: veja o que tem de novo", "Version {0}: see what's new", "Versión {0}: mira las novedades" },
+        ["updOpen"]   = new[] { "Ver novidades", "See what's new", "Ver novedades" },
+        // Lembrete de água (aviso na tela). {0} = quanto falta, {1} = meta do dia
+        ["waterTitle"] = new[] { "Hora de beber água", "Time to drink water", "Hora de tomar agua" },
+        ["waterLeft"]  = new[] { "Faltam {0} para a meta de hoje ({1})", "{0} left to today's goal ({1})", "Faltan {0} para la meta de hoy ({1})" },
+        ["waterDrank"] = new[] { "Bebi um copo", "I drank a glass", "Tomé un vaso" },
+        ["waterLeftShort"] = new[] { "Faltam {0}", "{0} to go", "Faltan {0}" },   // aviso curto, na ilha
+        ["waterLater"] = new[] { "Agora não", "Not now", "Ahora no" },
+        ["waterJustDrank"] = new[] { "Acabei de beber", "I just drank", "Acabo de beber" },
+        ["waterNotYet"]    = new[] { "Não bebi :(", "Not yet :(", "Aún no :(" },
         ["webviewError"] = new[]
         {
             "Não foi possível iniciar a interface (WebView2).\n\nVerifique se o \"WebView2 Runtime\" está instalado (vem no Windows 11).",
@@ -105,6 +118,43 @@ static class Strings
 
     public static string Get(string? lang, string key) =>
         Texts[key][Array.IndexOf(Languages, Normalize(lang))];
+}
+
+/// <summary>
+/// O app da frente está em tela cheia (jogo, vídeo, apresentação)? Usado para a ilha sumir e o lembrete de
+/// água esperar. O Volum mesmo confere o tamanho da janela da frente: a resposta "ocupado" do Windows
+/// (SHQueryUserNotificationState) também aparece com apps que cobrem a tela com uma janela invisível
+/// (ex.: apps de ilha como o Nusa), e aí o lembrete nunca chegava.
+/// </summary>
+static class Fullscreen
+{
+    /// <param name="primaryOnly">Só conta se for na tela principal (onde fica a ilha).</param>
+    public static bool ForegroundIsFullscreen(bool primaryOnly = false)
+    {
+        var fg = GetForegroundWindow();
+        if (fg == System.IntPtr.Zero || fg == GetShellWindow() || fg == GetDesktopWindow()) return false;
+        var cls = new System.Text.StringBuilder(64);
+        GetClassName(fg, cls, cls.Capacity);
+        if (cls.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd") return false;   // área de trabalho, barra de tarefas
+        GetWindowThreadProcessId(fg, out uint pid);
+        if (pid == System.Environment.ProcessId) return false;                          // janela do próprio Volum
+        if (!GetWindowRect(fg, out var r)) return false;
+        var screen = System.Windows.Forms.Screen.FromHandle(fg);
+        var b = screen.Bounds;
+        bool covers = r.Left <= b.Left && r.Top <= b.Top && r.Right >= b.Right && r.Bottom >= b.Bottom;
+        return covers && (!primaryOnly || screen.Primary);
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    struct RECT { public int Left, Top, Right, Bottom; }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetForegroundWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetShellWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetDesktopWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetWindowRect(System.IntPtr hwnd, out RECT rect);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(System.IntPtr hwnd, out uint pid);
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern int GetClassName(System.IntPtr hwnd, System.Text.StringBuilder name, int max);
 }
 
 /// <summary>Só no modo --dev: anota tempos em %TEMP%\Volum-dev.log (para medir a abertura do mixer).</summary>
@@ -170,6 +220,65 @@ static class TickSound
         var player = new System.Media.SoundPlayer(ms);
         player.Load();
         return player;
+    }
+}
+
+/// <summary>
+/// Som do lembrete de água: duas gotinhas ("plic-ploc"), gerado por código como o TickSound.
+/// Cada gota é um tom curto que sobe rápido de altura e some logo, como uma gota caindo na água.
+/// </summary>
+static class DropSound
+{
+    const double Volume = 0.16;    // sutil, mas dá para ouvir com música tocando
+
+    static System.Media.SoundPlayer? _player;
+
+    public static void Play()
+    {
+        try
+        {
+            _player ??= Create();
+            _player.Play();
+        }
+        catch { /* sem dispositivo de áudio: fica em silêncio */ }
+    }
+
+    static System.Media.SoundPlayer Create()
+    {
+        const int rate = 44100;
+        int samples = rate * 360 / 1000;                // 360 ms
+        var data = new double[samples];
+        AddDrop(data, rate, start: 0.000, baseHz: 520, topHz: 1500, gain: 1.0);
+        AddDrop(data, rate, start: 0.120, baseHz: 640, topHz: 1850, gain: 0.55);
+
+        var ms = new System.IO.MemoryStream();
+        var w = new System.IO.BinaryWriter(ms);
+        w.Write("RIFF"u8); w.Write(36 + samples * 2); w.Write("WAVE"u8);
+        w.Write("fmt "u8); w.Write(16); w.Write((short)1); w.Write((short)1);
+        w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+        w.Write("data"u8); w.Write(samples * 2);
+        foreach (var s in data) w.Write((short)(Math.Clamp(s, -1, 1) * Volume * short.MaxValue));
+
+        w.Flush();
+        ms.Position = 0;
+        var player = new System.Media.SoundPlayer(ms);
+        player.Load();
+        return player;
+    }
+
+    // Uma gota: a altura sobe de baseHz até topHz em poucos ms e o volume cai em ~40 ms
+    static void AddDrop(double[] data, int rate, double start, double baseHz, double topHz, double gain)
+    {
+        double phase = 0;
+        for (int i = (int)(start * rate); i < data.Length; i++)
+        {
+            double t = i / (double)rate - start;
+            double freq = baseHz + (topHz - baseHz) * (1 - Math.Exp(-t / 0.012));
+            phase += 2 * Math.PI * freq / rate;
+            double env = Math.Min(1, t / 0.002) * Math.Exp(-t / 0.04);   // 2 ms de subida (sem estalo)
+            if (env < 0.0005 && t > 0.05) break;
+            data[i] += gain * env * Math.Sin(phase);
+        }
     }
 }
 

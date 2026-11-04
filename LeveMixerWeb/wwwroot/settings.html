@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!-- Janela de configurações do Volum (aberta pela engrenagem do mixer ou pelo menu da bandeja).
+     Usa os mesmos controles do style.css (seletor, chave, botão de atalho, − / +) e o layout do settings.css. -->
+<html lang="pt-BR" data-theme="system" data-scheme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volum</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body class="settings-page">
+
+  <!-- Menu de seções -->
+  <nav class="nav" aria-label="Seções">
+    <div class="nav-brand">
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="currentColor"/><g stroke="var(--bg)" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="var(--bg)" stroke="currentColor" stroke-width="1.6"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
+      <span data-i18n="settings">Configurações</span>
+    </div>
+
+    <button class="nav-item" data-page="general" aria-current="page">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span data-i18n="pageGeneral">Geral</span>
+    </button>
+    <button class="nav-item" data-page="shortcut">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01" stroke-width="2.2"/><path d="M8.5 14h7"/></svg>
+      <span data-i18n="pageShortcut">Atalho</span>
+    </button>
+    <button class="nav-item" data-page="water">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c3.7 4.3 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.8 8.3 7.1 12 2.8z"/></svg>
+      <span data-i18n="pageWater">Água</span>
+    </button>
+    <button class="nav-item" data-page="island">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>
+      <span data-i18n="pageIsland">Ilha</span>
+    </button>
+    <button class="nav-item" data-page="about">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.01" stroke-width="2"/></svg>
+      <span data-i18n="pageAbout">Sobre</span>
+    </button>
+  </nav>
+
+  <main class="pages">
+
+    <!-- Geral -->
+    <section class="page" id="page-general">
+      <h1 data-i18n="pageGeneral">Geral</h1>
+      <div class="group">
+        <div class="label" data-i18n="theme">Tema</div>
+        <div class="segmented" id="themeSeg" role="radiogroup" aria-label="Tema" data-i18n-aria="theme">
+          <button data-value="system" role="radio" aria-checked="true" data-i18n="system">Sistema</button>
+          <button data-value="dark"   role="radio" aria-checked="false" data-i18n="dark">Escuro</button>
+          <button data-value="light"  role="radio" aria-checked="false" data-i18n="light">Claro</button>
+        </div>
+
+        <!-- Os nomes dos idiomas ficam sempre no próprio idioma -->
+        <div class="label label-gap" data-i18n="language">Idioma</div>
+        <div class="segmented" id="langSeg" role="radiogroup" aria-label="Idioma" data-i18n-aria="language">
+          <button data-value="pt" role="radio" aria-checked="true">Português</button>
+          <button data-value="en" role="radio" aria-checked="false">English</button>
+          <button data-value="es" role="radio" aria-checked="false">Español</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text" data-i18n="autostart">Iniciar com o Windows</span>
+          <label class="switch">
+            <input id="autostart" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="lite">Modo leve</span>
+            <small data-i18n="liteHint">Sem vidro e animações; usa menos memória</small>
+          </span>
+          <label class="switch">
+            <input id="lite" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Atalho para abrir o mixer (ex.: no meio de um jogo). Clicar no botão grava um novo -->
+    <section class="page" id="page-shortcut" hidden>
+      <h1 data-i18n="pageShortcut">Atalho</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="hotkey">Atalho para abrir</span>
+            <small id="hotkeyHint">Abre o mixer até no meio de um jogo</small>
+          </span>
+          <button id="hotkeyBtn" class="hotkey-btn">Ctrl + Alt + V</button>
+        </div>
+      </div>
+      <p class="page-note" data-i18n="shortcutHint"></p>
+    </section>
+
+    <!-- Lembrete de água: ligado, mostra as opções (o contador fica no mixer) -->
+    <section class="page" id="page-water" hidden>
+      <h1 data-i18n="pageWater">Água</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="waterReminder">Lembrete de água</span>
+            <small data-i18n="waterHint">Avisa de tempos em tempos e conta o que você bebeu</small>
+          </span>
+          <label class="switch">
+            <input id="waterOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="waterOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="waterGoal">Meta por dia</span>
+            <div class="stepper" data-field="goalMl">
+              <button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button>
+            </div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="waterEvery">Lembrar a cada</span>
+            <!-- Livre: digite os minutos (5 a 480) ou use − / + de 5 em 5 -->
+            <div class="stepper stepper-free" data-field="intervalMin">
+              <button data-step="-1" aria-label="−">−</button><label class="free"><input id="waterEvery" type="number"
+                min="5" max="480" step="5" inputmode="numeric"><span>min</span></label><button data-step="1" aria-label="+">+</button>
+            </div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="waterCup">Tamanho do copo</span>
+            <div class="stepper" data-field="cupMl">
+              <button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button>
+            </div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="waterSound">Tocar som no aviso</span>
+            <label class="switch">
+              <input id="waterSound" type="checkbox" checked>
+              <span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="waterTest" data-i18n="waterTest">Testar aviso</button>
+      </div>
+      <p class="page-note" id="waterToday"></p>
+    </section>
+
+    <!-- Ilha (estilo Dynamic Island): pílula no topo da tela com o player, a água e os avisos do Volum -->
+    <section class="page" id="page-island" hidden>
+      <h1 data-i18n="pageIsland">Ilha</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="islandToggle">Mostrar a ilha no topo da tela</span>
+            <small data-i18n="islandHint">Passe o mouse para ver a música tocando e a água; os avisos do Volum aparecem nela</small>
+          </span>
+          <label class="switch">
+            <input id="islandOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+      </div>
+      <p class="page-note" data-i18n="islandNote"></p>
+    </section>
+
+    <!-- Sobre: versão, links e as novidades -->
+    <section class="page" id="page-about" hidden>
+      <h1 data-i18n="pageAbout">Sobre</h1>
+      <div class="group about">
+        <div class="about-head">
+          <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="currentColor"/><g stroke="var(--bg)" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="var(--bg)" stroke="currentColor" stroke-width="1.6"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
+          <div>
+            <div class="about-name">Volum</div>
+            <div class="about-version" id="aboutVersion"></div>
+          </div>
+        </div>
+        <p class="about-text" data-i18n="aboutText"></p>
+        <div class="btn-row">
+          <button class="btn primary" id="siteBtn" data-i18n="site">Site do Volum</button>
+          <button class="btn" id="feedbackBtn" data-i18n="feedback">Sugestões e bugs</button>
+          <button class="btn" id="githubBtn" data-i18n="github">Código no GitHub</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="label label-gap" data-i18n="newsAgain">O que tem de novo</div>
+        <ul class="news-list" id="aboutNews"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="shared.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>

@@ -33,6 +33,9 @@ sealed class TrayController : IDisposable
             if (_form != null && !_form.IsDisposed && _form.IsOpen) _ = _form.CloseAnimatedAsync();
             KeyboardLock.Lock();
         };
+        // Janela de configurações (a engrenagem do mixer abre a mesma)
+        var settings = new ToolStripMenuItem();
+        settings.Click += (_, _) => SettingsForm.ShowWindow();
         var exit = new ToolStripMenuItem();
         exit.Click += (_, _) =>
         {
@@ -42,10 +45,11 @@ sealed class TrayController : IDisposable
             Application.Exit();
         };
 
-        // O idioma e o auto-início podem mudar pelo mixer: o menu se atualiza toda vez que abre
+        // O idioma e o auto-início podem mudar nas configurações: o menu se atualiza toda vez que abre
         void SyncMenu()
         {
-            var lang = AppSettings.Load().Language;
+            var lang = AppSettings.Current.Language;
+            settings.Text = Strings.Get(lang, "settings");
             autoStart.Text = Strings.Get(lang, "autostart");
             kbLock.Text = Strings.Get(lang, "kbLock");
             kbLock.Enabled = !KeyboardLock.IsLocked;
@@ -60,6 +64,7 @@ sealed class TrayController : IDisposable
         // Versão no topo do menu (ajuda quem está testando a dizer qual versão tem)
         menu.Items.Add(new ToolStripMenuItem($"Volum {Updater.Version}") { Enabled = false });
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(settings);
         menu.Items.Add(autoStart);
         menu.Items.Add(kbLock);
         menu.Items.Add(new ToolStripSeparator());
@@ -78,9 +83,19 @@ sealed class TrayController : IDisposable
         };
 
         // Atalho global (padrão Ctrl+Alt+V): abre o mixer por cima de tudo, até no meio de um jogo
-        var hotkey = AppSettings.Load();
+        var hotkey = AppSettings.Current;
         GlobalHotkey.Set(hotkey.HotkeyMods, hotkey.HotkeyKey);
         GlobalHotkey.Pressed += () => Toggle(fromHotkey: true);
+
+        // Lembrete de água (só liga o timer se estiver ativado nas configurações)
+        Water.Start();
+
+        // Ilha no topo da tela, se estiver ligada nas configurações (o alto-falante dela abre/fecha o mixer)
+        IslandForm.OpenMixer = () => Toggle();
+        if (AppSettings.Current.IslandEnabled) IslandForm.Apply(true);
+
+        // Atualizou sozinho: aviso discreto perto da bandeja (uma vez por versão) para ver as novidades
+        UpdateNotice.Start(() => Toggle());
 
         // Abriram o Volum de novo (ex.: ícone fixado no dock): a outra cópia avisa e sai.
         // Esperar o sinal não gasta nada: o Windows acorda a thread só quando ele chega.

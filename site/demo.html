@@ -80,10 +80,13 @@
         </svg>
       </button>
 
-      <button id="settingsBtn" class="icon-btn" title="Configurações" data-i18n-title="settings" aria-expanded="false">
-        <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.6"
-                stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Configurações: abre a janela própria de configurações (pelo C#) -->
+      <button id="settingsBtn" class="icon-btn" title="Configurações" data-i18n-title="settings">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <circle cx="8" cy="8" r="2.2"/>
+            <path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M12.4 3.6l-1.1 1.1M4.7 11.3l-1.1 1.1"/>
+          </g>
         </svg>
       </button>
 
@@ -94,68 +97,6 @@
         </svg>
       </button>
     </header>
-
-    <!-- Configurações (abre deslizando para baixo) -->
-    <section id="settings" class="settings" inert>
-      <div class="settings-inner">
-        <div class="panel settings-panel">
-
-          <div class="label" data-i18n="theme">Tema</div>
-          <div class="segmented" id="themeSeg" role="radiogroup" aria-label="Tema" data-i18n-aria="theme">
-            <button data-value="system" role="radio" aria-checked="true" data-i18n="system">Sistema</button>
-            <button data-value="dark"   role="radio" aria-checked="false" data-i18n="dark">Escuro</button>
-            <button data-value="light"  role="radio" aria-checked="false" data-i18n="light">Claro</button>
-          </div>
-
-          <!-- Os nomes dos idiomas ficam sempre no próprio idioma -->
-          <div class="label label-gap" data-i18n="language">Idioma</div>
-          <div class="segmented" id="langSeg" role="radiogroup" aria-label="Idioma" data-i18n-aria="language">
-            <button data-value="pt" role="radio" aria-checked="true">Português</button>
-            <button data-value="en" role="radio" aria-checked="false">English</button>
-            <button data-value="es" role="radio" aria-checked="false">Español</button>
-          </div>
-
-          <div class="setting-row">
-            <span class="setting-text" data-i18n="autostart">Iniciar com o Windows</span>
-            <label class="switch">
-              <input id="autostart" type="checkbox">
-              <span></span>
-            </label>
-          </div>
-
-          <div class="setting-row">
-            <span class="setting-text">
-              <span data-i18n="lite">Modo leve</span>
-              <small data-i18n="liteHint">Sem vidro e animações; usa menos memória</small>
-            </span>
-            <label class="switch">
-              <input id="lite" type="checkbox">
-              <span></span>
-            </label>
-          </div>
-
-          <!-- Atalho global para abrir o mixer (ex.: no meio de um jogo). Clicar no botão grava um novo -->
-          <div class="setting-row">
-            <span class="setting-text">
-              <span data-i18n="hotkey">Atalho para abrir</span>
-              <small id="hotkeyHint">Abre o mixer até no meio de um jogo</small>
-            </span>
-            <button id="hotkeyBtn" class="hotkey-btn">Ctrl + Alt + V</button>
-          </div>
-
-          <!-- Novas configurações entram aqui -->
-
-          <!-- Link para o site (abre no navegador padrão, pelo C#) -->
-          <button id="siteBtn" class="site-link">
-            <span data-i18n="site">Site do Volum</span>
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M6 3.5h6.5V10M12.5 3.5L4 12" fill="none" stroke="currentColor" stroke-width="1.6"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </section>
 
     <!-- Volume geral + microfone (a linha do microfone some se não houver microfone) -->
     <section class="panel master">
@@ -179,6 +120,26 @@
       </div>
     </section>
 
+    <!-- Água bebida hoje (só com o lembrete de água ligado) -->
+    <section id="water" class="panel water" hidden>
+      <div class="water-row">
+        <svg class="water-drop" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2.8c3.6 4.4 6.2 7.8 6.2 11a6.2 6.2 0 0 1-12.4 0c0-3.2 2.6-6.6 6.2-11z"/>
+        </svg>
+        <div class="water-text">
+          <span class="water-label" data-i18n="water">Água hoje</span>
+          <span class="water-amount" id="waterAmount"></span>
+        </div>
+        <button id="waterMinus" class="icon-btn" title="Tirar um copo" data-i18n-title="waterMinus">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M4 8h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="waterPlus" class="water-add"></button>
+      </div>
+      <div class="water-bar"><span id="waterFill"></span></div>
+    </section>
+
     <!-- Apps -->
     <div class="section-label">
       <span data-i18n="apps">Aplicativos</span>
@@ -187,9 +148,51 @@
     <section id="apps" class="apps"></section>
     <p id="empty" class="empty" hidden data-i18n="empty">Nenhum app usando áudio agora</p>
 
+    <!-- Novidades: aparece uma vez, na primeira abertura depois de atualizar (textos no NEWS do shared.js) -->
+    <div id="news" class="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
+      <div class="news-box">
+        <!-- Mascote: a bolinha laranja do Volum, de fone, flutuando e piscando o olho -->
+        <svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="mascotGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f7a07a"/>
+              <stop offset="1" stop-color="#e04a12"/>
+            </linearGradient>
+          </defs>
+          <ellipse class="m-shadow" cx="60" cy="110" rx="26" ry="4.5" fill="#000"/>
+          <g class="m-float">
+            <path class="m-wave" d="M104 50q6 8 0 16" fill="none" stroke="#f5895a" stroke-width="3" stroke-linecap="round"/>
+            <path class="m-wave w2" d="M110 44q10 14 0 28" fill="none" stroke="#f5895a" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="60" cy="60" r="40" fill="url(#mascotGrad)"/>
+            <ellipse cx="45" cy="36" rx="12" ry="7" fill="#fff" opacity=".28" transform="rotate(-25 45 36)"/>
+            <path d="M22 58a38 38 0 0 1 76 0" fill="none" stroke="#2b1a12" stroke-width="6" stroke-linecap="round"/>
+            <rect x="13" y="49" width="15" height="24" rx="7" fill="#2b1a12"/>
+            <rect x="92" y="49" width="15" height="24" rx="7" fill="#2b1a12"/>
+            <ellipse cx="38" cy="72" rx="6" ry="3.5" fill="#ffb3a0" opacity=".55"/>
+            <ellipse cx="82" cy="72" rx="6" ry="3.5" fill="#ffb3a0" opacity=".55"/>
+            <g>
+              <ellipse cx="47" cy="58" rx="7" ry="8.5" fill="#fff"/>
+              <circle cx="48" cy="59.5" r="4" fill="#2b1a12"/>
+              <circle cx="49.5" cy="57.5" r="1.3" fill="#fff"/>
+            </g>
+            <g class="m-wink">
+              <ellipse cx="73" cy="58" rx="7" ry="8.5" fill="#fff"/>
+              <circle cx="74" cy="59.5" r="4" fill="#2b1a12"/>
+              <circle cx="75.5" cy="57.5" r="1.3" fill="#fff"/>
+            </g>
+            <path d="M51 74q9 9 18 0z" fill="#5a1a06"/>
+          </g>
+        </svg>
+        <h2 id="newsTitle" class="news-title"><small></small><span></span></h2>
+        <ul id="newsList" class="news-list"></ul>
+        <button id="newsOk" class="news-ok" data-i18n="newsOk">Entendi!</button>
+      </div>
+    </div>
+
   </main>
 
   <script src="demo-bridge.js"></script>
+  <script src="../LeveMixerWeb/wwwroot/shared.js"></script>
   <script src="../LeveMixerWeb/wwwroot/app.js"></script>
 </body>
 </html>

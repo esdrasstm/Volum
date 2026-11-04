@@ -1,0 +1,289 @@
+@font-face { font-family: "Sora"; src: url("fonts/Sora.woff2") format("woff2"); font-weight: 100 800; font-display: block; }
+/* =========================================================
+   Volum — ilha (estilo Dynamic Island). Sempre preta, como a do iPhone.
+   A janela é transparente; a pílula (.shape) é desenhada aqui, grudada no topo da tela, com
+   "orelhas" (curvas) ligando ela à borda. Os tamanhos de cada estado precisam bater com o
+   IslandForm.cs (ClosedW/H, TuckW/H, OpenW, Ear).
+   ========================================================= */
+:root {
+  --black: #000;
+  --text: #f5f5f7;
+  --subtext: #9b9ba1;
+  --soft: rgba(255, 255, 255, .1);
+  --soft-hover: rgba(255, 255, 255, .18);
+  --accent: #ffffff;   /* identidade do Volum: branco no lugar do laranja */
+  --accent-2: #ffffff;
+  --water: #38bdf8;
+  --water-2: #0ea5e9;
+  --battery: #34d058;
+  --battery-low: #ff5a5f;
+  --ear: 10px;
+  --spring: cubic-bezier(.2, .9, .25, 1);
+  --anim: 340ms;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--text);
+  font-family: "Sora", "Segoe UI", system-ui, sans-serif;   /* a mesma fonte do mixer */
+  font-size: 13px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* ---------- Forma: tamanho de cada estado ---------- */
+.island { --w: 250px; --h: 32px; --r: 16px; --ear-size: var(--ear); position: relative; height: 100%; }
+.island.tucked { --w: 130px; --h: 6px; --r: 3px; --ear-size: 6px; }
+.island.open { --w: 440px; --h: var(--open-h, 156px); --r: 30px; }
+
+.shape {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--w);
+  height: var(--h);
+  transform: translateX(-50%);
+  border-radius: 0 0 var(--r) var(--r);
+  background: var(--black);
+  transition: width var(--anim) var(--spring), height var(--anim) var(--spring), border-radius var(--anim) var(--spring);
+}
+/* Orelhas: a pílula "escorre" da borda da tela, como um entalhe */
+.shape::before, .shape::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: var(--ear-size);
+  height: var(--ear-size);
+}
+.shape::before { right: 100%; background: radial-gradient(circle at 0 100%, transparent calc(var(--ear-size) - .5px), var(--black) var(--ear-size)); }
+.shape::after  { left: 100%;  background: radial-gradient(circle at 100% 100%, transparent calc(var(--ear-size) - .5px), var(--black) var(--ear-size)); }
+
+/* ---------- Fechada ---------- */
+.mini {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 250px;
+  height: 32px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* hora sempre no meio, com ou sem a onda */
+  align-items: center;
+  padding: 0 14px 0 12px;
+  transition: opacity .18s ease;
+}
+.island:not(.closed) .mini { opacity: 0; pointer-events: none; }
+.mini-left { display: flex; align-items: center; min-width: 22px; }
+.mini .wave { justify-self: end; }
+.mini-cover { width: 20px; height: 20px; border-radius: 6px; object-fit: cover; }
+.clock { font-size: 14px; font-weight: 700; letter-spacing: .2px; font-variant-numeric: tabular-nums; }
+
+/* Bateria: anel com a carga; com raio quando está carregando */
+.battery { display: inline-grid; place-items: center; width: 20px; height: 20px; }
+.battery[hidden] { display: none; }
+.battery svg { width: 20px; height: 20px; }
+
+/* Onda de áudio (anda com música tocando) */
+.wave[hidden] { display: none; }
+.wave { display: inline-flex; align-items: center; gap: 2px; height: 14px; }
+.wave i { width: 2.5px; border-radius: 2px; background: var(--text); height: 30%; }
+.wave i:nth-child(1) { height: 35%; } .wave i:nth-child(2) { height: 75%; } .wave i:nth-child(3) { height: 100%; }
+.wave i:nth-child(4) { height: 60%; } .wave i:nth-child(5) { height: 40%; }
+.wave.playing i { animation: wave 1.1s ease-in-out infinite; transform-origin: center; }
+.wave.playing i:nth-child(2) { animation-delay: -.25s; } .wave.playing i:nth-child(3) { animation-delay: -.5s; }
+.wave.playing i:nth-child(4) { animation-delay: -.75s; } .wave.playing i:nth-child(5) { animation-delay: -.4s; }
+@keyframes wave { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
+
+/* ---------- Aberta ---------- */
+.full {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 440px;
+  transform: translateX(-50%) scale(.97);
+  transform-origin: 50% 0;
+  padding: 8px 18px 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .16s ease, transform var(--anim) var(--spring);
+}
+.island.open .full { opacity: 1; transform: translateX(-50%); pointer-events: auto; transition-delay: .06s; }
+
+.status { position: relative; display: flex; align-items: center; justify-content: center; height: 20px; padding: 0 4px; }
+.status .battery { position: absolute; left: 4px; }
+.status .wave { position: absolute; right: 4px; }
+.when { font-size: 12px; color: var(--subtext); }
+.when b { color: var(--text); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
+
+.pages { position: relative; margin-top: 6px; }
+.page { padding: 0 26px; }
+.page[hidden] { display: none; }
+.page-arrow {
+  position: absolute;
+  top: 14px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--subtext);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.page-arrow svg { width: 12px; height: 12px; }
+.page-arrow:hover { background: var(--soft-hover); color: var(--text); }
+.page-arrow.left { left: -6px; }
+.page-arrow.right { right: -6px; }
+.page-arrow[hidden] { display: none; }
+
+/* Player */
+.track { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cover {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1c1c1e;
+  color: var(--subtext);
+}
+.cover img { width: 100%; height: 100%; object-fit: cover; }
+.cover img:not([hidden]) + svg { display: none; }
+.cover svg { width: 22px; height: 22px; }
+.meta { display: grid; flex: 1; min-width: 0; }
+.meta b, .meta span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.meta b { font-size: 15px; font-weight: 700; }
+.meta span { margin-top: 1px; font-size: 12px; color: var(--subtext); }
+
+.progress { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.progress[hidden] { display: none; }
+.progress .bar { flex: 1; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .25); overflow: hidden; }
+.progress .bar span { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--text); }
+
+.controls { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.controls button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease, opacity .15s ease;
+}
+.controls button svg { width: 22px; height: 22px; }
+.controls button:hover { background: var(--soft); }
+.controls button:active { transform: scale(.9); }
+.controls button:disabled { opacity: .3; pointer-events: none; }
+.controls .side { color: var(--subtext); }
+.controls .side svg { width: 19px; height: 19px; }
+.controls .play svg { width: 26px; height: 26px; }
+.play .i-pause, .play.playing .i-play { display: none; }
+.play.playing .i-pause { display: block; }
+
+/* Água */
+.water { display: flex; align-items: center; gap: 14px; padding-top: 2px; }
+.drop { flex: none; width: 34px; height: 34px; fill: var(--water); filter: drop-shadow(0 4px 12px rgba(56, 189, 248, .35)); }
+.water-text { display: grid; flex: 1; gap: 3px; min-width: 0; }
+.water-text b { font-size: 14px; }
+.water-text span { font-size: 12.5px; color: var(--subtext); font-variant-numeric: tabular-nums; }
+.water-bar { height: 5px; margin-top: 4px; border-radius: 5px; background: var(--soft); overflow: hidden; }
+.water-bar span { display: block; height: 100%; width: 0; border-radius: 5px; background: linear-gradient(90deg, var(--water-2), var(--water)); transition: width .5s var(--spring); }
+.water-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.water-buttons button { height: 30px; border: 0; border-radius: 9px; font-weight: 600; cursor: pointer; }
+.water-minus { width: 34px; background: var(--soft); font-size: 16px; }
+.water-minus:disabled { opacity: .35; pointer-events: none; }
+.water-add { padding: 0 14px; background: linear-gradient(135deg, var(--water), var(--water-2)); color: #fff; }
+.water-buttons button:active { transform: scale(.95); }
+
+/* Bolinhas das páginas */
+.dots { display: flex; justify-content: center; gap: 5px; height: 5px; margin-top: 8px; }
+.dots i { width: 5px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .3); transition: width .25s var(--spring), background .25s ease; cursor: pointer; }
+.dots i.on { width: 16px; background: var(--text); }
+.dots:empty { display: none; }
+
+/* ---------- Aviso do Volum: peças da faixa fina (.noticebar) ---------- */
+@keyframes notice-in { from { opacity: 0; transform: translateY(-6px); } }
+.notice-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #1c1c1e; }
+.notice-icon svg { width: 24px; height: 24px; }
+.notice-text { display: grid; flex: 1; min-width: 0; }
+.notice-text b { font-size: 14px; font-weight: 700; }
+.notice-text span { margin-top: 2px; font-size: 12px; line-height: 1.35; color: var(--subtext); }
+.notice-action {
+  flex: none;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #090909;
+  font-weight: 600;
+  cursor: pointer;
+}
+.notice-action[hidden] { display: none; }
+.notice-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--subtext);
+  cursor: pointer;
+}
+.notice-close:hover { background: var(--soft-hover); color: var(--text); }
+.notice-close svg { width: 12px; height: 12px; }
+
+/* Modo leve e "menos movimento" no Windows: sem animações */
+.lite *, .lite *::before, .lite *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Faixa de aviso (substitui o quadrado grande: discreta, da altura da ilha) ---------- */
+.island.alerting { --w: 400px; --h: 36px; --r: 18px; }
+.noticebar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 400px;
+  height: 36px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 14px;
+  inset: 0 auto auto 50%;
+  bottom: auto;
+  right: auto;
+  background: transparent;
+  animation: notice-in .35s var(--spring) both;
+}
+.island:not(.alerting) .noticebar { display: none; }
+.noticebar .notice-icon { width: 20px; height: 20px; border-radius: 0; background: none; }
+.noticebar .notice-icon svg { width: 18px; height: 18px; }
+.noticebar .notice-text { display: flex; gap: 6px; align-items: baseline; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; }
+.noticebar .notice-text b { font-size: 12.5px; }
+.noticebar .notice-text span { margin: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+.noticebar .notice-action { padding: 4px 10px; border-radius: 12px; font-size: 12px; background: #fff; color: #090909; }
+[data-kind="drop"] .noticebar .notice-action, .noticebar[data-kind="drop"] .notice-action { background: linear-gradient(135deg, var(--water), var(--water-2)); color: #fff; }   /* azul só na água */
+.noticebar .notice-close { width: 22px; height: 22px; }
+.island.alerting .mini, .island.alerting .full { opacity: 0; pointer-events: none; }

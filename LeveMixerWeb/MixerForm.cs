@@ -20,10 +20,24 @@ namespace Volum;
 sealed class MixerForm : Form
 {
     // Largura da janela em "pixels CSS". Se mudar aqui, mude também em style.css (.card { width })
-    const int WidthDip = 360;
+    const int WidthDip = 360;   // igual ao .card { width } do style.css
     const int MarginDip = 12;      // distância da borda da área de trabalho
     const int CloseMs = 130;       // acompanha --exit-ms do CSS (120ms)
     const string SiteUrl = "https://esdrasstm.github.io/Volum/";
+
+    /// <summary>Abre no navegador padrão: o site, o formulário de sugestões ("feedback", levando a versão
+    /// do app e do Windows, que ajuda nos bugs) ou o código no GitHub ("github").</summary>
+    internal static void OpenSite(string? section)
+    {
+        var url = section switch
+        {
+            "feedback" => $"{SiteUrl}?v={Uri.EscapeDataString(Updater.Version)}&w={Environment.OSVersion.Version.Build}#sugestoes",
+            "github" => "https://github.com/esdrasstm/Volum",
+            _ => SiteUrl,
+        };
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+    }
 
     static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -32,7 +46,7 @@ sealed class MixerForm : Form
     readonly Timer _sync = new() { Interval = 1000 };
     readonly Timer _meter = new() { Interval = 60 };
     readonly Timer _idle = new() { Interval = 45_000 };   // depois de fechado, descarta o WebView para liberar RAM
-    readonly AppSettings _settings = AppSettings.Load();
+    readonly AppSettings _settings = AppSettings.Current;   // a mesma da janela de configurações
     AudioService? _audio;
 
     bool _initStarted, _ready, _wantOpen, _pendingPresent, _shown, _closing, _contentShown;
@@ -64,6 +78,7 @@ sealed class MixerForm : Form
         ApplyBackdrop();
         Controls.Add(_web);
         Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
+        Water.Changed += OnWaterChanged;
         if (_settings.LightMode) _meter.Interval = MeterLiteMs;
 
         _sync.Tick += (_, _) => PushState();
@@ -101,8 +116,8 @@ sealed class MixerForm : Form
         base.OnHandleCreated(e);
         try
         {
-            int round = 2; // DWMWCP_ROUND (Windows 11; no Windows 10 é ignorado)
-            DwmSetWindowAttribute(Handle, 33, ref round, sizeof(int));
+            int square = 1; // DWMWCP_DONOTROUND: os cantos (raio 15, como no Figma) são desenhados pelo CSS
+            DwmSetWindowAttribute(Handle, 33, ref square, sizeof(int));
         }
         catch { }
         ApplyBackdrop();
@@ -110,7 +125,7 @@ sealed class MixerForm : Form
 
     // Acrílico nativo só existe a partir do Windows 11 22H2 (build 22621); antes disso, visual sólido.
     static readonly bool GlassSupported = Environment.OSVersion.Version.Build >= 22621;
-    bool UseGlass => GlassSupported && !_settings.LightMode;
+    bool UseGlass => false;   // sem acrílico desde o visual do Figma (cartão sólido #111111)
 
     const int MeterMs = 60, MeterLiteMs = 150;   // medidores: normal / modo leve
 
@@ -121,26 +136,25 @@ sealed class MixerForm : Form
     void ApplyBackdrop()
     {
         bool dark = IsDarkTheme();
-        var solid = dark ? Color.FromArgb(27, 22, 19) : Color.FromArgb(248, 245, 243);
 
-        // Preto = transparente para o DWM: aparece o acrílico. O WebView também fica transparente.
-        BackColor = UseGlass ? Color.Black : solid;
-        _web.DefaultBackgroundColor = UseGlass ? Color.Transparent : solid;
+        // Visual do Figma: o cartão (fundo #111111, borda em degradê, cantos de 15) é desenhado pelo CSS.
+        // A janela fica transparente (preto = transparente para o DWM, WebView transparente), sem acrílico.
+        BackColor = Color.Black;
+        _web.DefaultBackgroundColor = Color.Transparent;
 
         if (!IsHandleCreated) return;
         try
         {
             int d = dark ? 1 : 0;
-            DwmSetWindowAttribute(Handle, 20, ref d, sizeof(int));          // DWMWA_USE_IMMERSIVE_DARK_MODE (tom do vidro)
+            DwmSetWindowAttribute(Handle, 20, ref d, sizeof(int));          // DWMWA_USE_IMMERSIVE_DARK_MODE
 
-            int n = UseGlass ? -1 : 1;                                        // -1: janela inteira de vidro; 1: só a sombra
-            var m = new MARGINS { Left = n, Right = n, Top = n, Bottom = n };
+            var m = new MARGINS { Left = -1, Right = -1, Top = -1, Bottom = -1 };   // janela inteira transparente
             DwmExtendFrameIntoClientArea(Handle, ref m);
 
             if (GlassSupported)
             {
-                int backdrop = UseGlass ? 3 : 1;                              // DWMSBT_TRANSIENTWINDOW (acrílico) / DWMSBT_NONE
-                DwmSetWindowAttribute(Handle, 38, ref backdrop, sizeof(int)); // DWMWA_SYSTEMBACKDROP_TYPE
+                int none = 1;                                                 // DWMSBT_NONE: sem acrílico
+                DwmSetWindowAttribute(Handle, 38, ref none, sizeof(int));     // DWMWA_SYSTEMBACKDROP_TYPE
             }
         }
         catch { }
@@ -153,7 +167,7 @@ sealed class MixerForm : Form
     /// Tema "Sistema": o modo do Windows (o da barra de tarefas e do Iniciar, onde o mixer aparece).
     /// É a única fonte: o C# manda o resultado para a interface (settings.systemDark).
     /// </summary>
-    static bool WindowsIsDark()
+    internal static bool WindowsIsDark()
     {
         using var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
             @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
@@ -286,13 +300,8 @@ sealed class MixerForm : Form
         {
             _ = Handle; // cria a janela (ainda invisível) para o WebView2 poder inicializar
 
-            // Cache do WebView2. A cópia de teste (preview / --dev / pasta bin) usa outra pasta:
-            // se usasse %LocalAppData%\Volum, o instalador acharia que o Volum já está instalado.
-            var userData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                Updater.IsInstalled ? "Volum" : "VolumDev", "WebView2");
             DevLog.Write("WebView2: criando ambiente");
-            var env = await CoreWebView2Environment.CreateAsync(null, userData);
+            var env = await CoreWebView2Environment.CreateAsync(null, WebViewDataFolder);
             DevLog.Write("WebView2: ambiente pronto");
             await _web.EnsureCoreWebView2Async(env);
             DevLog.Write("WebView2: controle pronto");
@@ -347,7 +356,14 @@ sealed class MixerForm : Form
     Timer? _reloadDebounce;
 
     // Sobe a partir de bin\Release\net8.0-windows\ até achar a pasta do projeto (onde está o Volum.csproj)
-    static string? FindSourceWwwroot()
+    /// <summary>Cache do WebView2 (o mesmo para o mixer e a janela de configurações). A cópia de teste
+    /// (preview / --dev / pasta bin) usa outra pasta: se usasse %LocalAppData%\Volum, o instalador acharia
+    /// que o Volum já está instalado.</summary>
+    internal static string WebViewDataFolder => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        Updater.IsInstalled ? "Volum" : "VolumDev", "WebView2");
+
+    internal static string? FindSourceWwwroot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         for (int i = 0; i < 6 && dir != null; i++, dir = dir.Parent)
@@ -388,13 +404,15 @@ sealed class MixerForm : Form
 
         _audio?.Dispose();
         DevLog.Write("abrindo: lendo o áudio");
-        _audio = new AudioService(_iconsSent, listenMic: !_settings.LightMode);
+        // Sem escutar o microfone: no visual do Figma a linha dele não tem medidor (e o Windows deixaria de mostrar "microfone em uso")
+        _audio = new AudioService(_iconsSent, listenMic: false);
 
         // A interface renderiza e responde com "resize"; só então a janela aparece.
         _pendingPresent = true;
         PostSettings();
         PushState();
         _sync.Start();
+        _meter.Interval = _settings.LightMode ? MeterLiteMs : MeterMs;   // o modo leve pode ter mudado na janela de configurações
         _meter.Start();
 
         DevLog.Write("abrindo: estado enviado, esperando o tamanho");
@@ -512,14 +530,28 @@ sealed class MixerForm : Form
             type = "settings",
             theme = _settings.Theme.ToString().ToLowerInvariant(),
             autostart = AutoStart.IsEnabled,
-            glass = GlassSupported,
+            glass = false,   // visual do Figma: cartão sólido, sem os estilos de vidro
             lite = _settings.LightMode,
             language = Strings.Normalize(_settings.Language),
             systemDark = WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             version = Updater.Version,                 // a interface mostra as novidades se esta versão
-            newsSeen = _settings.LastSeenVersion       // ainda não foi vista
+            newsSeen = _settings.LastSeenVersion,      // ainda não foi vista
+            water = WaterDto()
         });
+    }
+
+    // Lembrete de água: configuração e quanto já bebeu hoje
+    static object WaterDto()
+    {
+        var w = Water.Data;
+        return new { enabled = w.Enabled, goalMl = w.GoalMl, intervalMin = w.IntervalMin, cupMl = w.CupMl, todayMl = w.TodayMl };
+    }
+
+    // O contador mudou por fora (ex.: "Bebi um copo" no aviso): o mixer aberto se atualiza
+    void OnWaterChanged()
+    {
+        if (!IsDisposed) Post(new { type = "water", water = WaterDto() });
     }
 
     void PushState()
@@ -587,15 +619,6 @@ sealed class MixerForm : Form
                         root.GetProperty("muted").GetBoolean());
                     break;
 
-                case "setTheme":
-                    if (Enum.TryParse<ThemeMode>(root.GetProperty("mode").GetString(), true, out var mode))
-                    {
-                        _settings.Theme = mode;
-                        _settings.Save();
-                        ApplyBackdrop();
-                    }
-                    break;
-
                 case "setMicDevice":   // escolheu outro microfone na lista: vira o padrão do Windows
                     try
                     {
@@ -605,50 +628,17 @@ sealed class MixerForm : Form
                     PushState();
                     break;
 
-                case "setLanguage":    // idioma nas configurações (o menu da bandeja lê na próxima vez que abrir)
-                    _settings.Language = Strings.Normalize(root.GetProperty("lang").GetString());
-                    _settings.Save();
-                    break;
-
-                case "setLightMode":   // chave "Modo leve" nas configurações
-                    _settings.LightMode = root.GetProperty("enabled").GetBoolean();
-                    _settings.Save();
-                    _meter.Interval = _settings.LightMode ? MeterLiteMs : MeterMs;
-                    ApplyBackdrop();
-                    break;
-
-                case "setAutostart":
-                    AutoStart.Set(root.GetProperty("enabled").GetBoolean());
-                    break;
-
-                case "hotkeyRecord":   // começou/cancelou a gravação de um atalho novo nas configurações
-                    if (root.GetProperty("on").GetBoolean()) GlobalHotkey.Pause();
-                    else GlobalHotkey.Resume();
-                    break;
-
-                case "setHotkey":      // gravou um atalho novo (key 0 = desligar)
-                {
-                    uint mods = root.GetProperty("mods").GetUInt32(), key = root.GetProperty("key").GetUInt32();
-                    bool ok = GlobalHotkey.Set(mods, key);
-                    if (ok)
-                    {
-                        _settings.HotkeyMods = mods;
-                        _settings.HotkeyKey = key;
-                        _settings.Save();
-                    }
-                    else GlobalHotkey.Set(_settings.HotkeyMods, _settings.HotkeyKey);   // em uso por outro app: volta o antigo
-                    Post(new { type = "hotkey", ok, mods = _settings.HotkeyMods, key = _settings.HotkeyKey });
-                    break;
-                }
-
-                case "openSite":   // link "Site do Volum" ou botão de sugestões: abre no navegador padrão e fecha o mixer
-                    // Sugestões: vai direto para o formulário, levando a versão do app e do Windows (ajuda nos bugs)
-                    var url = root.TryGetProperty("section", out var sec) && sec.GetString() == "feedback"
-                        ? $"{SiteUrl}?v={Uri.EscapeDataString(Updater.Version)}&w={Environment.OSVersion.Version.Build}#sugestoes"
-                        : SiteUrl;
-                    try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
-                    catch (Exception ex) { Debug.WriteLine(ex); }
+                case "openSite":   // botão de sugestões: abre no navegador padrão e fecha o mixer
+                    OpenSite(root.TryGetProperty("section", out var sec) ? sec.GetString() : null);
                     _ = CloseAnimatedAsync();
+                    break;
+
+                case "openSettings":   // engrenagem: abre a janela de configurações (o mixer fecha ao perder o foco)
+                    SettingsForm.ShowWindow();
+                    break;
+
+                case "waterAdd":   // botões + / − do contador de água
+                    Water.Add(root.GetProperty("ml").GetInt32());
                     break;
 
                 case "newsSeen":   // fechou o popup de novidades: não mostra de novo nesta versão
@@ -678,6 +668,7 @@ sealed class MixerForm : Form
         if (disposing)
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
+            Water.Changed -= OnWaterChanged;
             _sync.Dispose();
             _meter.Dispose();
             _idle.Dispose();

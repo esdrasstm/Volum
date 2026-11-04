@@ -16,5 +16,5 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-start "" "bin\Release\net8.0-windows\Volum.exe" --dev
+start "" "bin\Release\net8.0-windows10.0.19041.0\Volum.exe" --dev
 echo Preview aberto!

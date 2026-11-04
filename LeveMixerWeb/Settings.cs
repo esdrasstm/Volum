@@ -31,6 +31,12 @@ sealed class AppSettings
     // Vazio em quem atualizou de uma versão sem o popup: essas pessoas veem as novidades.
     public string? LastSeenVersion { get; set; }
 
+    // Última versão em que o aviso "Volum atualizado" (perto da bandeja) já apareceu: aparece uma vez por versão
+    public string? UpdateNoticeVersion { get; set; }
+
+    // Ilha (estilo Dynamic Island) no topo da tela: desligada por padrão (fica visível o tempo todo e gasta memória)
+    public bool IslandEnabled { get; set; }
+
     static string Folder(string app) => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), app);
 
@@ -38,6 +44,11 @@ sealed class AppSettings
 
     // Nome antigo do app: as configurações são trazidas na primeira vez que o Volum abre
     static string OldFilePath => System.IO.Path.Combine(Folder("LeveMixer"), "settings.json");
+
+    /// <summary>As configurações do app, uma só para o mixer e a janela de configurações
+    /// (se cada janela tivesse a sua cópia, uma apagaria o que a outra salvou).</summary>
+    public static AppSettings Current => s_current ??= Load();
+    static AppSettings? s_current;
 
     public static AppSettings Load()
     {

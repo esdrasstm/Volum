@@ -30,7 +30,7 @@ static class KeyboardLock
         s_hook = SetWindowsHookEx(13 /* WH_KEYBOARD_LL */, s_proc, GetModuleHandle(null), 0);
         if (s_hook == IntPtr.Zero) { s_proc = null; return; }
         s_until = DateTime.UtcNow.AddMinutes(Minutes);
-        s_notice = new Notice(AppSettings.Load().Language);
+        s_notice = new Notice(AppSettings.Current.Language);
         s_notice.Show();
         DevLog.Write("teclado travado");
     }
@@ -47,61 +47,33 @@ static class KeyboardLock
         DevLog.Write("teclado destravado");
     }
 
+
     /// <summary>Aviso "Teclado travado" no centro de baixo da tela, com o tempo restante e o botão Destravar.
-    /// Não rouba o foco de quem estiver na frente.</summary>
+    /// Mesma identidade dos outros avisos (Ui em Water.cs): fundo #090909, borda branca, Sora, ícone de traço.</summary>
     sealed class Notice : Form
     {
         readonly Timer _tick = new() { Interval = 1000 };
-        readonly Label _left;
-        readonly string _lang;
+        readonly string _lang, _title;
+        readonly Font _titleFont, _textFont;
+        readonly float _k;
+        string _left = "";
 
         public Notice(string lang)
         {
             _lang = lang;
-            float k = DeviceDpi / 96f;
-            int pad = (int)(18 * k);
+            _k = DeviceDpi / 96f;
+            Ui.SetupPopup(this, 340, 64);
+            _title = Strings.Get(lang, "kbLocked");
+            _titleFont = Sora.Get(FontStyle.Bold, 13 * _k);
+            _textFont = Sora.Get(FontStyle.Regular, 11 * _k);
 
-            FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.Manual;
-            ShowInTaskbar = false;
-            TopMost = true;
-            Text = "Volum";
-            BackColor = Color.FromArgb(27, 22, 19);   // mesmo fundo sólido do mixer (tema escuro)
-            Size = new Size((int)(360 * k), (int)(72 * k));
-
-            var title = new Label
-            {
-                Text = Strings.Get(lang, "kbLocked"),
-                AutoSize = true,
-                Font = new Font("Segoe UI Semibold", 11f),
-                ForeColor = Color.FromArgb(247, 242, 239),
-                Location = new Point(pad, (int)(13 * k)),
-            };
-            _left = new Label
-            {
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9f),
-                ForeColor = Color.FromArgb(168, 156, 149),
-                Location = new Point(pad, (int)(40 * k)),
-            };
-            var unlock = new Button
-            {
-                Text = Strings.Get(lang, "kbUnlock"),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(237, 90, 35),   // laranja do Volum
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 10f),
-                Size = new Size((int)(116 * k), (int)(38 * k)),
-                Cursor = Cursors.Hand,
-            };
-            unlock.FlatAppearance.BorderSize = 0;
-            unlock.FlatAppearance.MouseOverBackColor = Color.FromArgb(245, 137, 90);
-            unlock.Location = new Point(Width - unlock.Width - pad, (Height - unlock.Height) / 2);
+            var unlock = new Pill(Strings.Get(lang, "kbUnlock"), Color.White, Ui.Bg, Sora.Get(FontStyle.Regular, 11.5f * _k), _k, 30);
+            unlock.Location = new Point(Width - unlock.Width - Ui.Px(16, _k), (Height - unlock.Height) / 2);
             unlock.Click += (_, _) => Unlock();
-            Controls.AddRange(new Control[] { title, _left, unlock });
+            Controls.Add(unlock);
 
             var wa = Screen.FromPoint(Cursor.Position).WorkingArea;
-            Location = new Point(wa.Left + (wa.Width - Width) / 2, wa.Bottom - Height - (int)(24 * k));
+            Location = new Point(wa.Left + (wa.Width - Width) / 2, wa.Bottom - Height - Ui.Px(24, _k));
 
             _tick.Tick += (_, _) => UpdateLeft();
             UpdateLeft();
@@ -113,32 +85,26 @@ static class KeyboardLock
         {
             var left = s_until - DateTime.UtcNow;
             if (left <= TimeSpan.Zero) { Unlock(); return; }
-            _left.Text = string.Format(Strings.Get(_lang, "kbLeft"), $"{(int)left.TotalMinutes}:{left.Seconds:00}");
+            _left = string.Format(Strings.Get(_lang, "kbLeft"), $"{(int)left.TotalMinutes}:{left.Seconds:00}");
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            var g = e.Graphics;
+            Ui.Prepare(g);
+            Ui.DrawKeyboard(g, Color.White, 16 * _k, 20 * _k, _k);
+            using var white = new SolidBrush(Color.White);
+            using var dim = new SolidBrush(Ui.Dim);
+            Sora.DrawAtBaseline(g, _title, _titleFont, white, 52 * _k, 28 * _k);
+            Sora.DrawAtBaseline(g, _left, _textFont, dim, 52 * _k, 45 * _k);
+            Ui.DrawWin10Border(this, g);
         }
 
         protected override bool ShowWithoutActivation => true;
-
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                var cp = base.CreateParams;
-                cp.ExStyle |= 0x80 | 0x08000000;   // WS_EX_TOOLWINDOW (fora do Alt+Tab) | WS_EX_NOACTIVATE
-                return cp;
-            }
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            try
-            {
-                int round = 2, dark = 1;                              // cantos arredondados (Windows 11) e borda escura
-                DwmSetWindowAttribute(Handle, 33, ref round, sizeof(int));
-                DwmSetWindowAttribute(Handle, 20, ref dark, sizeof(int));
-            }
-            catch { }
-        }
+        protected override CreateParams CreateParams => Ui.PopupParams(base.CreateParams);
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); Ui.ApplyFrame(Handle); }
 
         protected override void Dispose(bool disposing)
         {
@@ -161,6 +127,4 @@ static class KeyboardLock
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     static extern IntPtr GetModuleHandle(string? name);
 
-    [DllImport("dwmapi.dll")]
-    static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 }

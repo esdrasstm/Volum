@@ -10,125 +10,31 @@
 
   <main id="card" class="card">
 
-    <!-- Cabeçalho: logo + nome + configurações + minimizar -->
+    <!-- Cabeçalho: "Volum" e os 4 botões (sugestões, travar teclado, configurações, minimizar).
+         Ícones de traço, todos com o mesmo peso (classe .ico). -->
     <header class="header">
-      <!-- Para usar sua logo: troque este <svg> por <img class="logo" src="logo.png" alt=""> -->
-      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f5895a"/>
-            <stop offset="1" stop-color="#e04a12"/>
-          </linearGradient>
-        </defs>
-        <circle cx="16" cy="16" r="15.5" fill="url(#logoGrad)"/>
-        <g stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".95">
-          <line x1="9.5"  y1="8" x2="9.5"  y2="24"/>
-          <line x1="16"   y1="8" x2="16"   y2="24"/>
-          <line x1="22.5" y1="8" x2="22.5" y2="24"/>
-        </g>
-        <g fill="#fff">
-          <circle cx="9.5"  cy="19.5" r="3.4"/>
-          <circle cx="16"   cy="11.5" r="3.4"/>
-          <circle cx="22.5" cy="17"   r="3.4"/>
-        </g>
-      </svg>
       <span class="brand">Volum</span>
 
       <!-- Sugestões e bugs: abre o formulário no site (pelo C#) -->
       <button id="feedbackBtn" class="icon-btn" title="Sugestões e bugs" data-i18n-title="feedback">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"
-                fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-          <path d="M5.5 7.5h.01M8 7.5h.01M10.5 7.5h.01" fill="none" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round"/>
-        </svg>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-5.5L7 21v-3.5a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01" stroke-width="2.2"/></svg>
       </button>
 
       <!-- Travar o teclado para limpar (o C# trava e mostra o aviso com o botão Destravar) -->
       <button id="kbLockBtn" class="icon-btn" title="Travar teclado para limpar" data-i18n-title="kbLock">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="1.75" y="4" width="12.5" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M4.5 6.75h.01M7 6.75h.01M9.5 6.75h.01M12 6.75h.01M5.5 9.5h5" fill="none" stroke="currentColor"
-                stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01" stroke-width="2.2"/><path d="M8.5 14h7"/></svg>
       </button>
 
-      <button id="settingsBtn" class="icon-btn" title="Configurações" data-i18n-title="settings" aria-expanded="false">
-        <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.6"
-                stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <!-- Configurações: abre a janela própria de configurações (pelo C#) -->
+      <button id="settingsBtn" class="icon-btn" title="Configurações" data-i18n-title="settings">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
 
       <!-- Minimizar: esconde o mixer (volta para a bandeja) -->
       <button id="minimizeBtn" class="icon-btn" title="Minimizar" data-i18n-title="minimize">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3.5 8h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>
       </button>
     </header>
-
-    <!-- Configurações (abre deslizando para baixo) -->
-    <section id="settings" class="settings" inert>
-      <div class="settings-inner">
-        <div class="panel settings-panel">
-
-          <div class="label" data-i18n="theme">Tema</div>
-          <div class="segmented" id="themeSeg" role="radiogroup" aria-label="Tema" data-i18n-aria="theme">
-            <button data-value="system" role="radio" aria-checked="true" data-i18n="system">Sistema</button>
-            <button data-value="dark"   role="radio" aria-checked="false" data-i18n="dark">Escuro</button>
-            <button data-value="light"  role="radio" aria-checked="false" data-i18n="light">Claro</button>
-          </div>
-
-          <!-- Os nomes dos idiomas ficam sempre no próprio idioma -->
-          <div class="label label-gap" data-i18n="language">Idioma</div>
-          <div class="segmented" id="langSeg" role="radiogroup" aria-label="Idioma" data-i18n-aria="language">
-            <button data-value="pt" role="radio" aria-checked="true">Português</button>
-            <button data-value="en" role="radio" aria-checked="false">English</button>
-            <button data-value="es" role="radio" aria-checked="false">Español</button>
-          </div>
-
-          <div class="setting-row">
-            <span class="setting-text" data-i18n="autostart">Iniciar com o Windows</span>
-            <label class="switch">
-              <input id="autostart" type="checkbox">
-              <span></span>
-            </label>
-          </div>
-
-          <div class="setting-row">
-            <span class="setting-text">
-              <span data-i18n="lite">Modo leve</span>
-              <small data-i18n="liteHint">Sem vidro e animações; usa menos memória</small>
-            </span>
-            <label class="switch">
-              <input id="lite" type="checkbox">
-              <span></span>
-            </label>
-          </div>
-
-          <!-- Atalho global para abrir o mixer (ex.: no meio de um jogo). Clicar no botão grava um novo -->
-          <div class="setting-row">
-            <span class="setting-text">
-              <span data-i18n="hotkey">Atalho para abrir</span>
-              <small id="hotkeyHint">Abre o mixer até no meio de um jogo</small>
-            </span>
-            <button id="hotkeyBtn" class="hotkey-btn">Ctrl + Alt + V</button>
-          </div>
-
-          <!-- Novas configurações entram aqui -->
-
-          <!-- Link para o site (abre no navegador padrão, pelo C#) -->
-          <button id="siteBtn" class="site-link">
-            <span data-i18n="site">Site do Volum</span>
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M6 3.5h6.5V10M12.5 3.5L4 12" fill="none" stroke="currentColor" stroke-width="1.6"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </section>
 
     <!-- Volume geral + microfone (a linha do microfone some se não houver microfone) -->
     <section class="panel master">
@@ -152,6 +58,22 @@
       </div>
     </section>
 
+    <!-- Água bebida hoje (só com o lembrete de água ligado) -->
+    <section id="water" class="panel water" hidden>
+      <div class="water-row">
+        <svg class="water-drop ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c3.7 4.3 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.8 8.3 7.1 12 2.8z"/></svg>
+        <div class="water-text">
+          <span class="water-label" data-i18n="water">Água hoje</span>
+          <span class="water-amount" id="waterAmount"></span>
+        </div>
+        <button id="waterMinus" class="water-minus" title="Tirar um copo" data-i18n-title="waterMinus">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" stroke-width="2.4"/></svg>
+        </button>
+        <button id="waterPlus" class="water-add"></button>
+      </div>
+      <div class="water-bar"><span id="waterFill"></span></div>
+    </section>
+
     <!-- Apps -->
     <div class="section-label">
       <span data-i18n="apps">Aplicativos</span>
@@ -160,39 +82,39 @@
     <section id="apps" class="apps"></section>
     <p id="empty" class="empty" hidden data-i18n="empty">Nenhum app usando áudio agora</p>
 
-    <!-- Novidades: aparece uma vez, na primeira abertura depois de atualizar (textos no NEWS do app.js) -->
+    <!-- Novidades: aparece uma vez, na primeira abertura depois de atualizar (textos no NEWS do shared.js) -->
     <div id="news" class="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
       <div class="news-box">
-        <!-- Mascote: a bolinha laranja do Volum, de fone, flutuando e piscando o olho -->
+        <!-- Mascote: a bolinha branca do Volum, de fone, flutuando e piscando o olho -->
         <svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
           <defs>
             <linearGradient id="mascotGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#f7a07a"/>
-              <stop offset="1" stop-color="#e04a12"/>
+              <stop offset="0" stop-color="#ffffff"/>
+              <stop offset="1" stop-color="#b8b8b8"/>
             </linearGradient>
           </defs>
           <ellipse class="m-shadow" cx="60" cy="110" rx="26" ry="4.5" fill="#000"/>
           <g class="m-float">
-            <path class="m-wave" d="M104 50q6 8 0 16" fill="none" stroke="#f5895a" stroke-width="3" stroke-linecap="round"/>
-            <path class="m-wave w2" d="M110 44q10 14 0 28" fill="none" stroke="#f5895a" stroke-width="3" stroke-linecap="round"/>
+            <path class="m-wave" d="M104 50q6 8 0 16" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            <path class="m-wave w2" d="M110 44q10 14 0 28" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
             <circle cx="60" cy="60" r="40" fill="url(#mascotGrad)"/>
             <ellipse cx="45" cy="36" rx="12" ry="7" fill="#fff" opacity=".28" transform="rotate(-25 45 36)"/>
-            <path d="M22 58a38 38 0 0 1 76 0" fill="none" stroke="#2b1a12" stroke-width="6" stroke-linecap="round"/>
-            <rect x="13" y="49" width="15" height="24" rx="7" fill="#2b1a12"/>
-            <rect x="92" y="49" width="15" height="24" rx="7" fill="#2b1a12"/>
-            <ellipse cx="38" cy="72" rx="6" ry="3.5" fill="#ffb3a0" opacity=".55"/>
-            <ellipse cx="82" cy="72" rx="6" ry="3.5" fill="#ffb3a0" opacity=".55"/>
+            <path d="M22 58a38 38 0 0 1 76 0" fill="none" stroke="#3a3a3a" stroke-width="6" stroke-linecap="round"/>
+            <rect x="13" y="49" width="15" height="24" rx="7" fill="#3a3a3a"/>
+            <rect x="92" y="49" width="15" height="24" rx="7" fill="#3a3a3a"/>
+            <ellipse cx="38" cy="72" rx="6" ry="3.5" fill="#8a8a8a" opacity=".35"/>
+            <ellipse cx="82" cy="72" rx="6" ry="3.5" fill="#8a8a8a" opacity=".35"/>
             <g>
               <ellipse cx="47" cy="58" rx="7" ry="8.5" fill="#fff"/>
-              <circle cx="48" cy="59.5" r="4" fill="#2b1a12"/>
+              <circle cx="48" cy="59.5" r="4" fill="#111111"/>
               <circle cx="49.5" cy="57.5" r="1.3" fill="#fff"/>
             </g>
             <g class="m-wink">
               <ellipse cx="73" cy="58" rx="7" ry="8.5" fill="#fff"/>
-              <circle cx="74" cy="59.5" r="4" fill="#2b1a12"/>
+              <circle cx="74" cy="59.5" r="4" fill="#111111"/>
               <circle cx="75.5" cy="57.5" r="1.3" fill="#fff"/>
             </g>
-            <path d="M51 74q9 9 18 0z" fill="#5a1a06"/>
+            <path d="M51 74q9 9 18 0z" fill="#111111"/>
           </g>
         </svg>
         <h2 id="newsTitle" class="news-title"><small></small><span></span></h2>
@@ -203,6 +125,7 @@
 
   </main>
 
+  <script src="shared.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
