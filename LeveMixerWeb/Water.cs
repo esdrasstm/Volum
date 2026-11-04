@@ -32,8 +32,7 @@ sealed class WaterData
 /// </summary>
 static class Water
 {
-    static readonly string FilePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Volum", "water.json");
+    static readonly string FilePath = Path.Combine(AppSettings.DataFolder, "water.json");
 
     static readonly WaterData s_data = Load();
     static readonly Timer s_timer = new();

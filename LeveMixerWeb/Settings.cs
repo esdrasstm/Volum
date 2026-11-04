@@ -40,7 +40,11 @@ sealed class AppSettings
     static string Folder(string app) => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), app);
 
-    static string FilePath => System.IO.Path.Combine(Folder("Volum"), "settings.json");
+    /// <summary>Pasta dos dados (configurações e água). A cópia de teste (pasta bin / --dev) usa outra,
+    /// para os testes não mexerem na instalada (ex.: marcar as novidades como vistas).</summary>
+    public static string DataFolder => Folder(Updater.IsInstalled ? "Volum" : "VolumDev");
+
+    static string FilePath => System.IO.Path.Combine(DataFolder, "settings.json");
 
     // Nome antigo do app: as configurações são trazidas na primeira vez que o Volum abre
     static string OldFilePath => System.IO.Path.Combine(Folder("LeveMixer"), "settings.json");
