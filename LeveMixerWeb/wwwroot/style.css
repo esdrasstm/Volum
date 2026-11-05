@@ -1093,6 +1093,13 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
   font-weight: 600;
   box-shadow: none;
 }
+/* Mascote em pixel art (mascot.css): ao lado do "Volum" e no popup de novidades */
+.brand { display: inline-flex; align-items: center; gap: 8px; }
+.brand-mascot { display: block; line-height: 0; }
+.brand-mascot .mascot.px { display: block; width: 32px; height: 22px; margin: 0; }
+.news-mascot { display: block; line-height: 0; }
+.news-mascot .mascot.px { display: block; width: 80px; height: 55px; margin: 2px auto 12px; }
+
 /* Etiqueta "Em breve" (novidade que ainda vai chegar) */
 .news-soon {
   display: inline-block;

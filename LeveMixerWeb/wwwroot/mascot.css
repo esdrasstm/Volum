@@ -1,0 +1,31 @@
+/* =========================================================
+   Volum — mascote em pixel art (16 bits): usado pela ilha e pelo mixer (cabeçalho e popup de novidades).
+   O desenho vem do shared.js (MASCOT_PX). Cada olhar é um quadro inteiro (step-end), como nos jogos antigos:
+   começa feliz (^ ^) com um pulinho, depois olhos normais, pisca em etapas, olha para os lados... (ciclo de 9 s)
+   ========================================================= */
+.px { shape-rendering: crispEdges; image-rendering: pixelated; overflow: visible; }
+
+/* Mascote: começa feliz (^ ^) com um pulinho, depois olhos normais, pisca, olha para os lados... (ciclo de 9 s) */
+.mascot.px .pe { opacity: 0; animation-duration: 9s; animation-iteration-count: infinite; animation-timing-function: step-end; }
+.mascot.px .pe-open  { animation-name: pe-open; opacity: 1; }   /* sem animação (modo leve), fica com os olhos abertos */
+.mascot.px .pe-blink { animation-name: pe-blink; }
+.mascot.px .pe-half  { animation-name: pe-half; }
+.mascot.px .pe-happy { animation-name: pe-happy; }
+.mascot.px .pe-left  { animation-name: pe-left; }
+.mascot.px .pe-right { animation-name: pe-right; }
+.mascot.px .px-body { animation: pe-hop 9s step-end infinite; }
+@keyframes pe-open  { 0% { opacity: 0; } 10% { opacity: 1; } 34% { opacity: 0; } 36.2% { opacity: 1; } 50% { opacity: 0; } 58% { opacity: 1; }
+                      60% { opacity: 0; } 68% { opacity: 1; } 80% { opacity: 0; } 82.2% { opacity: 1; } 83% { opacity: 0; } 85.2% { opacity: 1; } 92%, 100% { opacity: 0; } }
+/* Piscar em etapas: meio fechado → fechado → meio fechado (fica mais natural que sumir de uma vez) */
+@keyframes pe-half  { 0% { opacity: 0; } 34% { opacity: 1; } 34.7% { opacity: 0; } 35.5% { opacity: 1; } 36.2% { opacity: 0; }
+                      80% { opacity: 1; } 80.7% { opacity: 0; } 81.5% { opacity: 1; } 82.2% { opacity: 0; }
+                      83% { opacity: 1; } 83.7% { opacity: 0; } 84.5% { opacity: 1; } 85.2%, 100% { opacity: 0; } }
+@keyframes pe-blink { 0% { opacity: 0; } 34.7% { opacity: 1; } 35.5% { opacity: 0; } 80.7% { opacity: 1; } 81.5% { opacity: 0; }
+                      83.7% { opacity: 1; } 84.5%, 100% { opacity: 0; } }@keyframes pe-happy { 0% { opacity: 1; } 10% { opacity: 0; } 92%, 100% { opacity: 1; } }
+@keyframes pe-left  { 0% { opacity: 0; } 50% { opacity: 1; } 58%, 100% { opacity: 0; } }
+@keyframes pe-right { 0% { opacity: 0; } 60% { opacity: 1; } 68%, 100% { opacity: 0; } }
+@keyframes pe-hop   { 0% { transform: translateY(0); } 3% { transform: translateY(-1px); } 6% { transform: translateY(0); }
+                      94% { transform: translateY(-1px); } 97%, 100% { transform: translateY(0); } }
+
+/* Modo leve (sem animações): fica parado com os olhos abertos */
+.lite .mascot.px .pe-open, :root.lite .mascot.px .pe-open { opacity: 1; }

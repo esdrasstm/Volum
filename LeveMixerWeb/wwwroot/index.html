@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Volum</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mascot.css">
 </head>
 <body>
 
@@ -13,7 +14,7 @@
     <!-- Cabeçalho: "Volum" e os 4 botões (sugestões, travar teclado, configurações, minimizar).
          Ícones de traço, todos com o mesmo peso (classe .ico). -->
     <header class="header">
-      <span class="brand">Volum</span>
+      <span class="brand"><span class="brand-mascot" id="brandMascot" aria-hidden="true"></span>Volum</span>
 
       <!-- Sugestões e bugs: abre o formulário no site (pelo C#) -->
       <button id="feedbackBtn" class="icon-btn" title="Sugestões e bugs" data-i18n-title="feedback">
@@ -85,38 +86,8 @@
     <!-- Novidades: aparece uma vez, na primeira abertura depois de atualizar (textos no NEWS do shared.js) -->
     <div id="news" class="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
       <div class="news-box">
-        <!-- Mascote: a bolinha branca do Volum, de fone, flutuando e piscando o olho -->
-        <svg class="mascot" viewBox="0 0 120 120" aria-hidden="true">
-          <defs>
-            <linearGradient id="mascotGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#ffffff"/>
-              <stop offset="1" stop-color="#b8b8b8"/>
-            </linearGradient>
-          </defs>
-          <ellipse class="m-shadow" cx="60" cy="110" rx="26" ry="4.5" fill="#000"/>
-          <g class="m-float">
-            <path class="m-wave" d="M104 50q6 8 0 16" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-            <path class="m-wave w2" d="M110 44q10 14 0 28" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="60" cy="60" r="40" fill="url(#mascotGrad)"/>
-            <ellipse cx="45" cy="36" rx="12" ry="7" fill="#fff" opacity=".28" transform="rotate(-25 45 36)"/>
-            <path d="M22 58a38 38 0 0 1 76 0" fill="none" stroke="#3a3a3a" stroke-width="6" stroke-linecap="round"/>
-            <rect x="13" y="49" width="15" height="24" rx="7" fill="#3a3a3a"/>
-            <rect x="92" y="49" width="15" height="24" rx="7" fill="#3a3a3a"/>
-            <ellipse cx="38" cy="72" rx="6" ry="3.5" fill="#8a8a8a" opacity=".35"/>
-            <ellipse cx="82" cy="72" rx="6" ry="3.5" fill="#8a8a8a" opacity=".35"/>
-            <g>
-              <ellipse cx="47" cy="58" rx="7" ry="8.5" fill="#fff"/>
-              <circle cx="48" cy="59.5" r="4" fill="#111111"/>
-              <circle cx="49.5" cy="57.5" r="1.3" fill="#fff"/>
-            </g>
-            <g class="m-wink">
-              <ellipse cx="73" cy="58" rx="7" ry="8.5" fill="#fff"/>
-              <circle cx="74" cy="59.5" r="4" fill="#111111"/>
-              <circle cx="75.5" cy="57.5" r="1.3" fill="#fff"/>
-            </g>
-            <path d="M51 74q9 9 18 0z" fill="#111111"/>
-          </g>
-        </svg>
+        <!-- Mascote em pixel art (o mesmo da ilha; o app.js põe o desenho aqui) -->
+        <span class="news-mascot" id="newsMascot" aria-hidden="true"></span>
         <h2 id="newsTitle" class="news-title"><small></small><span></span></h2>
         <ul id="newsList" class="news-list"></ul>
         <button id="newsOk" class="news-ok" data-i18n="newsOk">Entendi!</button>

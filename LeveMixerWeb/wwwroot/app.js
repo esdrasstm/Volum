@@ -374,6 +374,10 @@
 
   /* ---------------- Novidades (popup depois de atualizar) ---------------- */
   // Aparece uma vez, na primeira abertura depois de atualizar para V.NEWS.version (textos no shared.js).
+  // Mascote em pixel art (o mesmo da ilha): ao lado do "Volum" no cabeçalho e no popup de novidades.
+  // Desenho fixo do shared.js; as animações ficam no mascot.css.
+  for (const id of ['brandMascot', 'newsMascot']) { const el = $(id); if (el && V.MASCOT_PX) el.innerHTML = V.MASCOT_PX; }
+
   const newsEl = $('news');
   let newsOpen = false;
   let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra

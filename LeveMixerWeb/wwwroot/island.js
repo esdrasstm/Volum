@@ -86,53 +86,11 @@
   /* ---------------- Pixel art (estilo 16 bits) ----------------
      Os desenhos são mapas de caracteres: cada letra é um pixel de uma cor da paleta e "." é vazio.
      Viram <rect> num SVG com bordas retas (crispEdges); a animação troca quadros inteiros (steps),
-     como nos jogos antigos. PIXEL_ART = false volta para o mascote vetorial acima. */
+     como nos jogos antigos. As animações do mascote ficam no mascot.css. PIXEL_ART = false volta para o mascote vetorial acima. */
   const PIXEL_ART = true;
 
-  // Junta pixels vizinhos da mesma cor numa linha só (menos <rect> na página)
-  function pixels(rows, pal, ox = 0, oy = 0) {
-    let out = '';
-    rows.forEach((row, y) => {
-      for (let x = 0; x < row.length;) {
-        const ch = row[x];
-        if (ch === '.' || !pal[ch]) { x++; continue; }
-        let w = 1;
-        while (row[x + w] === ch) w++;
-        out += `<rect x="${ox + x}" y="${oy + y}" width="${w}" height="1" fill="${pal[ch]}"/>`;
-        x += w;
-      }
-    });
-    return out;
-  }
-
-  // Mascote: rosto branco (sombra embaixo) e os olhos em "degradê" de 4 tons, do azul-escuro ao claro
-  const M_PAL = { W: '#f9f9f9', S: '#c9ced6', a: '#002e5f', b: '#0d4077', c: '#3d6a99', d: '#a9c0d9' };
-  const M_FACE = [
-    '..WWWWWWWWWWWW..',
-    '.WWWWWWWWWWWWWW.',
-    'WWWWWWWWWWWWWWWW',
-    'WWWWWWWWWWWWWWWW',
-    'WWWWWWWWWWWWWWWW',
-    'WWWWWWWWWWWWWWWW',
-    'WWWWWWWWWWWWWWWW',
-    'WWWWWWWWWWWWWWWW',
-    'SWWWWWWWWWWWWWWS',
-    '.SSSSSSSSSSSSSS.',
-  ];
-  // Só os olhos mudam de um quadro para outro (linhas 2 a 5 do rosto)
-  const M_EYES = {
-    open:  ['...aa......aa...', '...bb......bb...', '...cc......cc...', '...dd......dd...'],
-    half:  ['................', '...bb......bb...', '...cc......cc...', '...dd......dd...'],   // pálpebra descendo
-    blink: ['................', '................', '................', '...bb......bb...'],
-    happy: ['................', '...aa......aa...', '..a..a....a..a..', '................'],
-    left:  ['..aa......aa....', '..bb......bb....', '..cc......cc....', '..dd......dd....'],
-    right: ['....aa......aa..', '....bb......bb..', '....cc......cc..', '....dd......dd..'],
-  };
-  const MASCOT_PX =
-    '<svg class="mascot px" viewBox="0 -1 16 11" aria-hidden="true">' +
-    '<g class="px-body">' + pixels(M_FACE, M_PAL) +
-    Object.entries(M_EYES).map(([k, rows]) => `<g class="pe pe-${k}">${pixels(rows, M_PAL, 0, 2)}</g>`).join('') +
-    '</g></svg>';
+  // O desenho do mascote e a função de pixels ficam no shared.js (o mixer usa o mesmo mascote)
+  const pixels = V.pixels, MASCOT_PX = V.MASCOT_PX;
 
   // Cena do aviso de levantar: mesa com monitor, cadeira e o bonequinho (cabelo, pele, camiseta, calça, tênis)
   const W_PAL = { H: '#5a3a28', S: '#f1c58f', E: '#1d1d1d', T: '#4f86c6', t: '#3a6aa3', P: '#3b3f58', K: '#8d8d99',

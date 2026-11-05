@@ -197,5 +197,54 @@ window.Volum = (() => {
     : `${(ml / 1000).toLocaleString(langTag(lang), { maximumFractionDigits: 2 })} L`);
   const fmtMin = (m) => (m < 60 ? `${m} min` : m % 60 ? `${Math.floor(m / 60)} h ${m % 60}` : `${m / 60} h`);
 
-  return { I18N, t, langTag, applyI18n, NEWS, newsItems, compareVersions, fmtMl, fmtMin };
+  /* ---------------- Mascote em pixel art (16 bits) ----------------
+     Usado na ilha (ociosa) e no mixer (cabeçalho e popup de novidades). As animações ficam no mascot.css.
+     Os desenhos são mapas de caracteres: cada letra é um pixel de uma cor da paleta e "." é vazio. */
+  // Junta pixels vizinhos da mesma cor numa linha só (menos <rect> na página)
+  function pixels(rows, pal, ox = 0, oy = 0) {
+    let out = '';
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length;) {
+        const ch = row[x];
+        if (ch === '.' || !pal[ch]) { x++; continue; }
+        let w = 1;
+        while (row[x + w] === ch) w++;
+        out += `<rect x="${ox + x}" y="${oy + y}" width="${w}" height="1" fill="${pal[ch]}"/>`;
+        x += w;
+      }
+    });
+    return out;
+  }
+
+  // Mascote: rosto branco (sombra embaixo) e os olhos em "degradê" de 4 tons, do azul-escuro ao claro
+  const M_PAL = { W: '#f9f9f9', S: '#c9ced6', a: '#002e5f', b: '#0d4077', c: '#3d6a99', d: '#a9c0d9' };
+  const M_FACE = [
+    '..WWWWWWWWWWWW..',
+    '.WWWWWWWWWWWWWW.',
+    'WWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWW',
+    'SWWWWWWWWWWWWWWS',
+    '.SSSSSSSSSSSSSS.',
+  ];
+  // Só os olhos mudam de um quadro para outro (linhas 2 a 5 do rosto)
+  const M_EYES = {
+    open:  ['...aa......aa...', '...bb......bb...', '...cc......cc...', '...dd......dd...'],
+    half:  ['................', '...bb......bb...', '...cc......cc...', '...dd......dd...'],   // pálpebra descendo
+    blink: ['................', '................', '................', '...bb......bb...'],
+    happy: ['................', '...aa......aa...', '..a..a....a..a..', '................'],
+    left:  ['..aa......aa....', '..bb......bb....', '..cc......cc....', '..dd......dd....'],
+    right: ['....aa......aa..', '....bb......bb..', '....cc......cc..', '....dd......dd..'],
+  };
+  const MASCOT_PX =
+    '<svg class="mascot px" viewBox="0 -1 16 11" aria-hidden="true">' +
+    '<g class="px-body">' + pixels(M_FACE, M_PAL) +
+    Object.entries(M_EYES).map(([k, rows]) => `<g class="pe pe-${k}">${pixels(rows, M_PAL, 0, 2)}</g>`).join('') +
+    '</g></svg>';
+
+
+  return { I18N, t, langTag, applyI18n, NEWS, newsItems, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX };
 })();
