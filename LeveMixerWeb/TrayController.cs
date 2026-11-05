@@ -92,7 +92,14 @@ sealed class TrayController : IDisposable
 
         // Ilha no topo da tela, se estiver ligada nas configurações (o alto-falante dela abre/fecha o mixer)
         IslandForm.OpenMixer = () => Toggle();
-        if (AppSettings.Current.IslandEnabled) IslandForm.Apply(true);
+        var s = AppSettings.Current;
+        if (!s.IslandAutoOnDone)   // 0.3.0: a ilha vem ligada uma vez (o popup de novidades conta como desligar)
+        {
+            s.IslandAutoOnDone = true;
+            s.IslandEnabled = true;
+            s.Save();
+        }
+        if (s.IslandEnabled) IslandForm.Apply(true);
 
         // Atualizou sozinho: aviso discreto perto da bandeja (uma vez por versão) para ver as novidades
         UpdateNotice.Start(() => Toggle());

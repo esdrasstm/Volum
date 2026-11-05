@@ -14,6 +14,9 @@ static class Program
     /// <summary>Volum.exe --test-update-notice : mostra o aviso "Volum atualizado" ao iniciar (para testar o visual).</summary>
     internal static bool TestUpdateNotice { get; private set; }
 
+    /// <summary>Volum.exe --test-greet : o mascote da ilha dá oi ao iniciar, como se o PC tivesse acabado de ligar.</summary>
+    internal static bool TestGreeting { get; private set; }
+
     /// <summary>Sinal que uma segunda cópia do Volum manda para a que já está aberta: "abra o mixer".</summary>
     internal const string OpenSignalName = "Volum_OpenMixer";
 
@@ -31,6 +34,7 @@ static class Program
 
         DevMode = args.Contains("--dev", StringComparer.OrdinalIgnoreCase);
         TestUpdateNotice = args.Contains("--test-update-notice", StringComparer.OrdinalIgnoreCase);
+        TestGreeting = args.Contains("--test-greet", StringComparer.OrdinalIgnoreCase);
 
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.EnableVisualStyles();

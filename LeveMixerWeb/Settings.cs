@@ -37,6 +37,22 @@ sealed class AppSettings
     // Ilha (estilo Dynamic Island) no topo da tela: desligada por padrão (fica visível o tempo todo e gasta memória)
     public bool IslandEnabled { get; set; }
 
+    // A 0.3.0 liga a ilha uma única vez (atualização ou instalação nova), para o Pomodoro, o mascote e o
+    // aviso de levantar já chegarem funcionando. Se a pessoa desligar depois, não liga de novo.
+    public bool IslandAutoOnDone { get; set; }
+
+    // Pomodoro na ilha (só funciona com a ilha ligada): minutos de foco, pausa curta, pausa longa e
+    // de quantos em quantos focos vem a pausa longa
+    public bool PomodoroEnabled { get; set; } = true;
+    public int FocusMin { get; set; } = 25;
+    public int ShortBreakMin { get; set; } = 5;
+    public int LongBreakMin { get; set; } = 15;
+    public int LongBreakEvery { get; set; } = 4;
+
+    // Aviso para levantar e andar (pela ilha): depois de X minutos sentado
+    public bool StandUpEnabled { get; set; } = true;
+    public int StandUpMin { get; set; } = 60;
+
     static string Folder(string app) => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), app);
 

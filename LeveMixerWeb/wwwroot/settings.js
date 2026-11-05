@@ -63,6 +63,7 @@
     document.title = `Volum — ${t('settings')}`;
     showHotkey();
     showWater();
+    showFocus();
     showAbout();
   }
 
@@ -158,7 +159,7 @@
     $('waterOn').checked = water.enabled;
     $('waterSound').checked = water.sound !== false;
     $('waterOptions').hidden = !water.enabled;
-    document.querySelectorAll('.stepper').forEach((st) => {
+    document.querySelectorAll('#waterOptions .stepper').forEach((st) => {
       const field = st.dataset.field;
       if (field === 'intervalMin') {
         if (document.activeElement !== everyInput) everyInput.value = water.intervalMin;   // não atrapalha quem está digitando
@@ -186,7 +187,7 @@
     saveWater();
   });
 
-  document.querySelectorAll('.stepper').forEach((st) => st.addEventListener('click', (e) => {
+  document.querySelectorAll('#waterOptions .stepper').forEach((st) => st.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     const field = st.dataset.field, step = Number(b.dataset.step);
@@ -219,7 +220,54 @@
   $('waterTest').addEventListener('click', () => post({ type: 'testWater' }));
 
   /* ---------------- Ilha ---------------- */
-  $('islandOn').addEventListener('change', (e) => post({ type: 'setIsland', enabled: e.target.checked }));
+  let islandOn = false;
+  $('islandOn').addEventListener('change', (e) => {
+    islandOn = e.target.checked;
+    showFocus();
+    post({ type: 'setIsland', enabled: islandOn });
+  });
+
+  /* ---------------- Pomodoro e lembrete para levantar (página Ilha) ---------------- */
+  const FOCUS_STEPS = {
+    focusMin: [15, 20, 25, 30, 35, 40, 45, 50, 60, 75, 90],
+    shortMin: [3, 5, 10, 15],
+    longMin: [10, 15, 20, 25, 30],
+    every: [2, 3, 4, 5, 6],
+    standMin: [30, 45, 60, 75, 90, 120],
+  };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, standUp: true, standMin: 60 };
+
+  const fmtFocus = (v, unit) => unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
+    : unit === 'time' ? V.fmtMin(v) : `${v} min`;
+
+  function showFocus() {
+    $('pomoOn').checked = focus.pomodoro;
+    $('standOn').checked = focus.standUp;
+    $('pomoOptions').hidden = !focus.pomodoro;
+    $('standOptions').hidden = !focus.standUp;
+    $('standTest').disabled = !islandOn;
+    $('focusNote').hidden = islandOn;   // com a ilha desligada, avisa que tudo isso depende dela
+    document.querySelectorAll('.fstep').forEach((st) => {
+      const key = st.dataset.key, list = FOCUS_STEPS[key], i = nearest(list, focus[key]);
+      st.querySelector('output').textContent = fmtFocus(focus[key], st.dataset.unit);
+      st.querySelector('[data-step="-1"]').disabled = i <= 0;
+      st.querySelector('[data-step="1"]').disabled = i >= list.length - 1;
+    });
+  }
+
+  const saveFocus = () => post({ type: 'setFocus', ...focus });
+
+  $('pomoOn').addEventListener('change', (e) => { focus.pomodoro = e.target.checked; showFocus(); saveFocus(); });
+  $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
+  document.querySelectorAll('.fstep').forEach((st) => st.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const key = st.dataset.key, list = FOCUS_STEPS[key];
+    focus[key] = list[Math.min(list.length - 1, Math.max(0, nearest(list, focus[key]) + Number(b.dataset.step)))];
+    showFocus();
+    saveFocus();
+  }));
+  $('standTest').addEventListener('click', () => post({ type: 'testStand' }));
 
   /* ---------------- Sobre ---------------- */
   function showAbout() {
@@ -240,7 +288,8 @@
     recording = false;
     $('autostart').checked = !!s.autostart;
     $('lite').checked = !!s.lite;
-    $('islandOn').checked = !!s.island;
+    $('islandOn').checked = islandOn = !!s.island;
+    if (s.focus) focus = s.focus;
     setTheme(s.theme || 'system');
     setLanguage(s.language || 'pt');                // também redesenha atalho, água e "Sobre"
   }

@@ -27,11 +27,11 @@ sealed class IslandForm : Form
     // Tamanhos em "pixels CSS". A janela tem a pílula + as "orelhas" (curvas que ligam a pílula à borda da tela).
     // Precisam bater com o island.css (--closed-w, --tuck-w, --open-w, --ear...).
     const int Ear = 10;
-    const int ClosedW = 250, ClosedH = 32, TuckW = 130, TuckH = 6, OpenW = 440, NoticeW = 400, NoticeH = 36;
-    const int AnimMs = 340;            // acompanha a transição do CSS (encolher)
+    const int ClosedW = 250, ClosedH = 32, IdleH = 54, TuckW = 130, TuckH = 6, OpenW = 440, NoticeW = 400, NoticeH = 36;
+    const int AnimMs = 500;            // acompanha a transição do CSS (--anim 480 ms, encolher) + uma folga
     const int NoticeMs = 12_000;       // quanto tempo um aviso fica aberto, se ninguém disser outro
 
-    enum Mode { Tucked, Closed, Notice, Open }   // Notice = faixa fina com um aviso do Volum
+    enum Mode { Tucked, Closed, Idle, Notice, Open }   // Notice = faixa fina com um aviso do Volum; Idle = ociosa, com o mascote maior
 
     static IslandForm? s_island;
     static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -46,7 +46,8 @@ sealed class IslandForm : Form
     readonly Timer _soundTimer = new() { Interval = 400 };  // tem som saindo? (lê o medidor do Windows; só com a ilha ligada)
     MediaService? _media;
     Mode _mode = Mode.Closed;
-    bool _ready, _hover, _notice, _tuck, _hiddenByFullscreen;
+    bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen;
+    string _noticeKind = "";   // "greet" (bom dia) e "walk" (levantar, com a cena animada) usam a ilha mais alta
     int _openH = 160, _watchTicks;
     IntPtr _winEventHook;
     WinEventProc? _winEventProc;   // guardado: o Windows chama este delegate enquanto o gancho existir
@@ -64,7 +65,17 @@ sealed class IslandForm : Form
         {
             s_island.Close();
             s_island = null;
+            Pomodoro.Stop();   // Pomodoro e o aviso de levantar só existem com a ilha
         }
+        StandUp.Apply();
+    }
+
+    /// <summary>Mudou algo nas configurações que a ilha mostra (ex.: Pomodoro ligado, tempos).</summary>
+    public static void SettingsChanged()
+    {
+        if (!IsOn) return;
+        s_island!.PostSettings();
+        s_island.PostPomodoro();
     }
 
     public static bool IsOn => s_island != null && !s_island.IsDisposed;
@@ -96,11 +107,12 @@ sealed class IslandForm : Form
         _watch.Tick += (_, _) => OnWatch();
         _soundTimer.Tick += (_, _) => CheckSound();
         Water.Changed += OnWaterChanged;
+        Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
         _ = InitAsync();
     }
 
-    Mode Resting => _tuck ? Mode.Tucked : Mode.Closed;
+    Mode Resting => _tuck ? Mode.Tucked : _idle ? Mode.Idle : Mode.Closed;
 
     protected override bool ShowWithoutActivation => true;
 
@@ -147,13 +159,15 @@ sealed class IslandForm : Form
     void Place(Mode m)
     {
         float k = DeviceDpi / 96f;
-        int w = (int)Math.Round(((m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW }) + 2 * Ear) * k);
-        int h = (int)Math.Round((m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, _ => ClosedH }) * k);
+        bool greet = m == Mode.Notice && _noticeKind == "greet";   // "bom dia": do mesmo tamanho da ilha com o mascote
+        bool tall = m == Mode.Notice && _noticeKind == "walk";     // levantar: largura do aviso, altura da ilha ociosa (cabe a cena)
+        int w = (int)Math.Round(((greet ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW }) + 2 * Ear) * k);
+        int h = (int)Math.Round((greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH }) * k);
         var screen = Screen.PrimaryScreen!.Bounds;
         SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top, w, h);
     }
 
-    static int Rank(Mode m) => m switch { Mode.Open => 4, Mode.Notice => 3, Mode.Closed => 2, _ => 1 };
+    static int Rank(Mode m) => m switch { Mode.Open => 5, Mode.Notice => 4, Mode.Idle => 3, Mode.Closed => 2, _ => 1 };
 
     // Crescendo: a janela cresce antes e o CSS anima a pílula dentro dela.
     // Encolhendo: o CSS anima primeiro e a janela encolhe no fim (senão a animação seria cortada).
@@ -229,7 +243,7 @@ sealed class IslandForm : Form
     {
         if (tuck == _tuck) return;
         _tuck = tuck;
-        if (_mode is Mode.Closed or Mode.Tucked) SetMode(Resting);
+        if (_mode is Mode.Closed or Mode.Tucked or Mode.Idle) SetMode(Resting);
     }
 
     // Lugar da ilha fechada na tela (pixels de verdade)
@@ -312,6 +326,9 @@ sealed class IslandForm : Form
     void ShowNotice(string icon, string title, string text, string? actionLabel, Action? action, int ms)
     {
         _notice = true;
+        bool resize = _mode == Mode.Notice && _noticeKind != icon;   // trocou de um aviso para outro de outro tamanho
+        _noticeKind = icon;
+        if (resize) Place(Mode.Notice);
         _noticeAction = action;
         Post(new { type = "notice", icon, title, text, action = actionLabel });
         SetMode(Mode.Notice);   // faixa fina, sem abrir a ilha inteira
@@ -325,6 +342,7 @@ sealed class IslandForm : Form
         _noticeEnd.Stop();
         if (!_notice) return;
         _notice = false;
+        _noticeKind = "";
         _noticeAction = null;
         Post(new { type = "notice", icon = (string?)null });
         SetMode(_hover ? Mode.Open : Resting);
@@ -368,6 +386,55 @@ sealed class IslandForm : Form
         catch (Exception ex) { Debug.WriteLine(ex); }
     }
 
+    // ---------- mascote: oi quando o PC liga ----------
+
+    static bool s_greeted;   // uma vez por vez que o Volum abre
+
+    // Abriu junto com o Windows (o PC ligou há pouco): o mascote dá bom dia / boa tarde / boa noite.
+    // Abrir o Volum à mão, ou ele reiniciar para atualizar, não conta.
+    void Greet()
+    {
+        bool justBooted = Environment.TickCount64 < 10 * 60_000;   // PC ligado há menos de 10 min
+        if (s_greeted || !(justBooted || Program.TestGreeting)) return;
+        s_greeted = true;
+        int h = DateTime.Now.Hour;
+        string key = h is >= 5 and < 12 ? "hiMorning" : h is >= 12 and < 18 ? "hiAfternoon" : "hiEvening";
+        var lang = AppSettings.Current.Language;
+        // Espera a ilha aparecer e o Windows assentar (no início, tudo está abrindo ao mesmo tempo)
+        var t = new Timer { Interval = Program.TestGreeting ? 800 : 2500 };
+        t.Tick += (_, _) =>
+        {
+            t.Dispose();
+            if (IsDisposed || _hiddenByFullscreen) return;
+            ShowNotice("greet", Strings.Get(lang, key), "", null, null, 4000);   // só a frase; depois a ilha vira o mascote
+        };
+        t.Start();
+    }
+
+    void PostSettings()
+    {
+        var s = AppSettings.Current;
+        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled });
+    }
+
+    // Estado do Pomodoro: a ilha conta o tempo sozinha a partir de "leftMs" (nada vem do C# a cada segundo)
+    void PostPomodoro()
+    {
+        if (IsDisposed) return;
+        var s = AppSettings.Current;
+        Post(new
+        {
+            type = "pomodoro",
+            phase = Pomodoro.Current.ToString().ToLowerInvariant(),
+            paused = Pomodoro.Paused,
+            leftMs = (long)Pomodoro.Left.TotalMilliseconds,
+            totalMs = Pomodoro.TotalSec * 1000L,
+            done = Pomodoro.Done,
+            every = s.LongBreakEvery,
+            focusMin = s.FocusMin
+        });
+    }
+
     void OnWaterChanged()
     {
         var w = Water.Data;
@@ -384,13 +451,14 @@ sealed class IslandForm : Form
             {
                 case "ready":
                     _ready = true;
-                    var s = AppSettings.Current;
-                    Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode });
+                    PostSettings();
+                    PostPomodoro();
                     PostMode();
                     PostBattery();
                     OnWaterChanged();
                     _ = _media?.RefreshAsync();
                     CheckScreen();
+                    Greet();
                     break;
 
                 case "height":   // altura da ilha aberta (muda com a página e com a água)
@@ -402,6 +470,11 @@ sealed class IslandForm : Form
                     _hover = root.GetProperty("on").GetBoolean();
                     if (_hover && !_notice) { _collapse.Stop(); SetMode(Mode.Open); }   // com aviso na tela, fica a faixa (os botões não saem do lugar)
                     else if (!_notice) { _collapse.Stop(); _collapse.Start(); }
+                    break;
+
+                case "idle":     // a ilha ficou um tempo sem uso: cresce um pouco para baixo e o mascote aparece maior
+                    _idle = root.GetProperty("on").GetBoolean();
+                    if (_mode is Mode.Closed or Mode.Idle) SetMode(Resting);
                     break;
 
                 case "playPause": _media?.PlayPause(); break;
@@ -423,6 +496,13 @@ sealed class IslandForm : Form
                 case "noticeClose":
                     EndNotice();
                     break;
+
+                // Pomodoro (página Foco da ilha)
+                case "pomoStart": Pomodoro.Start(); break;
+                case "pomoPause": Pomodoro.Pause(); break;
+                case "pomoResume": Pomodoro.Resume(); break;
+                case "pomoSkip": Pomodoro.Skip(); break;
+                case "pomoStop": Pomodoro.Stop(); break;
             }
         }
         catch (Exception ex) { Debug.WriteLine(ex); }
@@ -434,6 +514,7 @@ sealed class IslandForm : Form
         {
             if (_winEventHook != IntPtr.Zero) UnhookWinEvent(_winEventHook);
             Water.Changed -= OnWaterChanged;
+            Pomodoro.Changed -= PostPomodoro;
             Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerChanged;
             _media?.Dispose();
             _collapse.Dispose();

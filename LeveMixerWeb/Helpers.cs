@@ -97,6 +97,21 @@ static class Strings
         ["updTitle"]  = new[] { "Volum atualizado", "Volum updated", "Volum actualizado" },
         ["updText"]   = new[] { "Versão {0}: veja o que tem de novo", "Version {0}: see what's new", "Versión {0}: mira las novedades" },
         ["updOpen"]   = new[] { "Ver novidades", "See what's new", "Ver novedades" },
+        // Pomodoro e aviso de levantar (pela ilha)
+        ["pomoBreak"]     = new[] { "Hora da pausa", "Break time", "Hora del descanso" },
+        ["pomoBreakText"] = new[] { "{0} min para descansar", "{0} min to rest", "{0} min para descansar" },
+        ["pomoLong"]      = new[] { "Pausa longa", "Long break", "Descanso largo" },
+        ["pomoLongText"]  = new[] { "{0} min: levante e beba água", "{0} min: stand up and drink water", "{0} min: levántate y toma agua" },
+        ["pomoDone"]      = new[] { "Pausa acabou", "Break's over", "Terminó el descanso" },
+        ["pomoDoneText"]  = new[] { "Bora para mais um foco?", "Ready for another focus?", "¿Otro rato de enfoque?" },
+        ["pomoGo"]        = new[] { "Focar", "Focus", "Enfocar" },
+        ["standTitle"]    = new[] { "Hora de levantar", "Time to stand up", "Hora de levantarse" },
+        ["standText"]     = new[] { "Sentado há {0}: dê uma volta", "Sitting for {0}: take a walk", "Sentado hace {0}: da una vuelta" },
+        ["standOk"]       = new[] { "Levantei", "I'm up", "Ya me levanté" },
+        // Mascote dando oi quando o PC liga (pela ilha), conforme a hora do dia
+        ["hiMorning"]     = new[] { "Bom dia!", "Good morning!", "¡Buenos días!" },
+        ["hiAfternoon"]     = new[] { "Boa tarde!", "Good afternoon!", "¡Buenas tardes!" },
+        ["hiEvening"]     = new[] { "Boa noite!", "Good evening!", "¡Buenas noches!" },
         // Lembrete de água (aviso na tela). {0} = quanto falta, {1} = meta do dia
         ["waterTitle"] = new[] { "Hora de beber água", "Time to drink water", "Hora de tomar agua" },
         ["waterLeft"]  = new[] { "Faltam {0} para a meta de hoje ({1})", "{0} left to today's goal ({1})", "Faltan {0} para la meta de hoy ({1})" },

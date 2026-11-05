@@ -18,8 +18,8 @@
   --battery: #34d058;
   --battery-low: #ff5a5f;
   --ear: 10px;
-  --spring: cubic-bezier(.2, .9, .25, 1);
-  --anim: 340ms;
+  --spring: cubic-bezier(.32, .72, 0, 1);   /* desacelera bem macio no fim (como a ilha do iPhone) */
+  --anim: 480ms;                           /* igual ao AnimMs do IslandForm.cs */
   color-scheme: dark;
 }
 
@@ -43,6 +43,7 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 /* ---------- Forma: tamanho de cada estado ---------- */
 .island { --w: 250px; --h: 32px; --r: 16px; --ear-size: var(--ear); position: relative; height: 100%; }
 .island.tucked { --w: 130px; --h: 6px; --r: 3px; --ear-size: 6px; }
+.island.idle { --h: 54px; --r: 24px; }   /* ociosa: desce um pouco e o mascote fica maior (IdleH no IslandForm.cs) */
 .island.open { --w: 440px; --h: var(--open-h, 156px); --r: 30px; }
 
 .shape {
@@ -81,7 +82,7 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   padding: 0 14px 0 12px;
   transition: opacity .18s ease;
 }
-.island:not(.closed) .mini { opacity: 0; pointer-events: none; }
+.island:not(.closed):not(.idle) .mini { opacity: 0; pointer-events: none; }
 .mini-left { display: flex; align-items: center; min-width: 22px; }
 .mini .wave { justify-self: end; }
 .mini-cover { width: 20px; height: 20px; border-radius: 6px; object-fit: cover; }
@@ -212,6 +213,118 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .water-add { padding: 0 14px; background: linear-gradient(135deg, var(--water), var(--water-2)); color: #fff; }
 .water-buttons button:active { transform: scale(.95); }
 
+/* ---------- Pomodoro ---------- */
+/* Anel: o JS põe o quanto já passou (--from) e o tempo que falta (--left); o CSS enche sozinho até o fim,
+   sem nada rodando a cada segundo. Pausado: fica parado onde está. */
+.ring-bg { fill: none; stroke: var(--soft); }
+.ring-fg {
+  fill: none;
+  stroke: var(--text);
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+.break .ring-fg { stroke: var(--battery); }   /* pausa: verde */
+.mini-ring { width: 20px; height: 20px; }
+.mini-ring[hidden] { display: none; }
+.mini-ring circle { stroke-width: 2.4; }
+
+.focus { display: flex; align-items: center; gap: 14px; padding-top: 2px; }
+.focus-ring { flex: none; width: 46px; height: 46px; }
+.focus-ring circle { stroke-width: 3; }
+.focus-text { display: grid; flex: 1; min-width: 0; }
+.focus-text span { font-size: 12px; color: var(--subtext); }
+.focus-text b { font-size: 22px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: .3px; }
+.focus-buttons { display: flex; align-items: center; gap: 8px; }
+.focus-buttons button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease, opacity .15s ease;
+}
+.focus-buttons button:active { transform: scale(.9); }
+.focus-buttons button:disabled { opacity: .3; pointer-events: none; }
+.focus-buttons .soft { background: var(--soft); color: var(--text); }
+.focus-buttons .soft:hover { background: var(--soft-hover); }
+.focus-buttons .soft svg { width: 15px; height: 15px; }
+.focus-buttons .main { width: 40px; height: 40px; background: var(--text); color: #090909; }
+.focus-buttons .main svg { width: 20px; height: 20px; }
+.focus-buttons .i-pause, .focus-buttons .main.running .i-play { display: none; }
+.focus-buttons .main.running .i-pause { display: block; }
+
+/* ---------- Páginas empilhadas: a ilha aberta tem sempre a altura da maior ---------- */
+.pages { display: grid; }
+.pages > .page { grid-area: 1 / 1; }
+.page.off { visibility: hidden; pointer-events: none; }
+
+/* ---------- Mascote ---------- */
+.mascot { display: block; overflow: visible; }
+.mascot .m-face { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25)); }
+/* Piscar: o olho vira um risquinho no meio */
+.mascot .m-eye { transform-box: fill-box; transform-origin: center; animation: m-blink 4.6s ease-in-out infinite; }
+.mascot .m-eyes { transform-box: fill-box; transform-origin: center; animation: m-look 11s ease-in-out infinite; }
+/* Uma piscadinha e, mais adiante, duas seguidas */
+@keyframes m-blink {
+  0%, 44%, 50%, 88%, 94%, 100% { transform: scaleY(1); }
+  47%, 91%, 97% { transform: scaleY(.08); }
+}
+/* Olha para os lados de vez em quando */
+@keyframes m-look {
+  0%, 30%, 100% { transform: translateX(0); }
+  36%, 46% { transform: translateX(-14px); }
+  54%, 64% { transform: translateX(14px); }
+  70% { transform: translateX(0); }
+}
+
+/* Na ilha fechada (ociosa): entra com um pulinho e fica "respirando" */
+.mini-mascot { display: inline-grid; place-items: center; width: 30px; height: 20px; }
+.mini-mascot[hidden] { display: none; }
+.mini-mascot .mascot { width: 28px; height: 18px; animation: m-pop .55s var(--spring) both, m-breathe 3.2s ease-in-out .6s infinite; }
+@keyframes m-pop { from { opacity: 0; transform: translateY(8px) scale(.4); } }
+@keyframes m-breathe { 50% { transform: translateY(-1px) scale(1.04); } }
+
+/* Olhinhos: alterna sozinho entre os olhos normais (piscando) e a carinha feliz em arquinho (^ ^).
+   Começa feliz (logo depois do "bom dia" e ao aparecer), volta ao normal, e de tempos em tempos sorri de novo. */
+.mascot .m-happy path { fill: none; stroke: #0c3f73; stroke-width: 24; stroke-linecap: round; }
+.mascot .m-happy { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; animation: m-happy 16s ease-in-out infinite; }
+.mascot .m-normal { animation: m-normal 16s ease-in-out infinite; }
+@keyframes m-happy {
+  0%, 16% { opacity: 1; transform: translateY(0); }
+  4% { transform: translateY(-14px); }     /* pulinho de alegria */
+  8% { transform: translateY(0); }
+  20%, 58% { opacity: 0; }
+  62%, 74% { opacity: 1; transform: translateY(0); }
+  67% { transform: translateY(-10px); }
+  78%, 100% { opacity: 0; }
+}
+@keyframes m-normal {
+  0%, 16% { opacity: 0; }
+  20%, 58% { opacity: 1; }
+  62%, 74% { opacity: 0; }
+  78%, 100% { opacity: 1; }
+}
+
+/* "Bom dia" (PC ligou): só a frase, no meio da ilha, entrando suave */
+.island.alerting.greeting { --w: 250px; --h: 54px; --r: 24px; }   /* mesmo tamanho da ilha ociosa (o mascote entra sem a ilha mudar) */
+.noticebar[data-kind="greet"] { justify-content: center; width: 250px; height: 54px; padding: 0 14px; }
+.noticebar[data-kind="greet"] .notice-icon,
+.noticebar[data-kind="greet"] .notice-close,
+.noticebar[data-kind="greet"] .notice-text span { display: none; }
+.noticebar[data-kind="greet"] .notice-text { flex: none; justify-content: center; }
+.noticebar[data-kind="greet"] .notice-text b { font-size: 14px; letter-spacing: .3px; animation: greet-in .9s var(--spring) both; }
+@keyframes greet-in { from { opacity: 0; transform: translateY(6px); letter-spacing: 2px; filter: blur(3px); } }
+/* Ociosa (e logo depois do "bom dia"): só o mascote, maior e no meio; a hora e o resto somem */
+.mini { transition: opacity .18s ease, height var(--anim) var(--spring); }
+.island.idle .mini { height: 54px; grid-template-columns: 1fr; justify-items: center; padding: 0; }
+.island.idle .clock, .island.idle .mini .wave, .island.idle .mini-left > :not(.mini-mascot) { display: none; }
+.island.idle .mini-left { justify-content: center; }
+.island.idle .mini-mascot { width: 56px; height: 36px; }
+.island.idle .mini-mascot .mascot { width: 54px; height: 34px; }
 /* Bolinhas das páginas */
 .dots { display: flex; justify-content: center; gap: 5px; height: 5px; margin-top: 8px; }
 .dots i { width: 5px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .3); transition: width .25s var(--spring), background .25s ease; cursor: pointer; }
@@ -219,7 +332,6 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .dots:empty { display: none; }
 
 /* ---------- Aviso do Volum: peças da faixa fina (.noticebar) ---------- */
-@keyframes notice-in { from { opacity: 0; transform: translateY(-6px); } }
 .notice-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #1c1c1e; }
 .notice-icon svg { width: 24px; height: 24px; }
 .notice-text { display: grid; flex: 1; min-width: 0; }
@@ -275,7 +387,6 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
   bottom: auto;
   right: auto;
   background: transparent;
-  animation: notice-in .35s var(--spring) both;
 }
 .island:not(.alerting) .noticebar { display: none; }
 .noticebar .notice-icon { width: 20px; height: 20px; border-radius: 0; background: none; }
@@ -287,3 +398,61 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 [data-kind="drop"] .noticebar .notice-action, .noticebar[data-kind="drop"] .notice-action { background: linear-gradient(135deg, var(--water), var(--water-2)); color: #fff; }   /* azul só na água */
 .noticebar .notice-close { width: 22px; height: 22px; }
 .island.alerting .mini, .island.alerting .full { opacity: 0; pointer-events: none; }
+
+/* ---------- Transições suaves ----------
+   A forma cresce/encolhe devagar e macia; o conteúdo que sai some rápido (antes de a forma mudar)
+   e o que entra aparece só depois que a ilha já abriu espaço, desfocado → nítido. Assim nada "pula". */
+.shape { will-change: width, height; }
+
+.mini { transition: opacity .12s ease, filter .12s ease, height var(--anim) var(--spring); }
+.island.closed .mini, .island.idle .mini { transition: opacity .3s ease .18s, filter .3s ease .18s, height var(--anim) var(--spring); }
+.island:not(.closed):not(.idle) .mini { filter: blur(3px); }
+
+.full { filter: blur(4px); transform: translateX(-50%) translateY(-6px) scale(.96);
+  transition: opacity .12s ease, filter .12s ease, transform .2s ease; }
+.island.open .full { filter: none; transform: translateX(-50%);
+  transition: opacity .3s ease .16s, filter .3s ease .16s, transform var(--anim) var(--spring) .06s; }
+
+/* A faixa de aviso é centralizada com translateX(-50%): a animação de entrada precisa manter isso,
+   senão ela termina dando um pulo para o lado */
+.noticebar { animation: notice-in .45s var(--spring) .14s both; }
+@keyframes notice-in { from { opacity: 0; transform: translateX(-50%) translateY(-4px); filter: blur(4px); } }
+
+/* ---------- Pixel art (estilo 16 bits): mascote e cena de levantar ----------
+   Os desenhos vêm do island.js (mapas de pixels). Tudo anda por quadros inteiros (step-end),
+   sem suavizar nada, como nos jogos antigos. */
+.px { shape-rendering: crispEdges; image-rendering: pixelated; overflow: visible; }
+
+/* Mascote: começa feliz (^ ^) com um pulinho, depois olhos normais, pisca, olha para os lados... (ciclo de 9 s) */
+.mascot.px .pe { opacity: 0; animation-duration: 9s; animation-iteration-count: infinite; animation-timing-function: step-end; }
+.mascot.px .pe-open  { animation-name: pe-open; }
+.mascot.px .pe-blink { animation-name: pe-blink; }
+.mascot.px .pe-half  { animation-name: pe-half; }
+.mascot.px .pe-happy { animation-name: pe-happy; }
+.mascot.px .pe-left  { animation-name: pe-left; }
+.mascot.px .pe-right { animation-name: pe-right; }
+.mascot.px .px-body { animation: pe-hop 9s step-end infinite; }
+@keyframes pe-open  { 0% { opacity: 0; } 10% { opacity: 1; } 34% { opacity: 0; } 36.2% { opacity: 1; } 50% { opacity: 0; } 58% { opacity: 1; }
+                      60% { opacity: 0; } 68% { opacity: 1; } 80% { opacity: 0; } 82.2% { opacity: 1; } 83% { opacity: 0; } 85.2% { opacity: 1; } 92%, 100% { opacity: 0; } }
+/* Piscar em etapas: meio fechado → fechado → meio fechado (fica mais natural que sumir de uma vez) */
+@keyframes pe-half  { 0% { opacity: 0; } 34% { opacity: 1; } 34.7% { opacity: 0; } 35.5% { opacity: 1; } 36.2% { opacity: 0; }
+                      80% { opacity: 1; } 80.7% { opacity: 0; } 81.5% { opacity: 1; } 82.2% { opacity: 0; }
+                      83% { opacity: 1; } 83.7% { opacity: 0; } 84.5% { opacity: 1; } 85.2%, 100% { opacity: 0; } }
+@keyframes pe-blink { 0% { opacity: 0; } 34.7% { opacity: 1; } 35.5% { opacity: 0; } 80.7% { opacity: 1; } 81.5% { opacity: 0; }
+                      83.7% { opacity: 1; } 84.5%, 100% { opacity: 0; } }@keyframes pe-happy { 0% { opacity: 1; } 10% { opacity: 0; } 92%, 100% { opacity: 1; } }
+@keyframes pe-left  { 0% { opacity: 0; } 50% { opacity: 1; } 58%, 100% { opacity: 0; } }
+@keyframes pe-right { 0% { opacity: 0; } 60% { opacity: 1; } 68%, 100% { opacity: 0; } }
+@keyframes pe-hop   { 0% { transform: translateY(0); } 3% { transform: translateY(-1px); } 6% { transform: translateY(0); }
+                      94% { transform: translateY(-1px); } 97%, 100% { transform: translateY(0); } }
+.mini-mascot .mascot.px { animation: m-pop .4s steps(3) both; }   /* entra em 3 quadros, sem "respirar" suave */
+.island.idle .mini-mascot .mascot.px { width: 48px; height: 33px; }
+
+/* Cena de levantar: o island.js toca os quadros (roteiro WALK_SCRIPT, ~9,7 s): digita sentado → levanta →
+   espreguiça → anda devagar até o sol → curte o sol. No fim a cena some e entram o texto e o botão. */
+.island.alerting.walking { --h: 54px; --r: 24px; }
+.noticebar[data-kind="walk"] { height: 54px; padding-left: 16px; }
+.walk-scene { display: none; position: absolute; inset: 0; width: 400px; height: 54px; pointer-events: none; }
+.noticebar[data-kind="walk"] .walk-scene { display: block; overflow: hidden; transition: opacity .5s ease; }
+.noticebar[data-kind="walk"].scene-done .walk-scene { opacity: 0; }
+.noticebar[data-kind="walk"] > :not(.walk-scene):not(.notice-close) { opacity: 0; transform: translateY(3px); transition: opacity .45s ease .25s, transform .45s ease .25s; }
+.noticebar[data-kind="walk"].scene-done > :not(.walk-scene):not(.notice-close) { opacity: 1; transform: none; }

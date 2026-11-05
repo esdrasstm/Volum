@@ -137,7 +137,17 @@ sealed class SettingsForm : Form
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             water = new { enabled = w.Enabled, goalMl = w.GoalMl, intervalMin = w.IntervalMin, cupMl = w.CupMl, todayMl = w.TodayMl, sound = w.Sound },
             version = Updater.Version,
-            island = _settings.IslandEnabled
+            island = _settings.IslandEnabled,
+            focus = new
+            {
+                pomodoro = _settings.PomodoroEnabled,
+                focusMin = _settings.FocusMin,
+                shortMin = _settings.ShortBreakMin,
+                longMin = _settings.LongBreakMin,
+                every = _settings.LongBreakEvery,
+                standUp = _settings.StandUpEnabled,
+                standMin = _settings.StandUpMin
+            }
         });
     }
 
@@ -231,6 +241,27 @@ sealed class SettingsForm : Form
                     _settings.IslandEnabled = root.GetProperty("enabled").GetBoolean();
                     _settings.Save();
                     IslandForm.Apply(_settings.IslandEnabled);
+                    break;
+
+                case "setFocus":   // Pomodoro e aviso de levantar (página Ilha)
+                    int Get(string key, int def, int min, int max) =>
+                        root.TryGetProperty(key, out var v) && v.TryGetInt32(out var n) ? Math.Clamp(n, min, max) : def;
+                    _settings.PomodoroEnabled = root.GetProperty("pomodoro").GetBoolean();
+                    _settings.FocusMin = Get("focusMin", 25, 5, 120);
+                    _settings.ShortBreakMin = Get("shortMin", 5, 1, 30);
+                    _settings.LongBreakMin = Get("longMin", 15, 5, 60);
+                    _settings.LongBreakEvery = Get("every", 4, 2, 8);
+                    _settings.StandUpEnabled = root.GetProperty("standUp").GetBoolean();
+                    _settings.StandUpMin = Get("standMin", 60, 20, 240);
+                    _settings.Save();
+                    if (!_settings.PomodoroEnabled) Pomodoro.Stop();
+                    Pomodoro.Configure();
+                    StandUp.Apply();
+                    IslandForm.SettingsChanged();
+                    break;
+
+                case "testStand":   // "Testar aviso" do levantar
+                    StandUp.Test();
                     break;
 
                 case "openSite":   // "Sobre": site, sugestões e GitHub (a janela continua aberta)

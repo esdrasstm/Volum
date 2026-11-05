@@ -11,6 +11,18 @@
   <link rel="stylesheet" href="island.css">
 </head>
 <body>
+  <!-- Degradê dos olhos do mascote (usado por todas as cópias dele na página) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="mEyeL" x1="78.08" y1="253.03" x2="133.67" y2="156.74" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#f7f7f7"/><stop offset="1" stop-color="#002e5f"/>
+      </linearGradient>
+      <linearGradient id="mEyeR" x1="315.18" y1="253.03" x2="370.77" y2="156.74" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#f7f7f7"/><stop offset="1" stop-color="#002e5f"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
   <div id="island" class="island closed">
     <div class="shape" aria-hidden="true"></div>
 
@@ -19,6 +31,13 @@
       <span class="mini-left">
         <img id="miniCover" class="mini-cover" alt="" hidden>
         <span class="battery" id="miniBattery" hidden></span>
+        <!-- Mascote: aparece quando a ilha fica um tempo sem uso (o JS põe o desenho aqui) -->
+        <span class="mini-mascot" id="miniMascot" hidden></span>
+        <!-- Pomodoro rodando: anel que vai enchendo (a hora continua no meio) -->
+        <svg class="mini-ring" id="miniRing" viewBox="0 0 20 20" aria-hidden="true" hidden>
+          <circle cx="10" cy="10" r="7.5" class="ring-bg"/>
+          <circle cx="10" cy="10" r="7.5" class="ring-fg" id="miniRingFg"/>
+        </svg>
       </span>
       <b id="clock" class="clock">--:--</b>
       <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
@@ -26,6 +45,8 @@
 
     <!-- Aviso do Volum: faixa fina, da altura da ilha (ex.: lembrete de água) -->
     <div class="noticebar" id="notice" hidden>
+      <!-- Aviso de levantar: cena em pixel art do bonequinho (o island.js desenha aqui) -->
+      <svg class="walk-scene" id="walkScene" aria-hidden="true"></svg>
       <span class="notice-icon" id="noticeIcon"></span>
       <span class="notice-text"><b id="noticeTitle"></b><span id="noticeBody"></span></span>
       <button id="noticeAction" class="notice-action" hidden></button>
@@ -82,6 +103,33 @@
             <button class="side" id="openMixer" title="Volum" aria-label="Volum">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             </button>
+          </div>
+        </section>
+
+        <!-- Página: Pomodoro (só com ele ligado nas configurações) -->
+        <section class="page" data-page="focus" hidden>
+          <div class="focus">
+            <svg class="focus-ring" viewBox="0 0 48 48" aria-hidden="true">
+              <circle cx="24" cy="24" r="20" class="ring-bg"/>
+              <circle cx="24" cy="24" r="20" class="ring-fg" id="focusRingFg"/>
+            </svg>
+            <div class="focus-text">
+              <span id="focusPhase"></span>
+              <b id="focusTime">25:00</b>
+              <span id="focusCycle"></span>
+            </div>
+            <div class="focus-buttons">
+              <button id="focusStop" class="soft" title="Parar" data-i18n-title="focusStop">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>
+              </button>
+              <button id="focusMain" class="main" title="Começar" data-i18n-title="focusStart">
+                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L18.5 12z" fill="currentColor"/></svg>
+                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor"/><rect x="13.4" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor"/></svg>
+              </button>
+              <button id="focusSkip" class="soft" title="Pular" data-i18n-title="focusSkip">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l8.5-6zM16.5 6h2v12h-2z" fill="currentColor"/></svg>
+              </button>
+            </div>
           </div>
         </section>
 

@@ -163,6 +163,61 @@
           </label>
         </div>
       </div>
+
+      <!-- Pomodoro e lembrete para levantar: só funcionam com a ilha ligada -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="pomoToggle">Pomodoro na ilha</span>
+            <small data-i18n="pomoHint">Foco e pausas com a contagem na ilha</small>
+          </span>
+          <label class="switch">
+            <input id="pomoOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="pomoOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="pomoFocus">Foco</span>
+            <div class="stepper fstep" data-key="focusMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoShort">Pausa curta</span>
+            <div class="stepper fstep" data-key="shortMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoLong">Pausa longa</span>
+            <div class="stepper fstep" data-key="longMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoEvery">Pausa longa a cada</span>
+            <div class="stepper fstep" data-key="every" data-unit="cycles"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="standToggle">Lembrete para levantar</span>
+            <small data-i18n="standHint">Avisa pela ilha depois de um tempo sentado</small>
+          </span>
+          <label class="switch">
+            <input id="standOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="standOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="standEvery">Avisar depois de</span>
+            <div class="stepper fstep" data-key="standMin" data-unit="time"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="standTest" data-i18n="standTest">Testar aviso de levantar</button>
+      </div>
+      <p class="page-note" id="focusNote" data-i18n="focusNeedsIsland"></p>
       <p class="page-note" data-i18n="islandNote"></p>
     </section>
 
