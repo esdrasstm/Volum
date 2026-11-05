@@ -39,8 +39,9 @@ jobs:
           mkdir -p _site/app
           cp -r site/. _site/
           cp -r LeveMixerWeb/wwwroot/. _site/app/
-          sed -i 's#\.\./LeveMixerWeb/wwwroot/#app/#g' _site/demo.html
+          sed -i 's#\.\./LeveMixerWeb/wwwroot/#app/#g' _site/demo.html _site/index.html
           grep -q 'app/app.js' _site/demo.html
+          grep -q 'app/shared.js' _site/index.html   # a página inicial usa o mascote e a fonte do app
           # A estrutura da demo (<main>…</main>) é copiada do app a cada publicação:
           # se o app ganhar um botão novo, a demo do site não fica desatualizada.
           python3 - <<'PY'

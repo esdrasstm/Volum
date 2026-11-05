@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Volum — o volume de cada app, a um clique</title>
   <meta name="description" content="Volum é um mixer de volume leve para Windows: controle o som de cada aplicativo e do microfone direto da barra de tarefas.">
-  <meta name="theme-color" content="#0e0603">
+  <meta name="theme-color" content="#090909">
   <!-- Card de compartilhamento (WhatsApp, redes sociais): título, descrição e imagem -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Volum">
@@ -17,7 +17,8 @@
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="pt_BR">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23ed5a23'/><g stroke='%23fff' stroke-width='2.5' stroke-linecap='round'><line x1='9.5' y1='8' x2='9.5' y2='24'/><line x1='16' y1='8' x2='16' y2='24'/><line x1='22.5' y1='8' x2='22.5' y2='24'/></g><g fill='%23fff'><circle cx='9.5' cy='19.5' r='3.4'/><circle cx='16' cy='11.5' r='3.4'/><circle cx='22.5' cy='17' r='3.4'/></g></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><rect x='1' y='3' width='14' height='10' fill='%23f9f9f9'/><rect x='0' y='4' width='16' height='8' fill='%23f9f9f9'/><rect x='3' y='5' width='2' height='2' fill='%23002e5f'/><rect x='11' y='5' width='2' height='2' fill='%23002e5f'/><rect x='3' y='7' width='2' height='2' fill='%233d6a99'/><rect x='11' y='7' width='2' height='2' fill='%233d6a99'/></svg>">
+  <link rel="stylesheet" href="../LeveMixerWeb/wwwroot/mascot.css">
   <style>
     /* =========================================================
        Volum — landing page (local)
@@ -618,6 +619,109 @@
       *, *::before, *::after { animation: none !important; transition: none !important; }
       .js .reveal, .js .reveal.zoom { opacity: 1; transform: none; }
     }
+
+    /* =========================================================
+       Identidade do Volum (11/2026): a mesma do app. Fundo #090909, branco no lugar do laranja,
+       fonte Sora, ícones de traço e o mascote em pixel art. Fica por cima das regras acima.
+       ========================================================= */
+    @font-face {
+      font-family: "Sora";
+      src: url("../LeveMixerWeb/wwwroot/fonts/Sora.woff2") format("woff2");
+      font-weight: 100 800;
+      font-display: swap;
+    }
+    :root {
+      --accent: #ffffff;
+      --accent-2: #ffffff;
+      --accent-ring: rgba(255, 255, 255, .16);
+      --bg: #090909;
+      --text: #ffffff;
+      --subtext: rgba(255, 255, 255, .62);
+      --muted: rgba(255, 255, 255, .42);
+      --glass: rgba(255, 255, 255, .025);
+      --glass-strong: rgba(255, 255, 255, .05);
+      --border: rgba(255, 255, 255, .09);
+      --highlight: rgba(255, 255, 255, .05);
+      --font: "Sora", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --font-display: "Sora", "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    body { font-size: 15px; }
+
+    /* Fundo: brilho neutro e frio no topo (no lugar do laranja quente) */
+    .blob.b1 { background: #3b3b3b; opacity: .35; }
+    .blob.b2 { background: #16314f; opacity: .3; }
+    .blob.b3 { background: #222; opacity: .3; }
+
+    /* Botões: o principal é branco com texto escuro */
+    .btn-primary, .btn-primary:hover { color: #090909; background: #fff; box-shadow: 0 10px 30px rgba(255, 255, 255, .12); }
+    .btn-primary:hover { box-shadow: 0 14px 38px rgba(255, 255, 255, .2); }
+    .btn-primary::after { background: linear-gradient(105deg, transparent 35%, rgba(0, 0, 0, .1) 50%, transparent 65%); }
+
+    /* Textos em degradê: do branco ao cinza */
+    h1 { letter-spacing: -2px; }
+    h1 .grad, h1 .script, .stat b {
+      background: linear-gradient(120deg, #fff 30%, #8f8f8f);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .eyebrow { color: var(--muted); }
+
+    /* Cartões, passos, formulário e menu em tons neutros */
+    .card:hover, .step:hover, .stat:hover { border-color: rgba(255, 255, 255, .22); }
+    .card .icon { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .12); color: #fff; }
+    .card:hover .icon { box-shadow: 0 8px 22px rgba(255, 255, 255, .08); }
+    .step::before { background: #fff; color: #090909; box-shadow: none; }
+    .kind input:checked + span { color: #090909; background: #fff; box-shadow: none; }
+    .field textarea:focus, .field input:focus { border-color: rgba(255, 255, 255, .45); }
+    .nav.scrolled .nav-inner { background: linear-gradient(160deg, rgba(24, 24, 24, .85), rgba(12, 12, 12, .82)); }
+    .card::after, .step::after, .stat::after, .notice::after, .final::after, .faq details::after {
+      background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, .07), transparent 45%);
+    }
+    .final::before { background: conic-gradient(from var(--angle), transparent 0 62%, rgba(255, 255, 255, .8) 76%, transparent 88%); }
+    .demo.min + .taskbar .tray-btn::after { border-color: #fff; }
+    .features { grid-template-columns: repeat(3, 1fr); }
+
+    /* Mascote em pixel art (desenho do shared.js do app, animações no mascot.css) */
+    .brand .brand-mascot { display: block; line-height: 0; }
+    .brand .brand-mascot .mascot.px { display: block; width: 32px; height: 22px; }
+    #trayMascot { display: block; line-height: 0; }
+    #trayMascot .mascot.px { display: block; width: 24px; height: 16.5px; }
+
+    /* ---------- Hero centralizado, com o mascote grande ---------- */
+    .hero { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 0; padding: 40px 0 56px; }
+    .hero-copy { padding-top: 0; display: flex; flex-direction: column; align-items: center; }
+    .lead { margin-left: auto; margin-right: auto; max-width: 38em; }
+    .cta { justify-content: center; }
+    .hero-mascot {
+      display: block;
+      width: 216px;
+      height: 168px;
+      margin: 0 auto 6px;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+      filter: drop-shadow(0 24px 40px rgba(0, 0, 0, .55));
+    }
+    .hero-mascot:focus-visible { outline: 2px solid #fff; outline-offset: 6px; border-radius: 12px; }
+    .hero-mascot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    /* Pulinho (em pixels inteiros, como nos jogos antigos) */
+    .hero-mascot.hop .hm-body { animation: hm-hop .5s step-end; }
+    @keyframes hm-hop { 0% { transform: translateY(-1px); } 20% { transform: translateY(-2px); } 45% { transform: translateY(-1px); } 70%, 100% { transform: translateY(0); } }
+
+    /* ---------- Experimente: a demo do mixer ao lado do texto ---------- */
+    .try { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 56px; }
+    .try .section-lead { margin-bottom: 0; }
+    .stage::before { background: radial-gradient(circle, rgba(255, 255, 255, .08), transparent 70%); }
+
+    @media (max-width: 900px) {
+      .features { grid-template-columns: 1fr 1fr; }
+      .try { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+      .try .section-lead { margin: 0 auto; }
+    }
+    @media (max-width: 640px) {
+      .features { grid-template-columns: 1fr; }
+      .hero-mascot { width: 162px; height: 126px; }
+    }
   </style>
 </head>
 <body>
@@ -633,15 +737,11 @@
   <header class="nav wrap">
     <div class="nav-inner glass">
       <a class="brand" href="#">
-        <svg viewBox="0 0 32 32" aria-hidden="true">
-          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5895a"/><stop offset="1" stop-color="#e04a12"/></linearGradient></defs>
-          <circle cx="16" cy="16" r="16" fill="url(#lg)"/>
-          <g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g>
-          <g fill="#fff"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g>
-        </svg>
+        <span class="brand-mascot" id="navMascot" aria-hidden="true"></span>
         Volum
       </a>
       <nav class="nav-links" aria-label="Seções">
+        <a href="#experimente">Experimente</a>
         <a href="#recursos">Recursos</a>
         <a href="#como-funciona">Como funciona</a>
         <a href="#perguntas">Perguntas</a>
@@ -657,34 +757,23 @@
     <!-- ===================== Hero ===================== -->
     <div class="hero">
       <div class="hero-copy">
-        <span class="pill glass intro" style="--i:0"><span class="dot"></span> Grátis para Windows 10 e 11</span>
-        <h1 class="intro" style="--i:1">O volume de cada app, <span class="grad">a um <em class="script">clique</em>.</span></h1>
-        <p class="lead intro" style="--i:2">
-          Volum é um mixer leve que mora na barra de tarefas do Windows. Abaixe o jogo, suba a call,
-          silencie o navegador e ajuste o microfone, tudo numa janela que some quando você não precisa.
+        <!-- Mascote do Volum em pixel art: os olhos seguem o mouse, pisca sozinho, fica feliz no "Baixar"
+             e pula quando clicam nele (script no fim da página) -->
+        <button class="hero-mascot intro" id="heroMascot" style="--i:0" type="button" aria-label="Mascote do Volum"></button>
+        <span class="pill glass intro" style="--i:1"><span class="dot"></span> Grátis para Windows 10 e 11</span>
+        <h1 class="intro" style="--i:2">O volume de cada app, <span class="grad">a um <em class="script">clique</em>.</span></h1>
+        <p class="lead intro" style="--i:3">
+          Volum é um mixer leve que mora na barra de tarefas do Windows. Abaixe o jogo, suba a call, ajuste o microfone
+          e, se quiser, ganhe uma ilha no topo da tela com a música, o Pomodoro e lembretes para beber água e levantar.
         </p>
-        <div class="cta intro" style="--i:3">
+        <div class="cta intro" style="--i:4">
           <a class="btn btn-primary download-link" data-goatcounter-click="baixar-topo" href="https://github.com/esdrasstm/Volum/releases/latest/download/Volum-win-Setup.exe">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
             Baixar para Windows
           </a>
-          <a class="btn btn-ghost" href="#recursos">Ver recursos</a>
+          <a class="btn btn-ghost" href="#experimente">Experimentar agora</a>
         </div>
-        <div class="meta intro" style="--i:4"><span>Tão leve que você esquece que está aberto</span><span>Instala em segundos</span><span>Sem cadastro</span></div>
-      </div>
-
-      <!-- Demo interativa: é a interface do app de verdade (demo.html), dá para mexer em tudo -->
-      <div class="stage intro-side">
-        <div class="demo" id="demo">
-          <iframe id="demoFrame" src="demo.html" title="Demonstração interativa do Volum: mexa nos volumes e nas configurações"></iframe>
-        </div>
-        <div class="taskbar glass">
-          <span class="hint" id="demoHint">Experimente: arraste e silencie os apps</span>
-          <button class="tray-btn" id="trayBtn" title="Volum" aria-label="Abrir ou fechar o Volum">
-            <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="url(#lg)"/><g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="#fff"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
-          </button>
-          <span class="clock" id="clock">12:00<br>08/10</span>
-        </div>
+        <div class="meta intro" style="--i:5"><span>Tão leve que você esquece que está aberto</span><span>Instala em segundos</span><span>Sem cadastro</span></div>
       </div>
     </div>
 
@@ -696,42 +785,77 @@
       <div class="stat glass"><b><span data-count="3">3</span></b><span>idiomas</span></div>
     </div>
 
+    <!-- ===================== Experimente: a interface do app de verdade (demo.html) ===================== -->
+    <section id="experimente" class="try">
+      <div class="try-copy">
+        <div class="eyebrow reveal">Experimente</div>
+        <h2 class="reveal">Mexa no Volum de verdade.</h2>
+        <p class="section-lead reveal">Esta é a interface do app rodando aqui no site. Arraste os volumes, silencie os apps e marque um copo de água.</p>
+      </div>
+      <!-- Demo interativa: é a interface do app de verdade (demo.html), dá para mexer em tudo -->
+      <div class="stage reveal zoom">
+        <div class="demo" id="demo">
+          <iframe id="demoFrame" src="demo.html" title="Demonstração interativa do Volum: mexa nos volumes e nas configurações"></iframe>
+        </div>
+        <div class="taskbar glass">
+          <span class="hint" id="demoHint">Experimente: arraste e silencie os apps</span>
+          <button class="tray-btn" id="trayBtn" title="Volum" aria-label="Abrir ou fechar o Volum"><span id="trayMascot" aria-hidden="true"></span></button>
+          <span class="clock" id="clock">12:00<br>08/10</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ===================== Recursos ===================== -->
     <section id="recursos">
       <div class="eyebrow reveal">Recursos</div>
       <h2 class="reveal">Tudo o que o mixer do Windows <br>deveria ter, num clique.</h2>
-      <p class="section-lead reveal">Sem abrir configurações, sem procurar painel escondido. Clique no ícone fixado na barra de tarefas e ajuste.</p>
+      <p class="section-lead reveal">Sem abrir configurações, sem procurar painel escondido. E agora com uma ilha no topo da tela que cuida de você enquanto trabalha.</p>
 
       <div class="features" data-stagger>
         <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="14" r="2.2" fill="currentColor"/><circle cx="12" cy="8" r="2.2" fill="currentColor"/><circle cx="18" cy="12" r="2.2" fill="currentColor"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 11v2M6 8v8M9 4v16M12 7v10M15 10v4M18 8v8M21 11v2"/></svg></div>
           <h3>Volume de cada app</h3>
-          <p>Cada programa que está tocando som aparece com seu ícone, volume, mute e um medidor que mostra o áudio ao vivo.</p>
+          <p>Cada programa que está tocando som aparece com seu ícone, volume e mute. A ondinha ao lado anda junto com o som.</p>
         </article>
         <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2.5" width="7" height="12" rx="3.5"/><path d="M5 11a7 7 0 0014 0M12 18v3.5"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4"/></svg></div>
           <h3>Microfone na mão</h3>
-          <p>Silencie, ajuste o ganho e troque de microfone. A barrinha cresce quando você fala — dá para saber na hora se ele está funcionando.</p>
+          <p>Silencie, ajuste o ganho e troque de microfone sem abrir as configurações do Windows.</p>
         </article>
         <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="4"/></svg></div>
+          <h3>Ilha no topo da tela</h3>
+          <p>Uma pílula preta no topo, estilo iPhone: música tocando com capa e controles, água e os avisos do Volum. Some sozinha em jogos e vídeos em tela cheia.</p>
+        </article>
+        <article class="card glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5M12 2.5V6"/></svg></div>
+          <h3>Pomodoro na ilha</h3>
+          <p>Foco e pausas com a contagem ali no topo: comece, pause e pule sem sair do que está fazendo. Os tempos você escolhe.</p>
+        </article>
+        <article class="card glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8c3.7 4.3 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.8 8.3 7.1 12 2.8z"/></svg></div>
+          <h3>Lembrete de água</h3>
+          <p>Escolha a meta do dia e de quanto em quanto tempo quer ser lembrado. Marque cada copo direto no mixer ou na ilha.</p>
+        </article>
+        <article class="card glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.8"/><path d="M9 21l3-6 2.5 2.5V21M12 15l-1.5-5 3.5-2 2.5 3 2.5 1M10.5 10l-3 1.5-1 3"/></svg></div>
+          <h3>Hora de levantar</h3>
+          <p>Depois de um tempo sentado, a ilha lembra você de esticar as pernas e tomar um sol. Durante um foco, ela espera a pausa.</p>
+        </article>
+        <article class="card glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01" stroke-width="2.2"/><path d="M8.5 14h7"/></svg></div>
+          <h3>Abre no meio do jogo</h3>
+          <p>Ctrl+Alt+V abre o mixer por cima de tudo. E dá para travar o teclado por alguns minutos para limpar, sem desligar nada.</p>
+        </article>
+        <article class="card glass">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/></svg></div>
           <h3>Leve de verdade</h3>
-          <p>Parado, praticamente não usa processador. Fica quietinho na bandeja e não disputa espaço com seus jogos e programas. Para PCs mais simples, o Modo leve desliga os efeitos e economiza ainda mais memória.</p>
+          <p>Parado, praticamente não usa processador. Para PCs mais simples, o Modo leve desliga os efeitos e economiza ainda mais memória.</p>
         </article>
         <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M3 9h18" opacity=".5"/></svg></div>
-          <h3>Visual de vidro</h3>
-          <p>Feito para combinar com o Windows 11: efeito de vidro desfocado, tema claro, escuro ou igual ao do sistema.</p>
-        </article>
-        <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v5h-5"/></svg></div>
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></div>
           <h3>Atualiza sozinho</h3>
-          <p>Versões novas chegam em silêncio, sem você precisar baixar nada de novo.</p>
-        </article>
-        <article class="card glass">
-          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></div>
-          <h3>Português, inglês e espanhol</h3>
-          <p>Escolha o idioma nas configurações. Abre com o Windows, se você quiser.</p>
+          <p>Versões novas chegam em silêncio. Em português, inglês e espanhol, e abre com o Windows, se você quiser.</p>
         </article>
       </div>
     </section>
@@ -782,11 +906,11 @@
         </details>
         <details class="glass">
           <summary>Funciona no Windows 10?</summary>
-          <p>Funciona no Windows 10 e no 11 (64 bits). O efeito de vidro aparece no Windows 11; no 10 o visual é sólido.</p>
+          <p>Funciona no Windows 10 e no 11 (64 bits), com o mesmo visual nos dois.</p>
         </details>
         <details class="glass">
-          <summary>Por que o Windows diz que o microfone está em uso?</summary>
-          <p>Para a barrinha do microfone mostrar sua voz, o Volum precisa "ouvir" o nível enquanto o mixer está aberto. Ele não grava nada. Ao fechar o mixer, o aviso some — e no Modo leve isso fica desligado.</p>
+          <summary>A ilha atrapalha jogos ou vídeos?</summary>
+          <p>Não. Em tela cheia ela some sozinha, e se ficar em cima de abas ou menus de outro app, ela vira só um risquinho. Também dá para desligar em Configurações → Ilha.</p>
         </details>
         <details class="glass">
           <summary>O Volum coleta meus dados?</summary>
@@ -849,6 +973,8 @@
     </div>
   </footer>
 
+  <!-- Textos e mascote do app (o mesmo shared.js da interface) -->
+  <script src="../LeveMixerWeb/wwwroot/shared.js"></script>
   <script>
     // Animações ao rolar (scroll-triggered). Sem suporte ou sem script, tudo fica visível direto.
     // "Modo Figma" (index.html?figma): tudo visível de uma vez, sem animações — para importar no Figma
@@ -1078,6 +1204,73 @@
     };
     tickClock();
     setInterval(tickClock, 30000);
+
+    // ---------- Mascote do Volum (pixel art, o mesmo do app: desenho no shared.js) ----------
+    // Topo e bandeja da demo: o mascote animado do app (mascot.css).
+    if (window.Volum && Volum.MASCOT_PX) {
+      for (const id of ['navMascot', 'trayMascot']) { const el = document.getElementById(id); if (el) el.innerHTML = Volum.MASCOT_PX; }
+    }
+
+    // Hero: mascote grande e interativo. Os olhos seguem o mouse (de pixel em pixel), ele pisca sozinho,
+    // fica feliz (^ ^) com o mouse no "Baixar" e dá um pulinho quando clicam nele.
+    const heroMascot = document.getElementById('heroMascot');
+    if (window.Volum && Volum.MASCOT_PARTS && heroMascot) {
+      const { pal, face, eyes } = Volum.MASCOT_PARTS;
+      const px = Volum.pixels;
+      heroMascot.innerHTML = '<svg class="px" viewBox="-1 -3 18 14" aria-hidden="true"><g class="hm-body">' +
+        px(face, pal) + '<g class="hm-eyes"></g></g></svg>';
+      const eyesEl = heroMascot.querySelector('.hm-eyes');
+      let look = { x: 0, y: 0 }, frame = 'happy', drawn = '', happyHold = false;
+
+      const draw = () => {
+        const still = frame === 'happy';               // feliz: olhos em arquinho, sem seguir o mouse
+        const dx = still ? 0 : look.x, dy = still ? 0 : look.y;
+        const key = frame + dx + ',' + dy;
+        if (key === drawn) return;
+        drawn = key;
+        eyesEl.innerHTML = px(eyes[frame], pal, dx, 2 + dy);
+      };
+      const setFrame = (f) => { frame = f; draw(); };
+      const hop = () => { heroMascot.classList.remove('hop'); void heroMascot.offsetWidth; heroMascot.classList.add('hop'); };
+
+      // Olhar: até 2 pixels para os lados e 1 para cima/baixo, conforme onde o mouse está
+      let pending = false, mouse = null;
+      addEventListener('pointermove', (e) => {
+        mouse = e;
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(() => {
+          pending = false;
+          const r = heroMascot.getBoundingClientRect();
+          const cx = r.left + r.width / 2, cy = r.top + r.height * .45;
+          const clamp = (v, m) => Math.max(-m, Math.min(m, v));
+          look = { x: clamp(Math.round((mouse.clientX - cx) / 140), 2), y: clamp(Math.round((mouse.clientY - cy) / 160), 1) };
+          draw();
+        });
+      }, { passive: true });
+      document.documentElement.addEventListener('pointerleave', () => { look = { x: 0, y: 0 }; draw(); });
+
+      // Piscar em etapas (meio fechado → fechado → meio fechado), às vezes duas vezes seguidas
+      const blinkOnce = (then) => {
+        if (frame !== 'open') { then && then(); return; }
+        setFrame('half');
+        setTimeout(() => { setFrame('blink'); setTimeout(() => { setFrame('half'); setTimeout(() => { if (frame === 'half') setFrame('open'); then && then(); }, 70); }, 110); }, 70);
+      };
+      const scheduleBlink = () => setTimeout(() => {
+        blinkOnce(() => { if (Math.random() < .3) setTimeout(() => blinkOnce(scheduleBlink), 180); else scheduleBlink(); });
+      }, 2400 + Math.random() * 3600);
+
+      // Feliz: ao chegar (com pulinho), no "Baixar" e ao clicar nele
+      const happy = (ms) => { setFrame('happy'); hop(); if (ms) setTimeout(() => { if (!happyHold) setFrame('open'); }, ms); };
+      document.querySelectorAll('.download-link').forEach((a) => {
+        a.addEventListener('pointerenter', () => { happyHold = true; setFrame('happy'); });
+        a.addEventListener('pointerleave', () => { happyHold = false; setFrame('open'); });
+      });
+      heroMascot.addEventListener('click', () => happy(900));
+
+      draw();
+      setTimeout(() => { hop(); setTimeout(() => { if (!happyHold) setFrame('open'); scheduleBlink(); }, 1200); }, 500);
+    }
   </script>
 </body>
 </html>
