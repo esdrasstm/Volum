@@ -52,6 +52,16 @@ jobs:
           main = re.search(r'<main id="card".*?</main>', app, re.S).group(0)
           demo_path.write_text(re.sub(r'<main id="card".*?</main>', lambda m: main, demo, count=1, flags=re.S), encoding="utf-8")
           print("estrutura da demo sincronizada com o app")
+          # Demo da ilha: gerada a partir do island.html do app (a mesma troca do site/island-demo.html local)
+          isl = pathlib.Path("LeveMixerWeb/wwwroot/island.html").read_text(encoding="utf-8")
+          isl = (isl.replace('href="island.css"', 'href="app/island.css"')
+                    .replace('href="mascot.css"', 'href="app/mascot.css"')
+                    .replace('<script src="shared.js"></script>', '<script src="island-bridge.js"></script>\n  <script src="app/shared.js"></script>')
+                    .replace('<script src="island.js"></script>', '<script src="app/island.js"></script>')
+                    .replace('</head>', '  <style>html, body { background: transparent !important; }</style>\n</head>'))
+          assert 'island-bridge.js' in isl and 'app/island.js' in isl
+          pathlib.Path("_site/island-demo.html").write_text(isl, encoding="utf-8")
+          print("demo da ilha gerada a partir do app")
           PY
 
       - name: Preparar o Pages

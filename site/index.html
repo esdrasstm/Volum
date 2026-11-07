@@ -708,15 +708,59 @@
     .hero-mascot.hop .hm-body { animation: hm-hop .5s step-end; }
     @keyframes hm-hop { 0% { transform: translateY(-1px); } 20% { transform: translateY(-2px); } 45% { transform: translateY(-1px); } 70%, 100% { transform: translateY(0); } }
 
-    /* ---------- Experimente: a demo do mixer ao lado do texto ---------- */
-    .try { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 56px; }
-    .try .section-lead { margin-bottom: 0; }
-    .stage::before { background: radial-gradient(circle, rgba(255, 255, 255, .08), transparent 70%); }
+    /* ---------- Experimente: um PC desenhado (logo abaixo do título) ----------
+       A tela é desenhada em 1000×560 e encolhe junto com a página (o script põe o zoom).
+       Ilha (island-demo.html) no topo, mixer (demo.html) abrindo pela bandeja, barra de tarefas no estilo do Windows. */
+    .showcase { padding: 8px 0 64px; }
+    .screen-wrap { position: relative; max-width: 1000px; margin: 0 auto; }
+    .screen-wrap::before {   /* brilho suave atrás da tela */
+      content: ""; position: absolute; inset: 8% 6% -4%; z-index: -1;
+      background: radial-gradient(closest-side, rgba(99, 102, 241, .25), transparent); filter: blur(40px);
+    }
+    .screen {
+      position: relative; width: 1000px; height: 560px; overflow: hidden; border-radius: 22px;
+      background:
+        radial-gradient(60% 70% at 18% 95%, #6d28d9 0%, transparent 60%),
+        radial-gradient(55% 65% at 85% 10%, #0e7490 0%, transparent 60%),
+        radial-gradient(45% 55% at 70% 85%, #be185d 0%, transparent 65%),
+        linear-gradient(160deg, #111827, #0b0b14);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, .6), inset 0 0 0 1px rgba(255, 255, 255, .08);
+    }
+    .screen .island-frame {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      width: 520px; height: 300px; border: 0; background: transparent; z-index: 2;
+      color-scheme: dark;   /* igual ao da ilha: com esquemas diferentes o navegador pinta o fundo do iframe */
+    }
+    /* Mixer: canto de baixo à direita, em cima da barra de tarefas (como no Windows) */
+    .screen .demo { position: absolute; right: 12px; bottom: 60px; width: 360px; margin: 0; z-index: 3; }
+    .screen .demo iframe { height: 470px; box-shadow: 0 24px 60px rgba(0, 0, 0, .55); }
+    /* Barra de tarefas */
+    .screen .taskbar {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 48px; width: auto; max-width: none;
+      display: flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 0; z-index: 4;
+      background: rgba(18, 18, 24, .72); backdrop-filter: blur(24px) saturate(140%); -webkit-backdrop-filter: blur(24px) saturate(140%);
+      border-top: 1px solid rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .8);
+    }
+    .tb-apps { display: flex; gap: 4px; }
+    .tb-app {
+      position: relative; width: 40px; height: 40px; display: grid; place-items: center;
+      border: 0; border-radius: 8px; background: transparent; color: #fff; cursor: pointer; transition: background .15s, transform .15s;
+    }
+    .tb-app:hover { background: rgba(255, 255, 255, .1); }
+    .tb-app:active { transform: scale(.9); }
+    .tb-app svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .tb-app::after {   /* nome em cima do botão, ao passar o mouse */
+      content: attr(data-label); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
+      padding: 4px 9px; border-radius: 7px; background: rgba(30, 30, 36, .95); font-size: 12px; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s;
+    }
+    .tb-app:hover::after { opacity: 1; transform: translateX(-50%); }
+    .tb-tray { position: absolute; right: 10px; top: 0; bottom: 0; display: flex; align-items: center; gap: 8px; }
+    .screen .clock { font-size: 11.5px; }
+    .screen-hint { margin: 18px auto 0; text-align: center; font-size: 13.5px; color: var(--subtext); }
 
     @media (max-width: 900px) {
       .features { grid-template-columns: 1fr 1fr; }
-      .try { grid-template-columns: 1fr; gap: 32px; text-align: center; }
-      .try .section-lead { margin: 0 auto; }
     }
     @media (max-width: 640px) {
       .features { grid-template-columns: 1fr; }
@@ -781,6 +825,36 @@
       </div>
     </div>
 
+    <!-- ===================== Experimente: um PC desenhado com a ilha e o mixer de verdade ===================== -->
+    <!-- A ilha (island-demo.html) e o mixer (demo.html) são a interface do app rodando aqui; as pontes
+         island-bridge.js e demo-bridge.js fazem o papel do C#. Os botões da barra de tarefas disparam as atividades. -->
+    <section id="experimente" class="showcase">
+      <div class="screen-wrap reveal zoom" id="screenWrap">
+        <div class="screen" id="screen">
+          <iframe class="island-frame" id="islandFrame" src="island-demo.html" title="Demonstração interativa da ilha do Volum"></iframe>
+          <div class="demo min" id="demo">
+            <iframe id="demoFrame" src="demo.html" title="Demonstração interativa do mixer do Volum: mexa nos volumes"></iframe>
+          </div>
+          <div class="taskbar" id="taskbar">
+            <div class="tb-apps" role="toolbar" aria-label="Atividades da ilha">
+              <button class="tb-app" data-act="music" data-label="Música"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></button>
+              <button class="tb-app" data-act="water" data-label="Água"><svg viewBox="0 0 24 24"><path d="M12 2.8c3.6 4.4 6.2 7.8 6.2 11a6.2 6.2 0 0 1-12.4 0c0-3.2 2.6-6.6 6.2-11z"/></svg></button>
+              <button class="tb-app" data-act="pomo" data-label="Pomodoro"><svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5"/></svg></button>
+              <button class="tb-app" data-act="calendar" data-label="Agenda"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button>
+              <button class="tb-app" data-act="charger" data-label="Carregador"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M21.5 10.5v3M11.5 8.8 9 12.2h3.2L10.5 15.4"/></svg></button>
+              <button class="tb-app" data-act="headphones" data-label="Fone"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3.5" y="13.5" width="4.5" height="7" rx="1.8"/><rect x="16" y="13.5" width="4.5" height="7" rx="1.8"/></svg></button>
+              <button class="tb-app" data-act="camera" data-label="Câmera"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="13" height="11" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></svg></button>
+            </div>
+            <div class="tb-tray">
+              <button class="tray-btn" id="trayBtn" title="Volum" aria-label="Abrir ou fechar o mixer do Volum"><span id="trayMascot" aria-hidden="true"></span></button>
+              <span class="clock" id="clock">12:00<br>08/10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="screen-hint" id="demoHint">Passe o mouse na ilha, use os botões da barra de tarefas e clique no Volum na bandeja</p>
+    </section>
+
     <!-- ===================== Números (contam ao aparecer) ===================== -->
     <div class="stats" data-stagger>
       <div class="stat glass"><b><span data-count="1">1</span></b><span>clique para abrir</span></div>
@@ -789,25 +863,6 @@
       <div class="stat glass"><b><span data-count="3">3</span></b><span>idiomas</span></div>
     </div>
 
-    <!-- ===================== Experimente: a interface do app de verdade (demo.html) ===================== -->
-    <section id="experimente" class="try">
-      <div class="try-copy">
-        <div class="eyebrow reveal">Experimente</div>
-        <h2 class="reveal">Mexa no Volum de verdade.</h2>
-        <p class="section-lead reveal">Esta é a interface do app rodando aqui no site. Arraste os volumes, silencie os apps e marque um copo de água.</p>
-      </div>
-      <!-- Demo interativa: é a interface do app de verdade (demo.html), dá para mexer em tudo -->
-      <div class="stage reveal zoom">
-        <div class="demo" id="demo">
-          <iframe id="demoFrame" src="demo.html" title="Demonstração interativa do Volum: mexa nos volumes e nas configurações"></iframe>
-        </div>
-        <div class="taskbar glass">
-          <span class="hint" id="demoHint">Experimente: arraste e silencie os apps</span>
-          <button class="tray-btn" id="trayBtn" title="Volum" aria-label="Abrir ou fechar o Volum"><span id="trayMascot" aria-hidden="true"></span></button>
-          <span class="clock" id="clock">12:00<br>08/10</span>
-        </div>
-      </div>
-    </section>
 
     <!-- ===================== Recursos ===================== -->
     <section id="recursos">
@@ -1158,9 +1213,34 @@
     const frame = document.getElementById('demoFrame');
     const hint = document.getElementById('demoHint');
     const tellDemo = (action) => frame.contentWindow.postMessage({ volumDemo: true, action }, '*');
+    const HINT = 'Passe o mouse na ilha, use os botões da barra de tarefas e clique no Volum na bandeja';
+    let demoUsed = false;   // estatística: alguém mexeu na demo (conta uma vez por visita)
+    const islandFrame = document.getElementById('islandFrame');
+    const tellIsland = (action) => islandFrame.contentWindow.postMessage({ volumIsland: true, action }, '*');
+
+    // Abre o mixer (bandeja ou "segurar a ilha")
+    const openMixer = () => {
+      if (!demo.classList.contains('min')) return;
+      demo.classList.remove('min');
+      hint.textContent = 'Arraste os volumes e silencie os apps. Clique de novo no Volum para fechar';
+      tellDemo('open');
+    };
+
+    // Botões da barra de tarefas: disparam as atividades na ilha
+    document.querySelectorAll('.tb-app').forEach((b) => b.addEventListener('click', () => {
+      tellIsland(b.dataset.act);
+      if (!demoUsed) { demoUsed = true; track('usou-a-demo'); }
+    }));
+
+    // A tela é desenhada em 1000×560: encolhe junto com a página (zoom), sem cortar nada
+    const screen = document.getElementById('screen');
+    const fitScreen = () => { screen.style.zoom = Math.min(1, document.getElementById('screenWrap').clientWidth / 1000); };
+    new ResizeObserver(fitScreen).observe(document.getElementById('screenWrap'));
+    fitScreen();
 
     window.addEventListener('message', (e) => {
       const m = e.data || {};
+      if (m.volumIsland && e.source === islandFrame.contentWindow && m.type === 'openMixer') { openMixer(); return; }
       if (!m.volumDemo || e.source !== frame.contentWindow) return;
       if (m.type === 'resize') frame.style.height = Math.ceil(m.height) + 'px';
       if (m.type === 'lite') demo.classList.toggle('lite', m.on);
@@ -1169,21 +1249,20 @@
       if (m.type === 'settings') {   // engrenagem na demo: no app ela abre a janela de configurações
         hint.textContent = 'No app, a engrenagem abre a janela de configurações';
         clearTimeout(hint._t);
-        hint._t = setTimeout(() => { hint.textContent = 'Experimente: arraste e silencie os apps'; }, 3500);
+        hint._t = setTimeout(() => { hint.textContent = HINT; }, 3500);
       }
       if (m.type === 'hide') {
         // espera a animação de saída do app terminar e "esconde a janela"
         setTimeout(() => {
           demo.classList.add('min');
-          hint.textContent = 'Clique no ícone para abrir o Volum →';
+          hint.textContent = HINT;
         }, 130);
       }
     });
 
     // Estatística: alguém mexeu na demo (clicar no iframe tira o foco da página). Conta uma vez por visita.
-    let demoUsed = false;
     addEventListener('blur', () => {
-      if (demoUsed || document.activeElement !== frame) return;
+      if (demoUsed || (document.activeElement !== frame && document.activeElement !== islandFrame)) return;
       demoUsed = true;
       track('usou-a-demo');
     });
@@ -1195,9 +1274,7 @@
     // Ícone da bandeja: abre ou fecha, igual ao Windows
     document.getElementById('trayBtn').addEventListener('click', () => {
       if (demo.classList.contains('min')) {
-        demo.classList.remove('min');
-        hint.textContent = 'Experimente: arraste e silencie os apps';
-        tellDemo('open');
+        openMixer();
       } else {
         tellDemo('close');
       }
