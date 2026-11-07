@@ -162,6 +162,12 @@
             <span></span>
           </label>
         </div>
+        <!-- Formato: grudada na borda de cima (com as curvinhas) ou pílula solta, um pouco abaixo do topo -->
+        <div class="label label-gap" data-i18n="islandStyle">Formato</div>
+        <div class="segmented two" id="islandStyleSeg" role="radiogroup" aria-label="Formato" data-i18n-aria="islandStyle">
+          <button data-value="notch" role="radio" aria-checked="true" data-i18n="islandNotch">Grudada no topo</button>
+          <button data-value="float" role="radio" aria-checked="false" data-i18n="islandFloat">Flutuante</button>
+        </div>
       </div>
 
       <!-- Pomodoro e lembrete para levantar: só funcionam com a ilha ligada -->
@@ -231,6 +237,35 @@
           </label>
         </div>
       </div>
+      <!-- Notificações dos outros apps (só na versão da Store: o Windows exige) -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="appNotesToggle">Notificações dos apps</span>
+            <small id="appNotesHint" data-i18n="appNotesHint">WhatsApp, Discord, e-mail... aparecem na ilha. Ligue o "Não incomodar" do Windows para elas aparecerem só aqui</small>
+          </span>
+          <label class="switch">
+            <input id="appNotesOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Agenda: endereço iCal do Google Agenda ou do Outlook -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="calTitle">Agenda</span>
+            <small data-i18n="calHint">Cole o endereço iCal (.ics) da sua agenda. No Google Agenda: Configurações → sua agenda → "Endereço secreto no formato iCal". A ilha avisa 10 min antes de cada compromisso</small>
+          </span>
+        </div>
+        <div class="cal-row">
+          <input id="calUrl" class="text-input" type="url" spellcheck="false" autocomplete="off" placeholder="https://calendar.google.com/calendar/ical/...basic.ics">
+          <button class="btn" id="calSave" data-i18n="calSave">Salvar</button>
+        </div>
+        <small class="cal-status" id="calStatus"></small>
+      </div>
+
       <div class="btn-row">
         <button class="btn" id="standTest" data-i18n="standTest">Testar aviso de levantar</button>
       </div>

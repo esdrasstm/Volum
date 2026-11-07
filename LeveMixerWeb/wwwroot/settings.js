@@ -225,8 +225,34 @@
   $('islandOn').addEventListener('change', (e) => {
     islandOn = e.target.checked;
     showFocus();
+    showAppNotes('');
     post({ type: 'setIsland', enabled: islandOn });
   });
+  /* Notificações dos apps: só na versão da Store (o Windows exige); na do GitHub fica desligada com o aviso */
+  let appNotesSupported = false;
+  function showAppNotes(msg) {
+    $('appNotesOn').disabled = !appNotesSupported || !islandOn;
+    $('appNotesHint').textContent = msg || (appNotesSupported ? t('appNotesHint') : t('appNotesStoreOnly'));
+  }
+  $('appNotesOn').addEventListener('change', (e) => {
+    showAppNotes(e.target.checked ? t('appNotesAsking') : '');
+    post({ type: 'setAppNotes', on: e.target.checked });
+  });
+
+  /* Agenda: salva o endereço iCal e o C# baixa para conferir */
+  $('calSave').addEventListener('click', () => {
+    const url = $('calUrl').value.trim();
+    $('calSave').disabled = true;
+    $('calStatus').classList.remove('bad');
+    $('calStatus').textContent = url ? t('calLoading') : '';
+    post({ type: 'setCalendar', url });
+  });
+  $('calUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('calSave').click(); });
+
+  $('islandStyleSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    selectSegment($('islandStyleSeg'), b.dataset.value);
+    post({ type: 'setIslandStyle', style: b.dataset.value });
+  }));
 
   /* ---------------- Pomodoro e lembrete para levantar (página Ilha) ---------------- */
   const FOCUS_STEPS = {
@@ -300,6 +326,11 @@
     $('autostart').checked = !!s.autostart;
     $('lite').checked = !!s.lite;
     $('islandOn').checked = islandOn = !!s.island;
+    selectSegment($('islandStyleSeg'), s.islandStyle === 'float' ? 'float' : 'notch');
+    appNotesSupported = !!s.appNotesSupported;
+    $('appNotesOn').checked = !!s.appNotes;
+    $('calUrl').value = s.calendarUrl || '';
+    showAppNotes('');
     if (s.focus) focus = s.focus;
     setTheme(s.theme || 'system');
     setLanguage(s.language || 'pt');                // também redesenha atalho, água e "Sobre"
@@ -312,6 +343,16 @@
       case 'systemTheme': systemDark = m.dark; applyScheme(); break;   // trocou o tema do Windows
       case 'hotkey':      hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey
       case 'water':       water = m.water; showWater(); break;          // contador mudou (mixer ou aviso)
+      case 'appNotes':    // resposta do setAppNotes (o Windows pode ter negado a permissão)
+        $('appNotesOn').checked = !!m.on;
+        showAppNotes(m.denied ? t('appNotesDenied') : '');
+        break;
+      case 'calendar':    // resposta do setCalendar: quantos compromissos hoje e amanhã, ou erro
+        $('calSave').disabled = false;
+        $('calStatus').textContent = m.empty ? '' : m.count < 0 ? t(m.error === 'notIcs' ? 'calNotIcs' : 'calError')
+          : t('calOk').replace('{0}', m.count);
+        $('calStatus').classList.toggle('bad', !m.empty && m.count < 0);
+        break;
     }
   });
 

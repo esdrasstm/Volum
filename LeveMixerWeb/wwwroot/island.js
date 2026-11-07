@@ -15,6 +15,7 @@
   let lang = 'pt';
   const t = (key) => V.t(lang, key);
   let mode = 'closed';
+  let modeSeq = 0;   // número da última troca de estado (volta no "animDone")
   let media = null;
   let water = { enabled: false, goalMl: 2000, cupMl: 250, todayMl: 0 };
   let battery = { present: false, percent: 100, charging: false };
@@ -63,7 +64,7 @@
   function showMini() {
     const ring = pomoActive();
     const pet = !ring && idle;   // ociosa: só o mascote (a capa seria de uma música parada)
-    const cover = !ring && !pet && !!(media && media.cover);
+    const cover = !pet && !!(media && media.cover);   // com o Pomodoro rodando, aparecem os dois (anel e capa)
     $('miniRing').toggleAttribute('hidden', !ring);   // é um <svg>: a propriedade .hidden não vale nele
     $('miniCover').hidden = !cover;
     $('miniMascot').hidden = !pet;
@@ -204,6 +205,107 @@
     if (soundOn) wake();   // som tocando: a ilha não está ociosa
   }
 
+  /* ---------------- Onda ao vivo ----------------
+     Com som saindo, o C# manda o nível (~10 por segundo). Cada barrinha estica conforme o nível, com um peso
+     próprio que muda um pouco a cada vez (parece a música). Se o nível parar de chegar, volta a animação de sempre. */
+  const WAVE_SHAPE = [0.55, 0.85, 1, 0.75, 0.5];
+  let liveTimer = 0;
+  function onLevel(v) {
+    const lvl = Math.min(1, Math.sqrt(v) * 1.15);   // raiz: sons baixos ainda mexem a onda
+    for (const w of [$('wave'), $('miniWave')]) {
+      w.classList.add('live');
+      [...w.children].forEach((bar, i) => {
+        const s = 0.28 + lvl * WAVE_SHAPE[i] * (0.7 + Math.random() * 0.5);
+        bar.style.transform = `scaleY(${Math.min(1, s).toFixed(2)})`;
+      });
+    }
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => {
+      for (const w of [$('wave'), $('miniWave')]) { w.classList.remove('live'); [...w.children].forEach((b) => { b.style.transform = ''; }); }
+    }, 700);
+  }
+
+  /* ---------------- Cor da música (tirada da capa) ----------------
+     Lê a capa num quadradinho de 12×12 e pega a cor mais viva; deixa clara o bastante para aparecer no preto.
+     Capa sem cor (preto e branco): volta ao branco. Roda uma vez por capa. */
+  let tintFor = '';
+  function tintFromCover(src) {
+    if (!src || src === tintFor) return;
+    tintFor = src;
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = c.height = 12;
+        const g = c.getContext('2d', { willReadFrequently: true });
+        g.drawImage(img, 0, 0, 12, 12);
+        const d = g.getImageData(0, 0, 12, 12).data;
+        let best = null, bestScore = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const [h, s, l] = rgbToHsl(d[i], d[i + 1], d[i + 2]);
+          const score = s * (1 - Math.abs(l - 0.5) * 1.6);   // vivo e nem muito escuro nem muito claro
+          if (score > bestScore) { bestScore = score; best = [h, s, l]; }
+        }
+        if (!best || bestScore < 0.12) { island.style.removeProperty('--tint'); island.classList.remove('tinted'); return; }
+        const [h, s] = best;
+        island.style.setProperty('--tint', `hsl(${Math.round(h * 360)} ${Math.round(Math.max(0.55, s) * 100)}% 68%)`);
+        island.classList.add('tinted');
+      } catch { /* capa de outro endereço: fica branco */ }
+    };
+    img.src = src;
+  }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+    if (max === min) return [0, 0, l];
+    const dd = max - min, s = l > 0.5 ? dd / (2 - max - min) : dd / (max + min);
+    const h = max === r ? (g - b) / dd + (g < b ? 6 : 0) : max === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
+    return [h / 6, s, l];
+  }
+
+  /* ---------------- Agenda ----------------
+     O C# manda os próximos compromissos de hoje e amanhã (já em horário local, em ms). Montado com textContent:
+     o título vem da agenda da pessoa e nunca vira HTML. */
+  let agendaOn = false, agenda = [];
+  function showAgenda() {
+    const list = $('agendaList');
+    const now = Date.now();
+    const today = new Date().toDateString();
+    const fmt = (ms) => new Date(ms).toLocaleTimeString(V.langTag(lang), { hour: '2-digit', minute: '2-digit' });
+    const items = agenda.slice(0, 3).map((e) => {
+      const li = document.createElement('li');
+      const when = document.createElement('span');
+      when.className = 'agenda-when';
+      const tomorrow = new Date(e.start).toDateString() !== today;
+      when.textContent = e.allDay ? t('agendaAllDay') : e.start <= now ? t('agendaNow') : (tomorrow ? t('agendaTomorrow') + ' ' : '') + fmt(e.start);
+      if (!e.allDay && e.start <= now) li.classList.add('now');
+      const title = document.createElement('span');
+      title.className = 'agenda-title';
+      title.textContent = e.title;
+      li.append(when, title);
+      return li;
+    });
+    if (!items.length) {
+      const li = document.createElement('li');
+      li.className = 'agenda-empty';
+      li.textContent = t('agendaEmpty');
+      items.push(li);
+    }
+    list.replaceChildren(...items);
+  }
+
+  /* ---------------- Microfone e câmera em uso ---------------- */
+  function showPrivacy(m) {
+    const mic = (m.mic || []).length > 0, cam = (m.cam || []).length > 0;
+    const tip = [...(m.cam || []).map((a) => t('privCam') + ': ' + a), ...(m.mic || []).map((a) => t('privMic') + ': ' + a)].join('\n');
+    for (const el of [$('privacy'), $('miniPrivacy')]) {
+      el.hidden = !mic && !cam;
+      el.classList.toggle('mic', mic);
+      el.classList.toggle('cam', cam);
+      el.title = tip;
+    }
+  }
+
   /* ---------------- Música ---------------- */
   const fmtTime = (s) => {
     s = Math.max(0, Math.floor(s));
@@ -242,6 +344,8 @@
       img.hidden = !(has && media.cover);
       if (has && media.cover && img.src !== media.cover) img.src = media.cover;
     }
+    if (has && media.cover) tintFromCover(media.cover);
+    else { tintFor = ''; island.style.removeProperty('--tint'); island.classList.remove('tinted'); }
     $('title').textContent = has ? media.title : t('islandNothing');
     $('subtitle').textContent = has ? [media.artist, media.album].filter(Boolean).join(' - ') || media.app : '';
     $('play').classList.toggle('playing', has && media.playing);
@@ -357,7 +461,7 @@
   /* ---------------- Páginas (setas ‹ › e bolinhas) ---------------- */
   let page = 0;
   const pages = () => [...document.querySelectorAll('.page')].filter((p) =>
-    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn));
+    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn));
   function goToPage(name) {
     const i = pages().findIndex((p) => p.dataset.page === name);
     if (i >= 0) { page = i; showPages(); }
@@ -378,15 +482,99 @@
     $('dots').replaceChildren(...(many ? list.map((_, i) => {
       const dot = document.createElement('i');
       dot.className = i === page ? 'on' : '';
-      dot.addEventListener('click', () => { page = i; showPages(); });
+      dot.addEventListener('click', () => { const step = i - page; if (!step) return; page = i; showPages(); slideIn(step); });
       return dot;
     }) : []));
     reportHeight();
   }
 
-  const turn = (step) => { const n = pages().length; page = (page + step + n) % n; showPages(); };
+  // A página nova entra deslizando do lado de onde veio (anima só a que aparece)
+  function slideIn(step) {
+    const cur = pages()[page];
+    if (!cur) return;
+    cur.classList.remove('enter-next', 'enter-prev');
+    void cur.offsetWidth;   // recomeça a animação
+    cur.classList.add(step > 0 ? 'enter-next' : 'enter-prev');
+  }
+  const turn = (step) => { const n = pages().length; if (n < 2) return; page = (page + step + n) % n; showPages(); slideIn(step); };
   $('pagePrev').addEventListener('click', () => turn(-1));
   $('pageNext').addEventListener('click', () => turn(1));
+
+  /* ---------------- Gestos ----------------
+     Rodinha: volume geral (o C# muda e responde com "volume"). Deslizar para o lado (arrastando com o mouse
+     ou com dois dedos no touchpad): no player troca a música; nas outras páginas, troca de página.
+     Apertar e segurar: abre o mixer. */
+  function swipe(dir) {   // dir 1 = próxima, -1 = anterior
+    const cur = pages()[page];
+    if (cur && cur.dataset.page === 'media' && media && media.title) {
+      if (dir > 0 ? media.canNext !== false : media.canPrev !== false) post({ type: dir > 0 ? 'next' : 'prev' });
+    } else turn(dir);
+  }
+
+  let wheelAcc = 0, swipeAcc = 0, swipeLock = 0;
+  document.addEventListener('wheel', (e) => {
+    if (mode !== 'open') return;
+    e.preventDefault();
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {   // touchpad: dois dedos para o lado
+      swipeAcc += e.deltaX;
+      if (Math.abs(swipeAcc) > 90 && Date.now() > swipeLock) { swipe(swipeAcc > 0 ? 1 : -1); swipeAcc = 0; swipeLock = Date.now() + 600; }
+      return;
+    }
+    wheelAcc += e.deltaY;
+    while (Math.abs(wheelAcc) >= 60) {   // um "clique" da rodinha (100) ≈ 2 passos de 2%
+      const d = wheelAcc > 0 ? -1 : 1;
+      wheelAcc += d * 60;
+      post({ type: 'volStep', d });
+    }
+  }, { passive: false });
+
+  let drag = null;
+  const rubber = (dx) => Math.sign(dx) * Math.min(60, Math.abs(dx) * 0.4);   // a página vem junto, mas "pesada"
+  $('full').addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || mode !== 'open' || e.target.closest('button, .dots')) return;
+    const cur = pages()[page];
+    drag = { x: e.clientX, dx: 0, moved: false, cur };
+    drag.hold = setTimeout(() => {   // segurou sem arrastar: abre o mixer
+      if (!drag || drag.moved) return;
+      island.classList.remove('pressing');
+      drag = null;
+      post({ type: 'openMixer' });
+    }, 550);
+    island.classList.add('pressing');
+    $('full').setPointerCapture(e.pointerId);
+  });
+  $('full').addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    drag.dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(drag.dx) > 6) {
+      drag.moved = true;
+      clearTimeout(drag.hold);
+      island.classList.remove('pressing');
+      drag.cur?.classList.add('dragging');
+    }
+    if (drag.moved && drag.cur) drag.cur.style.transform = `translateX(${rubber(drag.dx)}px)`;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    clearTimeout(drag.hold);
+    island.classList.remove('pressing');
+    if (drag.cur) { drag.cur.classList.remove('dragging'); drag.cur.style.transform = ''; }   // volta com a mola
+    if (drag.moved && Math.abs(drag.dx) > 50) swipe(drag.dx < 0 ? 1 : -1);
+    drag = null;
+  };
+  $('full').addEventListener('pointerup', endDrag);
+  $('full').addEventListener('pointercancel', endDrag);
+
+  // Volume mudou pela rodinha (ou pelo teclado com a ilha aberta): aparece no lugar da data
+  let volTimer = 0;
+  function showVolume(m) {
+    const st = document.querySelector('.status');
+    $('volPct').textContent = m.muted ? '0%' : Math.round(m.v * 100) + '%';
+    $('volFill').style.width = (m.muted ? 0 : m.v * 100) + '%';
+    st.classList.add('showing-vol');
+    clearTimeout(volTimer);
+    volTimer = setTimeout(() => st.classList.remove('showing-vol'), 1300);
+  }
 
   /* ---------------- Avisos do Volum ---------------- */
   const NOTICE_ICONS = {
@@ -399,6 +587,19 @@
     volmute: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5l4.5 4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></g></svg>',
     mic: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4"/></g></svg>',
     micoff: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4M4 3l16 18"/></g></svg>',
+    // Teclas de mídia e brilho (no lugar dos avisos do Windows)
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="#ffffff" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><g fill="#ffffff"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></g></svg>',
+    next: '<svg viewBox="0 0 24 24"><g fill="#ffffff"><path d="M4 6.5v11l7.5-5.5zM12 6.5v11l7.5-5.5z"/></g></svg>',
+    prev: '<svg viewBox="0 0 24 24"><g fill="#ffffff"><path d="M20 6.5v11L12.5 12zM12 6.5v11L4.5 12z"/></g></svg>',
+    // Atividades: carregador, bateria, fone, alto-falante, câmera
+    charging: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#34d058" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M21.5 10.5v3"/><path d="M11.5 8.8 9 12.2h3.2L10.5 15.4" stroke-width="1.5"/></g></svg>',
+    battery: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M21.5 10.5v3"/></g><rect x="5" y="9.5" width="8" height="5" rx="1" fill="#ffffff"/></svg>',
+    headphones: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3.5" y="13.5" width="4.5" height="7" rx="1.8"/><rect x="16" y="13.5" width="4.5" height="7" rx="1.8"/></g></svg>',
+    speaker: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><circle cx="12" cy="14.5" r="3.2"/><path d="M12 6.8h.01"/></g></svg>',
+    calendar: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></g><circle cx="8.5" cy="14.5" r="1.3" fill="#ffffff"/></svg>',
+    camera: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#30d158" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="13" height="11" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></g></svg>',
+    bright: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></g></svg>',
     timer: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5M12 2.5V6"/></g></svg>',
     walk: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.8"/><path d="M9 21l3-6 2.5 2.5V21M12 15l-1.5-5 3.5-2 2.5 3 2.5 1M10.5 10l-3 1.5-1 3"/></g></svg>',
     sparkle: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3c.8 4.5 2.5 6.2 7 7-4.5.8-6.2 2.5-7 7-.8-4.5-2.5-6.2-7-7 4.5-.8 6.2-2.5 7-7z"/><path d="M19 15v6M16 18h6"/></g></svg>',
@@ -417,10 +618,17 @@
     if (!on) return;
     $('notice').dataset.kind = n.kind || n.icon;   // água: botão azul; o resto, branco; greet: só a frase; osd: indicador rápido
     island.classList.toggle('osd', n.kind === 'osd');
+    island.classList.toggle('act', n.kind === 'act');   // atividade: faixa um pouco mais larga
     const bar = $('osdBar');   // volume: barrinha com o nível
-    bar.hidden = !(n.kind === 'osd' && n.level >= 0);
+    bar.hidden = !((n.kind === 'osd' || n.kind === 'act') && n.level >= 0);
     if (!bar.hidden) bar.firstElementChild.style.width = Math.round(n.level * 100) + '%';
     $('noticeIcon').innerHTML = n.icon === 'greet' ? '' : NOTICE_ICONS[n.icon] || NOTICE_ICONS.bell;   // ícones fixos daqui; o "bom dia" é só a frase
+    if (n.img && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(n.img)) {   // notificação de outro app: o ícone dele (só imagem embutida)
+      const img = document.createElement('img');
+      img.src = n.img;
+      img.alt = '';
+      $('noticeIcon').replaceChildren(img);
+    }
     $('noticeTitle').textContent = n.title || '';
     $('noticeBody').textContent = n.text || '';
     $('noticeAction').hidden = !n.action;
@@ -453,6 +661,82 @@
     if (h && h !== lastH) { lastH = h; post({ type: 'height', h }); }
   }
 
+  /* ---------------- Forma: mola física + cantos contínuos ----------------
+     Cada estado define no CSS o tamanho-alvo (--w, --h, --r, --ear-size). Quando muda (classe da ilha, altura da
+     página, formato), a mola leva a forma até lá; o requestAnimationFrame só roda enquanto ela se mexe.
+     Rígida e pouco elástica, medida no Alcove: chega em ~250 ms e passa só ~2% do tamanho. Interrompida no meio
+     (o mouse saiu), ela muda de direção sem tranco, porque continua da velocidade em que estava. */
+  const SPRING_K = 380, SPRING_C = 28;   // rigidez e amortecimento (massa 1)
+  const shapeBox = document.querySelector('.shape'), shapeSvg = document.querySelector('.shape-svg'), shapePath = $('shapePath');
+  const KEYS = ['w', 'h', 'r', 'e'];
+  let cur = null, goal = null, vel = { w: 0, h: 0, r: 0, e: 0 }, springRaf = 0, springT = 0;
+
+  function readGoal() {
+    const cs = getComputedStyle(island);
+    const n = (p) => parseFloat(cs.getPropertyValue(p)) || 0;
+    const floating = document.documentElement.classList.contains('floating');
+    return { w: n('--w'), h: n('--h'), r: n('--r'), e: floating ? 0 : n('--ear-size') };
+  }
+
+  // Canto contínuo (como os da Apple): a curva começa mais longe do canto e aperta no fim,
+  // em vez do quarto de círculo. p = quanto o canto "come" de cada lado; c = puxada das alças.
+  function corner(r, maxP) { const p = Math.max(0, Math.min(r * 1.35, maxP)); return [p, p * 0.32]; }
+
+  function drawShape() {
+    const { w, h, r } = cur;
+    const e = Math.max(0, cur.e);
+    const floating = document.documentElement.classList.contains('floating');
+    shapeSvg.setAttribute('width', Math.max(1, w + 2 * e));
+    shapeSvg.setAttribute('height', Math.max(1, h));
+    shapeSvg.style.left = (-e) + 'px';
+    shapeBox.style.width = w + 'px';    // a caixa acompanha a mola (centralizada pelo CSS), o desenho vai junto
+    shapeBox.style.height = h + 'px';
+    const L = e, R = e + w;
+    let d;
+    if (floating) {   // pílula solta: quatro cantos contínuos
+      const [p, c] = corner(r, Math.min(w, h) / 2);
+      d = `M${L + p},0 H${R - p} C${R - c},0 ${R},${c} ${R},${p} V${h - p} C${R},${h - c} ${R - c},${h} ${R - p},${h}` +
+          ` H${L + p} C${L + c},${h} ${L},${h - c} ${L},${h - p} V${p} C${L},${c} ${L + c},0 ${L + p},0 Z`;
+    } else {          // grudada no topo: borda de cima reta, orelhas côncavas ligando à borda, cantos de baixo contínuos
+      const [p, c] = corner(r, Math.min(w / 2, h));
+      d = `M0,0 H${R + e} Q${R},0 ${R},${e} V${h - p} C${R},${h - c} ${R - c},${h} ${R - p},${h}` +
+          ` H${L + p} C${L + c},${h} ${L},${h - c} ${L},${h - p} V${e} Q${L},0 0,0 Z`;
+    }
+    shapePath.setAttribute('d', d);
+  }
+
+  function springTo() {
+    goal = readGoal();
+    const still = document.documentElement.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!cur || still) { cur = { ...goal }; drawShape(); post({ type: 'animDone', seq: modeSeq }); return; }
+    if (!springRaf) { springT = performance.now(); springRaf = requestAnimationFrame(springStep); }
+  }
+
+  function springStep(now) {
+    const dt = Math.min(0.032, (now - springT) / 1000);   // aba escondida e volta: não dá um salto
+    springT = now;
+    let moving = false;
+    for (const k of KEYS) {
+      const a = -SPRING_K * (cur[k] - goal[k]) - SPRING_C * vel[k];
+      vel[k] += a * dt;
+      cur[k] += vel[k] * dt;
+      if (Math.abs(vel[k]) > 0.3 || Math.abs(cur[k] - goal[k]) > 0.3) moving = true;
+    }
+    if (!moving) {
+      cur = { ...goal }; vel = { w: 0, h: 0, r: 0, e: 0 }; springRaf = 0;
+      drawShape();
+      post({ type: 'animDone', seq: modeSeq });   // o C# já pode deixar a janela do tamanho exato
+      return;
+    }
+    drawShape();
+    springRaf = requestAnimationFrame(springStep);
+  }
+
+  // Qualquer troca de estado, de altura da página aberta ou de formato reposiciona o alvo da mola
+  new MutationObserver(springTo).observe(island, { attributes: true, attributeFilter: ['class', 'style'] });
+  new MutationObserver(springTo).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  springTo();
+
   /* ---------------- Mensagens do C# ---------------- */
   window.chrome.webview.addEventListener('message', (e) => {
     const m = e.data;
@@ -461,6 +745,7 @@
         lang = V.I18N[m.language] ? m.language : 'pt';
         document.documentElement.lang = V.langTag(lang);
         document.documentElement.classList.toggle('lite', !!m.lite);
+        document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
         pomoOn = m.pomodoro !== false;
         V.applyI18n(lang);
         tickClock();
@@ -470,8 +755,17 @@
         break;
       case 'pomodoro': onPomodoro(m); break;
       case 'pet': if (m.on) rest(m.ms || 0); else wake(); break;   // mascote: PC parado ou passadinha
-      case 'mode':    setMode(m.mode); break;
-      case 'media':   media = m.media; showMedia(); break;
+      case 'mode':    modeSeq = m.seq || 0; setMode(m.mode); break;
+      case 'media': {
+        const changed = media && m.media && media.title !== m.media.title;
+        media = m.media; showMedia();
+        if (changed && mode === 'open') { const t = document.querySelector('.track'); t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap'); }
+        break;
+      }
+      case 'volume':  showVolume(m); break;
+      case 'level':   onLevel(m.v); break;
+      case 'privacy': showPrivacy(m); break;
+      case 'agenda':  agendaOn = !!m.on; agenda = m.events || []; showAgenda(); showPages(); break;
       case 'water':   water = m.water; showWater(); break;
       case 'battery': battery = m; showBattery(); break;
       case 'sound':   soundOn = m.on; showWave(); break;

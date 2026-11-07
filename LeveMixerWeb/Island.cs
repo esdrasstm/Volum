@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -27,8 +29,11 @@ sealed class IslandForm : Form
     // Tamanhos em "pixels CSS". A janela tem a pílula + as "orelhas" (curvas que ligam a pílula à borda da tela).
     // Precisam bater com o island.css (--closed-w, --tuck-w, --open-w, --ear...).
     const int Ear = 10;
-    const int ClosedW = 250, ClosedH = 32, IdleH = 54, TuckW = 130, TuckH = 6, OpenW = 440, NoticeW = 400, NoticeH = 36;
-    const int AnimMs = 500;            // acompanha a transição do CSS (--anim 480 ms, encolher) + uma folga
+    const int ClosedW = 250, ClosedH = 40, IdleH = 54, TuckW = 130, TuckH = 6, OpenW = 440, NoticeW = 400, NoticeH = 40;   // fechada e avisos: 40 de altura, cantos 12 (como o Alcove)
+    const int ActW = 320;              // largura da faixa de uma atividade (carregador, fone, microfone/câmera em uso)
+    const int FloatGap = 8;            // ilha flutuante: distância da borda de cima da tela
+    const int AnimMs = 900;            // garantia: se o "animDone" do JS não vier, a janela fica do tamanho exato depois disso
+    const int MoveSlack = 10;          // folga embaixo da janela enquanto a forma anima (a mola passa um pouquinho)
     const int NoticeMs = 12_000;       // quanto tempo um aviso fica aberto, se ninguém disser outro
 
     enum Mode { Tucked, Closed, Idle, Notice, Open }   // Notice = faixa fina com um aviso do Volum; Idle = ociosa, com o mascote maior
@@ -69,6 +74,7 @@ sealed class IslandForm : Form
             Pomodoro.Stop();   // Pomodoro e o aviso de levantar só existem com a ilha
         }
         StandUp.Apply();
+        Agenda.Apply(enabled);   // a agenda só avisa com a ilha ligada
     }
 
     /// <summary>Mudou algo nas configurações que a ilha mostra (ex.: Pomodoro ligado, tempos).</summary>
@@ -156,47 +162,74 @@ sealed class IslandForm : Form
         _watch.Start();
         _soundTimer.Start();
         _petTimer.Start();
+        StartActivities();   // carregador, saída de áudio, microfone e câmera em uso
         if (AppSettings.Current.IslandOsd) StartOsd();
     }
 
     // ---------- tamanho e posição: centro do topo da tela principal, grudada na borda ----------
 
-    void Place(Mode m)
+    // Tamanho da ilha num estado, em "pixels CSS" (sem as orelhas)
+    Size SizeOf(Mode m)
     {
-        float k = DeviceDpi / 96f;
         bool greet = m == Mode.Notice && _noticeKind == "greet";   // "bom dia": do mesmo tamanho da ilha com o mascote
         bool tall = m == Mode.Notice && _noticeKind == "walk";     // levantar: largura do aviso, altura da ilha ociosa (cabe a cena)
         bool osd = m == Mode.Notice && _noticeKind == "osd";       // indicador rápido (volume, Caps Lock...): estreito
-        int w = (int)Math.Round(((greet || osd ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW }) + 2 * Ear) * k);
-        int h = (int)Math.Round((greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH }) * k);
+        bool act = m == Mode.Notice && _noticeKind == "act";       // atividade (carregador, fone, câmera...): um pouco mais larga
+        int w = act ? ActW : greet || osd ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW };
+        int h = greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH };
+        return new Size(w, h);
+    }
+
+    // Janela no tamanho exato do estado (quando a forma já parou)
+    void Place(Mode m) { _shown = SizeOf(m); PlaceSize(_shown, 0); }
+
+    // A forma vai mudar de tamanho (o que está na tela → o novo estado): janela com folga até ela parar
+    void MoveTo(Mode m) { var to = SizeOf(m); PlaceMoving(_shown, to); _shown = to; }
+    Size _shown = new(ClosedW, ClosedH);   // tamanho que a forma tem (ou para onde está indo)
+
+    // Durante a animação: a janela fica com o maior dos dois tamanhos + uma folga embaixo, para a mola
+    // (que passa um pouquinho do tamanho) não ser cortada. Quando a forma para, o JS manda "animDone".
+    void PlaceMoving(Size from, Size to) =>
+        PlaceSize(new Size(Math.Max(from.Width, to.Width), Math.Max(from.Height, to.Height)), MoveSlack);
+
+    void PlaceSize(Size s, int slack)
+    {
+        float k = DeviceDpi / 96f;
+        int w = (int)Math.Round((s.Width + 2 * Ear) * k);
+        int h = (int)Math.Round((s.Height + slack) * k);
         var screen = Screen.PrimaryScreen!.Bounds;
-        SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top, w, h);
+        SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
+    }
+
+    static bool Floating => AppSettings.Current.IslandStyle == "float";
+    static int TopGap(float k) => Floating ? (int)Math.Round(FloatGap * k) : 0;
+
+    /// <summary>Trocou o formato da ilha nas configurações (grudada no topo ou flutuante).</summary>
+    public static void ApplyStyle()
+    {
+        if (!IsOn) return;
+        s_island!.PostSettings();
+        s_island.Place(s_island._mode);
     }
 
     static int Rank(Mode m) => m switch { Mode.Open => 5, Mode.Notice => 4, Mode.Idle => 3, Mode.Closed => 2, _ => 1 };
 
-    // Crescendo: a janela cresce antes e o CSS anima a pílula dentro dela.
-    // Encolhendo: o CSS anima primeiro e a janela encolhe no fim (senão a animação seria cortada).
+    // A janela vai antes para o maior dos dois tamanhos (+ folga), o JS anima a forma com a mola dentro dela
+    // e, quando a forma para ("animDone"), a janela fica do tamanho exato. O temporizador é só por garantia.
     void SetMode(Mode m)
     {
         if (m == _mode) return;
-        var old = _mode;
         _mode = m;
-        if (Rank(m) > Rank(old))
-        {
-            Place(m);
-            PostMode();
-        }
-        else
-        {
-            PostMode();
-            var t = new Timer { Interval = AnimMs };
-            t.Tick += (_, _) => { t.Dispose(); if (_mode == m && !IsDisposed) Place(m); };
-            t.Start();
-        }
+        MoveTo(m);
+        PostMode();
+        var t = new Timer { Interval = AnimMs };
+        int seq = _modeSeq;
+        t.Tick += (_, _) => { t.Dispose(); if (seq == _modeSeq && !IsDisposed) Place(_mode); };
+        t.Start();
     }
 
-    void PostMode() => Post(new { type = "mode", mode = _mode.ToString().ToLowerInvariant() });
+    int _modeSeq;   // cada troca de estado tem um número: um "animDone" atrasado, de antes da troca, é ignorado
+    void PostMode() => Post(new { type = "mode", mode = _mode.ToString().ToLowerInvariant(), seq = ++_modeSeq });
 
     // ---------- tela cheia e janelas encostando ----------
 
@@ -205,6 +238,7 @@ sealed class IslandForm : Form
     NAudio.CoreAudioApi.MMDeviceEnumerator? _enum;
     NAudio.CoreAudioApi.MMDevice? _out;
     bool _soundOn;
+    float _lastLevel;
     DateTime _lastSound;
     int _soundTicks;
 
@@ -215,12 +249,20 @@ sealed class IslandForm : Form
             if (++_soundTicks % 75 == 0) { _out?.Dispose(); _out = null; }   // a cada ~30 s pega a saída padrão de novo (pode ter mudado)
             _enum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
             _out ??= _enum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
-            if (_out.AudioMeterInformation.MasterPeakValue > 0.003f) _lastSound = DateTime.UtcNow;
+            float peak = _out.AudioMeterInformation.MasterPeakValue;
+            if (peak > 0.003f) _lastSound = DateTime.UtcNow;
+            // Com som saindo e a ilha na tela: manda o nível ~10 vezes por segundo (a onda acompanha o som de verdade)
+            if (_soundOn && Visible && !_hiddenByFullscreen && Math.Abs(peak - _lastLevel) > 0.02f)
+            {
+                _lastLevel = peak;
+                Post(new { type = "level", v = Math.Round(peak, 2) });
+            }
         }
         catch { _out?.Dispose(); _out = null; }   // sem saída de áudio (ou trocou agora): tenta de novo no próximo
         bool on = (DateTime.UtcNow - _lastSound).TotalMilliseconds < 1500;   // segura 1,5 s (pausas curtas entre músicas)
         if (on == _soundOn) return;
         _soundOn = on;
+        _soundTimer.Interval = on ? 100 : 400;   // sem som, volta a olhar devagar
         Post(new { type = "sound", on });
     }
 
@@ -258,7 +300,7 @@ sealed class IslandForm : Form
         float k = DeviceDpi / 96f;
         var screen = Screen.PrimaryScreen!.Bounds;
         int w = (int)((ClosedW + 2 * Ear) * k), h = (int)(ClosedH * k);
-        return new Rectangle(screen.Left + (screen.Width - w) / 2, screen.Top, w, h);
+        return new Rectangle(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
     }
 
     // A janela da frente ocupa o lugar da ilha fechada? Ex.: navegador maximizado. Devolve a janela (ou zero).
@@ -310,7 +352,185 @@ sealed class IslandForm : Form
 
     void OnPowerChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
-        if (!IsDisposed) BeginInvoke(new Action(PostBattery));
+        if (!IsDisposed) BeginInvoke(new Action(() => { PostBattery(); CheckCharger(); }));
+    }
+
+    // ---------- atividades: o que está acontecendo no PC aparece sozinho na ilha ----------
+    // Carregador ligado/desligado, saída de áudio trocada (fone conectado), microfone e câmera em uso.
+    // Tudo por aviso do Windows (nada fica checando). Aparecem como a faixa rápida dos indicadores.
+
+    PowerLineStatus _lastLine = SystemInformation.PowerStatus.PowerLineStatus;
+
+    void CheckCharger()
+    {
+        var p = SystemInformation.PowerStatus;
+        if (p.PowerLineStatus == _lastLine || p.PowerLineStatus == PowerLineStatus.Unknown) return;
+        _lastLine = p.PowerLineStatus;
+        if (p.BatteryChargeStatus is BatteryChargeStatus.NoSystemBattery or BatteryChargeStatus.Unknown) return;
+        bool on = p.PowerLineStatus == PowerLineStatus.Online;
+        int pct = (int)Math.Round(p.BatteryLifePercent * 100);
+        var lang = AppSettings.Current.Language;
+        ShowActivity(on ? "charging" : "battery", Strings.Get(lang, on ? "actCharging" : "actOnBattery"), $"{pct}%", pct / 100.0);
+    }
+
+    // Faixa rápida de uma atividade: não atropela aviso de verdade (água, Pomodoro...) e some com tela cheia
+    void ShowActivity(string icon, string title, string text, double level = -1)
+    {
+        if (!_ready || _hiddenByFullscreen) return;
+        if (_notice && _noticeKind is not ("osd" or "act")) return;
+        ShowNotice(icon, title, text, null, null, 2600, level, kind: "act");
+    }
+
+    // Saída de áudio padrão trocou (ex.: fone Bluetooth conectou): mostra o nome do aparelho
+    sealed class OutputWatch : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient
+    {
+        public Action<string>? DefaultChanged;
+        public void OnDefaultDeviceChanged(NAudio.CoreAudioApi.DataFlow flow, NAudio.CoreAudioApi.Role role, string id)
+        {
+            if (flow == NAudio.CoreAudioApi.DataFlow.Render && role == NAudio.CoreAudioApi.Role.Multimedia) DefaultChanged?.Invoke(id);
+        }
+        public void OnDeviceStateChanged(string id, NAudio.CoreAudioApi.DeviceState state) { }
+        public void OnDeviceAdded(string id) { }
+        public void OnDeviceRemoved(string id) { }
+        public void OnPropertyValueChanged(string id, NAudio.CoreAudioApi.PropertyKey key) { }
+    }
+
+    NAudio.CoreAudioApi.MMDeviceEnumerator? _devEnum;
+    OutputWatch? _outputWatch;
+    string? _lastOutput;
+
+    void StartActivities()
+    {
+        try
+        {
+            _devEnum = new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            try { using var d = _devEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia); _lastOutput = d.ID; } catch { }
+            _outputWatch = new OutputWatch { DefaultChanged = id => { try { BeginInvoke(new Action(() => OnOutputChanged(id))); } catch { } } };
+            _devEnum.RegisterEndpointNotificationCallback(_outputWatch);
+        }
+        catch { }
+        _privacy = new PrivacyWatch();
+        _privacy.Changed += (mic, cam) => { try { BeginInvoke(new Action(() => OnPrivacy(mic, cam))); } catch { } };
+        Agenda.Changed += OnAgendaChanged;
+        Agenda.Alert += OnAgendaAlert;
+    }
+
+    // ---------- agenda (Agenda.cs): página na ilha + avisos 10 min antes e na hora ----------
+
+    void OnAgendaChanged(IReadOnlyList<CalEvent> list) { if (!IsDisposed) BeginInvoke(new Action(PostAgenda)); }
+
+    void PostAgenda()
+    {
+        if (!_ready) return;
+        var now = DateTime.Now;
+        var items = Agenda.Upcoming
+            .Where(e => e.End > now && e.Start.Date <= now.Date.AddDays(1))
+            .Take(4)
+            .Select(e => new { title = e.Title, start = new DateTimeOffset(e.Start).ToUnixTimeMilliseconds(), end = new DateTimeOffset(e.End).ToUnixTimeMilliseconds(), allDay = e.AllDay })
+            .ToArray();
+        Post(new { type = "agenda", on = !string.IsNullOrWhiteSpace(AppSettings.Current.CalendarUrl), events = items });
+    }
+
+    void OnAgendaAlert(CalEvent e, bool started)
+    {
+        if (IsDisposed) return;
+        BeginInvoke(new Action(() =>
+        {
+            PostAgenda();
+            if (_hiddenByFullscreen) return;
+            if (_notice && _noticeKind is not ("osd" or "act" or "app")) return;   // não atropela água/Pomodoro
+            var lang = AppSettings.Current.Language;
+            string title = started ? Strings.Get(lang, "calNow") : Strings.Get(lang, "calSoon").Replace("{0}", Agenda.SoonMin.ToString());
+            ShowNotice("calendar", title, e.Title, null, null, started ? 10_000 : 8000, kind: "act");
+            ChimeSound.Play();
+        }));
+    }
+
+    /// <summary>Salvaram outro endereço da agenda nas configurações: baixa de novo. Devolve quantos compromissos achou (-1 = erro).</summary>
+    public static async Task<int> CalendarChangedAsync()
+    {
+        Agenda.Apply(IsOn);
+        if (!IsOn || string.IsNullOrWhiteSpace(AppSettings.Current.CalendarUrl)) { s_island?.PostAgenda(); return 0; }
+        return await Agenda.FetchAsync();
+    }
+
+    // ---------- notificações dos outros apps (AppNotes.cs, só na versão da Store) ----------
+
+    AppNotifications? _appNotes;
+
+    async Task StartAppNotesAsync()
+    {
+        if (_appNotes != null || !AppNotifications.Supported || !AppSettings.Current.IslandAppNotes) return;
+        if (!await AppNotifications.RequestAsync()) return;
+        _appNotes = new AppNotifications();
+        _appNotes.Arrived += n => { try { BeginInvoke(new Action(() => OnAppNote(n))); } catch { } };
+        await _appNotes.StartAsync();
+    }
+
+    void StopAppNotes()
+    {
+        _appNotes?.Dispose();
+        _appNotes = null;
+    }
+
+    void OnAppNote(AppNote n)
+    {
+        if (IsDisposed || _hiddenByFullscreen) return;
+        if (_notice && _noticeKind is not ("osd" or "act" or "app")) return;   // aviso do Volum na tela: não atropela
+        ShowNotice("app", n.Title, n.Body.Length > 0 ? n.Body : n.App, null, null, 6000, kind: "app", img: n.Icon);
+    }
+
+    /// <summary>Ligou/desligou as notificações dos apps nas configurações. Devolve se o Windows deu a permissão.</summary>
+    public static async Task<bool> SetAppNotesAsync(bool on)
+    {
+        if (!on) { s_island?.StopAppNotes(); return false; }
+        if (!AppNotifications.Supported) return false;
+        bool ok = await AppNotifications.RequestAsync();
+        if (ok && IsOn) await s_island!.StartAppNotesAsync();
+        return ok;
+    }
+
+    void StopActivities()
+    {
+        try { if (_outputWatch != null) _devEnum?.UnregisterEndpointNotificationCallback(_outputWatch); } catch { }
+        _devEnum?.Dispose();
+        _devEnum = null;
+        _privacy?.Dispose();
+        _privacy = null;
+    }
+
+    void OnOutputChanged(string id)
+    {
+        if (IsDisposed || id == _lastOutput) return;
+        _lastOutput = id;
+        _out?.Dispose(); _out = null;   // a onda passa a ouvir a saída nova
+        if (_osdOn) HookAudio();        // e os indicadores de volume também
+        try
+        {
+            using var dev = _devEnum!.GetDevice(id);
+            uint form = 0;
+            try { form = Convert.ToUInt32(dev.Properties[NAudio.CoreAudioApi.PropertyKeys.PKEY_AudioEndpoint_FormFactor].Value); } catch { }
+            bool phones = form is 3 /* fone */ or 5 /* headset */;
+            var lang = AppSettings.Current.Language;
+            ShowActivity(phones ? "headphones" : "speaker", Strings.Get(lang, phones ? "actHeadphones" : "actOutput"), dev.FriendlyName);
+        }
+        catch { }
+    }
+
+    PrivacyWatch? _privacy;
+    string[] _micApps = Array.Empty<string>(), _camApps = Array.Empty<string>();
+
+    // Microfone/câmera: pontinho na ilha enquanto algum app usa; quando um app começa a usar, avisa quem é
+    void OnPrivacy(string[] mic, string[] cam)
+    {
+        if (IsDisposed) return;
+        var lang = AppSettings.Current.Language;
+        var newCam = cam.Except(_camApps).FirstOrDefault();
+        var newMic = mic.Except(_micApps).FirstOrDefault();
+        _micApps = mic; _camApps = cam;
+        Post(new { type = "privacy", mic, cam });
+        if (newCam != null) ShowActivity("camera", Strings.Get(lang, "actCamInUse"), newCam);
+        else if (newMic != null) ShowActivity("mic", Strings.Get(lang, "actMicInUse"), newMic);
     }
 
     void PostBattery()
@@ -329,15 +549,15 @@ sealed class IslandForm : Form
 
     // ---------- avisos ----------
 
-    void ShowNotice(string icon, string title, string text, string? actionLabel, Action? action, int ms, double level = -1, string? kind = null)
+    void ShowNotice(string icon, string title, string text, string? actionLabel, Action? action, int ms, double level = -1, string? kind = null, string? img = null)
     {
         _notice = true;
         kind ??= icon;
         bool resize = _mode == Mode.Notice && _noticeKind != kind;   // trocou de um aviso para outro de outro tamanho
         _noticeKind = kind;
-        if (resize) Place(Mode.Notice);
+        if (resize) MoveTo(Mode.Notice);
         _noticeAction = action;
-        Post(new { type = "notice", icon, kind, title, text, action = actionLabel, level });
+        Post(new { type = "notice", icon, kind, title, text, action = actionLabel, level, img });
         SetMode(Mode.Notice);   // faixa fina, sem abrir a ilha inteira
         _noticeEnd.Stop();
         _noticeEnd.Interval = ms;
@@ -381,7 +601,12 @@ sealed class IslandForm : Form
             core.Navigate("https://app.volum/island.html");
 
             _media = await MediaService.CreateAsync();
-            _media.Changed += (info) => { if (!IsDisposed) BeginInvoke(new Action(() => Post(new { type = "media", media = info }))); };
+            _media.Changed += (info) => { if (!IsDisposed) BeginInvoke(new Action(() =>
+            {
+                _lastMedia = info;
+                MediaKeys.PassMedia = info == null;   // sem nada tocando, as teclas de mídia seguem para o Windows (abrir o último player)
+                Post(new { type = "media", media = info });
+            })); };
         }
         catch (Exception ex) { Debug.WriteLine(ex); Close(); }
     }
@@ -419,6 +644,11 @@ sealed class IslandForm : Form
         _numOn = Control.IsKeyLocked(Keys.NumLock);
         RegisterKeyboard(true);
         HookAudio();
+        // Teclas de volume e de mídia: só pela ilha (o aviso do Windows não aparece)
+        MediaKeys.PassMedia = _lastMedia == null;
+        MediaKeys.Start(vk => { try { BeginInvoke(new Action(() => OnMediaKey(vk))); } catch { } });
+        _ = System.Threading.Tasks.Task.Run(StartBrightness);   // conectar no WMI leva um instante: fora da thread da janela
+        HookFlyout();   // aviso de brilho do Windows (precisa estar na thread da janela, que recebe os avisos)
     }
 
     void StopOsd()
@@ -427,6 +657,156 @@ sealed class IslandForm : Form
         _osdOn = false;
         RegisterKeyboard(false);
         UnhookAudio();
+        MediaKeys.Stop();
+        StopBrightness();
+    }
+
+    // ---------- teclas de volume e de mídia (MediaKeys.cs) ----------
+
+    MediaInfo? _lastMedia;
+
+    void OnMediaKey(int vk)
+    {
+        if (IsDisposed) return;
+        var lang = AppSettings.Current.Language;
+        switch (vk)
+        {
+            case MediaKeys.VolUp or MediaKeys.VolDown or MediaKeys.VolMute:
+                KeyVolume(vk);
+                break;
+            case MediaKeys.PlayPause:
+                _media?.PlayPause();
+                bool willPlay = !(_lastMedia?.Playing ?? false);
+                ShowMediaOsd(willPlay ? "play" : "pause", Strings.Get(lang, willPlay ? "osdPlay" : "osdPause"));
+                break;
+            case MediaKeys.Next: _media?.Next(); ShowMediaOsd("next", Strings.Get(lang, "osdNext")); break;
+            case MediaKeys.Prev: _media?.Previous(); ShowMediaOsd("prev", Strings.Get(lang, "osdPrev")); break;
+            case MediaKeys.StopKey: _media?.Stop(); ShowMediaOsd("pause", Strings.Get(lang, "osdPause")); break;
+        }
+    }
+
+    // Como o Windows: 2% por toque, mudo liga/desliga, mexer no volume tira do mudo. Mostra sempre (mesmo já no 100%).
+    void KeyVolume(int vk)
+    {
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            var ep = dev.AudioEndpointVolume;
+            if (vk == MediaKeys.VolMute) ep.Mute = !ep.Mute;
+            else
+            {
+                ep.MasterVolumeLevelScalar = Math.Clamp(ep.MasterVolumeLevelScalar + (vk == MediaKeys.VolUp ? 0.02f : -0.02f), 0f, 1f);
+                if (ep.Mute) ep.Mute = false;
+            }
+            _lastVol = -1;   // força mostrar (o aviso do Windows sobre a mudança chega depois e é ignorado)
+            ShowVolume(ep.MasterVolumeLevelScalar, ep.Mute);
+        }
+        catch { }
+    }
+
+    void ShowMediaOsd(string icon, string title) => ShowOsd(icon, title, _lastMedia?.Title ?? "", -1);
+
+    // ---------- brilho da tela (notebooks): o Windows avisa pelo WMI quando muda ----------
+    // A tecla de brilho não passa pelo teclado (o notebook trata direto; conferido no PC do Esdras), então não dá
+    // para segurar a tecla como o volume. O aviso do Windows é uma janela do Explorer (XamlExplorerHostIslandWindow,
+    // pequena, no meio, embaixo): quando ela aparece junto com uma mudança de brilho (até 1,5 s de diferença),
+    // o Volum a esconde e mostra o brilho na ilha. Outros avisos do Windows nessa janela não são mexidos.
+    // Em monitor de mesa o evento de brilho não existe (nada acontece).
+
+    System.Management.ManagementEventWatcher? _bright;
+    IntPtr _flyoutHook, _flyout;
+    WinEventProc? _flyoutProc;   // guardado: o Windows chama este delegate enquanto o gancho existir
+    uint _explorerPid;
+    DateTime _lastBright = DateTime.MinValue, _flyoutAt = DateTime.MinValue;
+
+    void OnBrightness(int b)
+    {
+        _lastBright = DateTime.UtcNow;
+        if ((DateTime.UtcNow - _flyoutAt).TotalMilliseconds < 1500) HideFlyout();
+        ShowOsd("bright", Strings.Get(AppSettings.Current.Language, "osdBright"), $"{b}%", b / 100.0);
+    }
+
+    // Ouve só as janelas que o Explorer mostra (o Windows avisa; nada fica checando)
+    void HookFlyout()
+    {
+        UnhookFlyout();
+        var tray = FindWindow("Shell_TrayWnd", null);
+        if (tray == IntPtr.Zero) return;
+        GetWindowThreadProcessId(tray, out _explorerPid);
+        _flyoutProc = OnShellShow;
+        _flyoutHook = SetWinEventHook(0x8002 /* EVENT_OBJECT_SHOW */, 0x8002, IntPtr.Zero, _flyoutProc, _explorerPid, 0, 0);
+    }
+
+    void UnhookFlyout()
+    {
+        if (_flyoutHook != IntPtr.Zero) UnhookWinEvent(_flyoutHook);
+        _flyoutHook = IntPtr.Zero;
+    }
+
+    // O Explorer reiniciou? (a cada 30 s, junto com a conferência do áudio)
+    void RefreshFlyoutHook()
+    {
+        var tray = FindWindow("Shell_TrayWnd", null);
+        if (tray == IntPtr.Zero) return;
+        GetWindowThreadProcessId(tray, out uint pid);
+        if (pid != _explorerPid || _flyoutHook == IntPtr.Zero) HookFlyout();
+    }
+
+    void OnShellShow(IntPtr hook, uint ev, IntPtr hwnd, int obj, int child, uint thread, uint time)
+    {
+        if (obj != 0 || hwnd == IntPtr.Zero || !IsOsdFlyout(hwnd)) return;
+        _flyout = hwnd;
+        _flyoutAt = DateTime.UtcNow;
+        if ((DateTime.UtcNow - _lastBright).TotalMilliseconds < 1500) HideFlyout();
+    }
+
+    // O aviso do Windows: classe do Explorer, pequeno, centralizado e encostado embaixo (acima da barra de tarefas)
+    static bool IsOsdFlyout(IntPtr hwnd)
+    {
+        var cls = new System.Text.StringBuilder(64);
+        GetClassName(hwnd, cls, cls.Capacity);
+        if (cls.ToString() != "XamlExplorerHostIslandWindow") return false;
+        if (!GetWindowRect(hwnd, out var r)) return false;
+        float k = Math.Max(1, GetDpiForWindow(hwnd)) / 96f;
+        var scr = Screen.FromHandle(hwnd).Bounds;
+        int w = r.Right - r.Left, h = r.Bottom - r.Top;
+        return w < 420 * k && h < 140 * k
+            && Math.Abs((r.Left + r.Right) / 2 - (scr.Left + scr.Right) / 2) < 60 * k
+            && r.Bottom > scr.Bottom - 220 * k;
+    }
+
+    void HideFlyout()
+    {
+        if (_flyout != IntPtr.Zero && IsWindowVisible(_flyout) && IsOsdFlyout(_flyout)) ShowWindow(_flyout, 0 /* SW_HIDE */);
+    }
+
+    void StartBrightness()
+    {
+        try
+        {
+            var w = new System.Management.ManagementEventWatcher(new System.Management.ManagementScope(@"root\WMI"),
+                new System.Management.EventQuery("SELECT * FROM WmiMonitorBrightnessEvent"));
+            w.EventArrived += (_, e) =>
+            {
+                int b;
+                try { b = Convert.ToInt32(e.NewEvent["Brightness"]); } catch { return; }
+                try { BeginInvoke(new Action(() => OnBrightness(b))); } catch { }
+            };
+            w.Start();
+            if (_osdOn) _bright = w; else w.Dispose();   // desligaram enquanto conectava
+        }
+        catch { }
+    }
+
+    void StopBrightness()
+    {
+        UnhookFlyout();
+        var w = _bright;
+        _bright = null;
+        if (w == null) return;
+        try { w.Stop(); } catch { }
+        w.Dispose();
     }
 
     void RegisterKeyboard(bool on)
@@ -543,10 +923,29 @@ sealed class IslandForm : Form
     {
         if (Math.Abs(v - _lastVol) < 0.004f && muted == _lastMute) return;   // nada mudou de verdade
         _lastVol = v; _lastMute = muted;
+        if (_hover && _mode == Mode.Open) { Post(new { type = "volume", v, muted }); return; }   // ilha aberta: mostra dentro dela
         var lang = AppSettings.Current.Language;
         bool silent = muted || v < 0.005f;
         ShowOsd(silent ? "volmute" : "vol", Strings.Get(lang, muted ? "osdMuted" : "osdVolume"),
             muted ? "" : $"{Math.Round(v * 100)}%", muted ? 0 : v);
+    }
+
+    // Rodinha do mouse na ilha. Mostra o nível dentro da ilha aberta (mesmo com os indicadores desligados).
+    void StepVolume(int d)
+    {
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            var ep = dev.AudioEndpointVolume;
+            float v = Math.Clamp(ep.MasterVolumeLevelScalar + Math.Sign(d) * 0.02f, 0f, 1f);
+            ep.MasterVolumeLevelScalar = v;
+            if (ep.Mute && d > 0) ep.Mute = false;   // subir o volume tira do mudo
+            _lastVol = v; _lastMute = ep.Mute;
+            Post(new { type = "volume", v, muted = ep.Mute });
+            TickSound.Play();
+        }
+        catch { }
     }
 
     void ShowMic(bool muted)
@@ -560,7 +959,7 @@ sealed class IslandForm : Form
     void ShowOsd(string icon, string title, string text, double level)
     {
         if (!_osdOn || !_ready || _hiddenByFullscreen) return;
-        if (_notice && _noticeKind != "osd") return;   // não atropela um aviso de verdade (água, Pomodoro...)
+        if (_notice && _noticeKind is not ("osd" or "act")) return;   // não atropela um aviso de verdade (água, Pomodoro...)
         foreach (Form f in Application.OpenForms)
             if (f is MixerForm mf && mf.IsOpen) return;   // com o mixer aberto, ele mesmo já mostra
         ShowNotice(icon, title, text, null, null, OsdMs, level, kind: "osd");
@@ -583,7 +982,7 @@ sealed class IslandForm : Form
 
     void CheckPet()
     {
-        if (_osdOn) RefreshAudioHook();   // trocou a saída ou o microfone padrão? (aproveita o mesmo relógio de 30 s)
+        if (_osdOn) { RefreshAudioHook(); RefreshFlyoutHook(); }   // trocou a saída/microfone padrão ou o Explorer reiniciou? (mesmo relógio de 30 s)
         if (!_ready || _hiddenByFullscreen) return;
         bool idle = IdleMs() >= PetIdleMin * 60_000L;
         if (idle != _petIdle)
@@ -641,7 +1040,7 @@ sealed class IslandForm : Form
     void PostSettings()
     {
         var s = AppSettings.Current;
-        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled });
+        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch" });
     }
 
     // Estado do Pomodoro: a ilha conta o tempo sozinha a partir de "leftMs" (nada vem do C# a cada segundo)
@@ -685,12 +1084,14 @@ sealed class IslandForm : Form
                     OnWaterChanged();
                     _ = _media?.RefreshAsync();
                     CheckScreen();
+                    PostAgenda();
+                    _ = StartAppNotesAsync();
                     Greet();
                     break;
 
                 case "height":   // altura da ilha aberta (muda com a página e com a água)
                     _openH = Math.Clamp((int)Math.Ceiling(root.GetProperty("h").GetDouble()), 80, 400);
-                    if (_mode == Mode.Open) Place(Mode.Open);
+                    if (_mode == Mode.Open) MoveTo(Mode.Open);
                     break;
 
                 case "hover":    // mouse entrou/saiu da ilha
@@ -708,6 +1109,12 @@ sealed class IslandForm : Form
                 case "next": _media?.Next(); break;
                 case "prev": _media?.Previous(); break;
                 case "openMixer": OpenMixer?.Invoke(); break;
+                case "animDone":   // a forma parou: janela no tamanho exato (sem a folga), se não mudou de estado nesse meio-tempo
+                    if (root.TryGetProperty("seq", out var sq) && sq.GetInt32() == _modeSeq) Place(_mode);
+                    break;
+                case "volStep":   // rodinha do mouse em cima da ilha: volume geral de 2 em 2%
+                    StepVolume(root.GetProperty("d").GetInt32());
+                    break;
 
                 case "waterAdd":
                     Water.Add(root.GetProperty("ml").GetInt32());
@@ -749,6 +1156,10 @@ sealed class IslandForm : Form
             _soundTimer.Dispose();
             _petTimer.Dispose();
             StopOsd();
+            StopActivities();
+            StopAppNotes();
+            Agenda.Changed -= OnAgendaChanged;
+            Agenda.Alert -= OnAgendaAlert;
             _osdEnum?.Dispose();
             _out?.Dispose();
             _enum?.Dispose();
@@ -768,6 +1179,9 @@ sealed class IslandForm : Form
 
     [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint tid, uint flags);
     [DllImport("user32.dll")] static extern bool UnhookWinEvent(IntPtr hook);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string? title);
+    [DllImport("user32.dll")] static extern uint GetDpiForWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hwnd, int cmd);
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);

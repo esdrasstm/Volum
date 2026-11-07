@@ -444,3 +444,131 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .osd-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--soft); overflow: hidden; }
 .osd-bar[hidden] { display: none; }
 .osd-bar i { display: block; height: 100%; border-radius: 2px; background: var(--text); transition: width .12s ease; }
+
+/* ---------- Transições fluidas: mola de verdade ----------
+   A forma cresce passando um pouquinho do tamanho e volta (--bounce, ~5% a mais na largura); a altura usa
+   uma mola quase sem sobra (--soft-spring), porque a janela tem a altura exata da ilha e cortaria o excesso.
+   As curvas são de uma mola amortecida calculada (linear() com os pontos). AnimMs no IslandForm.cs = --anim + folga. */
+:root {
+  --anim: 540ms;
+  --bounce: linear(0, 0.0234, 0.0839, 0.169, 0.2683, 0.3737, 0.4788, 0.5791, 0.6714, 0.7537, 0.825, 0.8851, 0.9342, 0.9732, 1.0031, 1.0248, 1.0396, 1.0487, 1.0533, 1.0542, 1.0525, 1.0489, 1.0441, 1.0386, 1.0329, 1.0272, 1.0219, 1.0169, 1.0126, 1.0088, 1.0057, 1.0031, 1.0011, 0.9996, 0.9985, 0.9977, 1);
+  --soft-spring: linear(0, 0.0388, 0.1306, 0.2475, 0.3711, 0.4897, 0.597, 0.6898, 0.7674, 0.8303, 0.88, 0.9182, 0.9469, 0.9678, 0.9825, 0.9926, 0.9991, 1.0031, 1.0052, 1.0062, 1.0063, 1.0059, 1.0052, 1.0045, 1.0037, 1.003, 1.0023, 1.0018, 1);
+}
+.shape { transition: width var(--anim) var(--bounce), height var(--anim) var(--soft-spring), border-radius var(--anim) var(--soft-spring); }
+
+/* O conteúdo nasce de dentro da forma: pequeno e desfocado → tamanho certo, com a mesma mola */
+.island.open .full { transition: opacity .28s ease .12s, filter .3s ease .12s, transform var(--anim) var(--bounce) .04s; }
+.full { transform: translateX(-50%) translateY(-10px) scale(.9); }
+.mini { transform: translateX(-50%) scale(.92); }
+.island.closed .mini, .island.idle .mini { transform: translateX(-50%); transition: opacity .3s ease .18s, filter .3s ease .18s, transform var(--anim) var(--bounce) .1s, height var(--anim) var(--soft-spring); }
+.noticebar { animation: notice-in .5s var(--bounce) .12s both; }
+@keyframes notice-in { from { opacity: 0; transform: translateX(-50%) scale(.9); filter: blur(4px); } }
+
+/* Apertar e segurar (abre o mixer): a ilha "afunda" um pouquinho enquanto segura */
+.island { transform-origin: 50% 0; transition: transform .3s var(--soft-spring); }
+.island.pressing { transform: scale(.965); transition-duration: .55s; }
+
+/* Trocar de página: a nova entra deslizando do lado certo; arrastar puxa a página junto com o mouse */
+.page { transition: transform .4s var(--bounce); }
+.page.dragging { transition: none; }
+.page.enter-next { animation: page-next .42s var(--soft-spring) both; }
+.page.enter-prev { animation: page-prev .42s var(--soft-spring) both; }
+@keyframes page-next { from { opacity: 0; transform: translateX(28px); filter: blur(4px); } }
+@keyframes page-prev { from { opacity: 0; transform: translateX(-28px); filter: blur(4px); } }
+/* Música nova: capa e nome entram de novo */
+.track.swap { animation: track-swap .45s var(--soft-spring) both; }
+@keyframes track-swap { from { opacity: 0; transform: translateY(6px) scale(.97); filter: blur(4px); } }
+
+/* Volume pela rodinha: aparece no lugar da data por um instante */
+.when-vol { position: absolute; left: 50%; display: flex; align-items: center; gap: 8px; width: 180px; transform: translateX(-50%) scale(.9);
+  opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .35s var(--bounce); }
+.when-vol svg { width: 16px; height: 16px; flex: none; }
+.when-vol .osd-bar { flex: 1; }
+.when-vol b { width: 34px; font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.when { transition: opacity .18s ease; }
+.status.showing-vol .when { opacity: 0; }
+.status.showing-vol .when-vol { opacity: 1; transform: translateX(-50%); }
+
+/* ---------- Ilha flutuante (Configurações → Ilha → Formato) ----------
+   Pílula solta, arredondada por inteiro, um pouco abaixo da borda de cima (o C# desce a janela FloatGap px).
+   Sem as orelhas; um contorno bem fraco para não sumir em papéis de parede escuros. */
+.floating .shape { border-radius: var(--r); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09); }
+.floating .shape::before, .floating .shape::after { display: none; }
+
+/* ---------- Forma desenhada em SVG + mola física (substitui as transições de largura/altura acima) ----------
+   O island.js lê o tamanho-alvo de cada estado (--w, --h, --r, --ear-size) e anima com uma mola de verdade
+   (rígida e pouco elástica, como no Alcove: chega em ~250 ms, passa ~2%), só enquanto a ilha se mexe.
+   Cantos contínuos (squircle) e as orelhas do formato grudado vão no mesmo caminho. */
+.shape { background: none; border-radius: 0; transition: none; overflow: visible; }
+.shape::before, .shape::after { display: none; }
+.floating .shape { box-shadow: none; }
+.shape-svg { position: absolute; top: 0; left: 0; overflow: visible; }
+.shape-svg path { fill: var(--black); }
+.floating .shape-svg path { stroke: rgba(255, 255, 255, .1); stroke-width: 1; }
+
+/* Conteúdo acompanhando a mola: entra rápido logo depois de a forma abrir espaço */
+.island.open .full { transition: opacity .2s ease .07s, filter .22s ease .07s, transform .42s var(--soft-spring) .03s; }
+.full { transform: translateX(-50%) translateY(-6px) scale(.94); }
+.island.closed .mini, .island.idle .mini { transition: opacity .22s ease .1s, filter .22s ease .1s, transform .42s var(--soft-spring) .06s, height var(--anim) var(--soft-spring); }
+
+/* Indicador de música (teclas de mídia): "Tocando · nome da música"; o nome corta com "…" dentro da pílula */
+.noticebar[data-kind="osd"]:has(.osd-bar[hidden]) .notice-text { flex: 1 1 auto; min-width: 0; }
+
+/* ---------- Proporções do Alcove (07/11/2026, pedido do Esdras) ----------
+   Em vez da pílula toda redonda: um retângulo de cantos arredondados (raio 12, contínuos) e um pouco mais alto.
+   Fechada e avisos com 40 de altura (ClosedH e NoticeH no IslandForm.cs). */
+.island { --h: 40px; --r: 12px; }
+.island.idle { --h: 54px; --r: 16px; }
+.island.open { --r: 24px; }
+.island.alerting, .island.alerting.osd { --h: 40px; --r: 12px; }
+.island.alerting.greeting, .island.alerting.walking { --h: 54px; --r: 16px; }
+.mini { height: 40px; padding: 0 14px; }
+.mini-cover { width: 24px; height: 24px; border-radius: 7px; }
+.mini-ring, .battery, .battery svg { width: 22px; height: 22px; }
+.clock { font-size: 14.5px; }
+.noticebar { height: 40px; }
+.noticebar[data-kind="greet"], .noticebar[data-kind="walk"] { height: 54px; }
+
+/* ---------- Fase 3: atividades ao vivo ---------- */
+/* Direita da ilha fechada: pontinhos de microfone/câmera + onda */
+.mini-right { justify-self: end; display: flex; align-items: center; gap: 7px; }
+.island.idle .mini-right { display: none; }
+/* Pontinhos (como no iPhone): laranja = microfone, verde = câmera */
+.privacy { display: inline-flex; gap: 4px; align-items: center; }
+.privacy[hidden] { display: none; }
+.privacy i { width: 6px; height: 6px; border-radius: 50%; display: none; }
+.privacy.mic .mic { display: block; background: #ff9f0a; box-shadow: 0 0 6px rgba(255, 159, 10, .7); }
+.privacy.cam .cam { display: block; background: #30d158; box-shadow: 0 0 6px rgba(48, 209, 88, .7); }
+.status .privacy { position: absolute; right: 34px; }
+
+/* Cor da música: tirada da capa (o JS põe --tint); a onda e a barra de progresso usam ela */
+.island { --tint: var(--text); }
+.wave i { background: var(--tint); transition: background .6s ease; }
+.progress .bar span { background: var(--tint); transition: background .6s ease; }
+.mini-cover, .cover { box-shadow: 0 0 0 0 transparent; transition: box-shadow .6s ease; }
+.island.tinted .cover { box-shadow: 0 6px 22px -6px var(--tint); }
+
+/* Onda ao vivo: o JS mexe cada barrinha pelo nível do som (sem a animação de sempre) */
+.wave.live i { animation: none !important; transition: transform .11s linear, background .6s ease; transform-origin: center; }
+
+/* Faixa de atividade (carregador, fone, microfone/câmera em uso): como o indicador, um pouco mais larga (ActW no C#) */
+.island.alerting.act { --w: 320px; --h: 40px; --r: 12px; }
+.noticebar[data-kind="act"] { width: 320px; padding: 0 16px; gap: 10px; }
+.noticebar[data-kind="act"] .notice-close, .noticebar[data-kind="act"] .notice-action { display: none; }
+.noticebar[data-kind="act"] .notice-text { flex: 1 1 auto; min-width: 0; }
+.noticebar[data-kind="act"] .notice-text span { color: var(--text); }
+.noticebar[data-kind="act"] .osd-bar { flex: 0 0 64px; }
+.noticebar[data-kind="act"] .osd-bar i { background: var(--battery); }
+
+/* ---------- Fase 4: notificações dos apps (ícone do app) ---------- */
+.notice-icon img { width: 20px; height: 20px; border-radius: 5px; object-fit: contain; }
+
+/* ---------- Agenda (página na ilha aberta) ---------- */
+.agenda { display: grid; gap: 6px; padding-top: 2px; }
+.agenda-head { font-size: 12px; color: var(--subtext); font-weight: 600; }
+.agenda-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.agenda-list li { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.agenda-when { flex: none; width: 74px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--subtext); }
+.agenda-title { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.agenda-list li.now .agenda-when { color: #30d158; font-weight: 700; }
+.agenda-empty { font-size: 13px; color: var(--subtext); }

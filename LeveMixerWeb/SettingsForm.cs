@@ -123,6 +123,22 @@ sealed class SettingsForm : Form
         catch (Exception ex) { Debug.WriteLine(ex); }
     }
 
+    async Task SetAppNotesAsync(bool want)
+    {
+        bool ok = await IslandForm.SetAppNotesAsync(want);
+        _settings.IslandAppNotes = want && ok;
+        _settings.Save();
+        if (!IsDisposed) Post(new { type = "appNotes", on = _settings.IslandAppNotes, denied = want && !ok });
+    }
+
+    async Task SetCalendarAsync(string url)
+    {
+        _settings.CalendarUrl = url;
+        _settings.Save();
+        int n = await IslandForm.CalendarChangedAsync();
+        if (!IsDisposed) Post(new { type = "calendar", count = n, empty = url.Length == 0, error = n < 0 ? Agenda.LastError : "" });
+    }
+
     void PostSettings()
     {
         var w = Water.Data;
@@ -139,6 +155,10 @@ sealed class SettingsForm : Form
             version = Updater.Version,
             store = Updater.IsStore,
             island = _settings.IslandEnabled,
+            islandStyle = _settings.IslandStyle == "float" ? "float" : "notch",
+            appNotes = _settings.IslandAppNotes && AppNotifications.Supported,
+            appNotesSupported = AppNotifications.Supported,
+            calendarUrl = _settings.CalendarUrl ?? "",
             focus = new
             {
                 pomodoro = _settings.PomodoroEnabled,
@@ -244,6 +264,24 @@ sealed class SettingsForm : Form
                     _settings.IslandEnabled = root.GetProperty("enabled").GetBoolean();
                     _settings.Save();
                     IslandForm.Apply(_settings.IslandEnabled);
+                    break;
+
+                case "setAppNotes":   // notificações dos outros apps na ilha (só Store): o Windows pede a permissão
+                {
+                    _ = SetAppNotesAsync(root.GetProperty("on").GetBoolean());   // continua nesta thread (a da janela)
+                    break;
+                }
+
+                case "setCalendar":   // endereço iCal da agenda: salva e baixa para conferir
+                {
+                    _ = SetCalendarAsync((root.GetProperty("url").GetString() ?? "").Trim());
+                    break;
+                }
+
+                case "setIslandStyle":   // formato da ilha: grudada no topo ou flutuante
+                    _settings.IslandStyle = root.GetProperty("style").GetString() == "float" ? "float" : "notch";
+                    _settings.Save();
+                    IslandForm.ApplyStyle();
                     break;
 
                 case "setFocus":   // Pomodoro e aviso de levantar (página Ilha)

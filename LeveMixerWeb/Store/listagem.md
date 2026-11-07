@@ -32,7 +32,7 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Correções de bugs e mais estabilidade.
+Ilha nova: formato novo, animação mais fluida e opção de ilha flutuante. Volume, teclas de música e brilho aparecem na ilha no lugar dos avisos do Windows. Atividades ao vivo (microfone e câmera em uso, carregador, fone conectado), agenda na ilha pelo link iCal e notificações dos apps na ilha (opcional).
 
 ### Recursos do produto (um por linha)
 Volume de cada aplicativo, com mudo e nível de som
@@ -86,7 +86,7 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Bug fixes and better stability.
+A new island: new shape, smoother animation and a floating option. Volume, media keys and brightness show up on the island instead of the Windows pop-ups. Live activities (microphone and camera in use, charger, headphones connected), calendar on the island via an iCal link and app notifications on the island (optional).
 
 ### Product features (one per line)
 Per-app volume with mute and sound level
@@ -140,7 +140,7 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Corrección de errores y más estabilidad.
+Isla nueva: forma nueva, animación más fluida y opción de isla flotante. El volumen, las teclas de música y el brillo aparecen en la isla en lugar de los avisos de Windows. Actividades en vivo (micrófono y cámara en uso, cargador, auriculares conectados), agenda en la isla con un enlace iCal y notificaciones de las apps en la isla (opcional).
 
 ### Características del producto (una por línea)
 Volumen de cada aplicación, con silencio y nivel de sonido
@@ -180,7 +180,9 @@ sonido
 Volum is a system tray volume mixer built with .NET and WebView2. It needs runFullTrust because it uses the Windows Core Audio APIs to read and change the volume of each app's audio session and of the microphone, and to switch the default microphone when the user picks one from the list.
 - The keyboard is only locked when the user clicks "Lock keyboard to clean" (a low-level keyboard hook that is removed after 10 minutes or when the user clicks "Unlock"; Ctrl+Alt+Del always works).
 - Caps Lock / Num Lock indicators use Raw Input only to detect those two keys; no keystrokes are stored or sent anywhere.
-- The app makes no network connections in the Store version (updates come from the Store).
+- Volume and media keys (VK 0xAD-0xB3 only) are intercepted with a low-level keyboard hook so the change is shown on the app's island instead of the Windows flyout; every other key is passed through immediately and nothing is stored or sent. It can be turned off in Settings > Island > Island indicators.
+- Optional app notifications on the island use the userNotificationListener capability; Windows asks the user for permission first. Notifications are only displayed locally, never stored or sent.
+- The only network connection in the Store version is optional: if the user pastes an iCal (.ics) calendar address in Settings > Island > Calendar, the app downloads that calendar every 15 minutes to show event reminders. Updates come from the Store.
 - To test: click the Volum icon in the system tray (near the clock). Optional features are in Settings (gear icon): island at the top of the screen, Pomodoro, water reminder.
 
 ### Capturas de tela

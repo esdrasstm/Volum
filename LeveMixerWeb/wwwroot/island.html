@@ -25,7 +25,8 @@
   </svg>
 
   <div id="island" class="island closed">
-    <div class="shape" aria-hidden="true"></div>
+    <!-- A forma é desenhada pelo island.js (SVG com cantos contínuos e as orelhas), animada por uma mola -->
+    <div class="shape" aria-hidden="true"><svg class="shape-svg"><path id="shapePath"/></svg></div>
 
     <!-- Fechada -->
     <div class="mini">
@@ -41,7 +42,11 @@
         </svg>
       </span>
       <b id="clock" class="clock">--:--</b>
-      <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <!-- Direita: pontinhos de microfone/câmera em uso (como no iPhone) e a onda do som -->
+      <span class="mini-right">
+        <span class="privacy" id="miniPrivacy" hidden><i class="cam"></i><i class="mic"></i></span>
+        <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </span>
     </div>
 
     <!-- Aviso do Volum: faixa fina, da altura da ilha (ex.: lembrete de água) -->
@@ -63,6 +68,13 @@
       <div class="status">
         <span class="battery" id="battery" hidden></span>
         <span class="when"><span id="date"></span> <b id="time"></b></span>
+        <!-- Rodinha do mouse na ilha: o volume aparece aqui no lugar da data, por um instante -->
+        <span class="when-vol" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5l4.5 4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/></g></svg>
+          <span class="osd-bar"><i id="volFill"></i></span>
+          <b id="volPct"></b>
+        </span>
+        <span class="privacy" id="privacy" hidden><i class="cam"></i><i class="mic"></i></span>
         <span class="wave" id="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
 
@@ -149,6 +161,14 @@
           <div class="water-buttons">
             <button class="water-minus" id="waterMinus" aria-label="−">−</button>
             <button class="water-add" id="waterPlus"></button>
+          </div>
+        </section>
+
+        <!-- Página: agenda (só com o endereço iCal salvo nas configurações); o JS monta a lista -->
+        <section class="page" data-page="agenda" hidden>
+          <div class="agenda">
+            <b class="agenda-head" data-i18n="islandAgenda">Agenda</b>
+            <ul class="agenda-list" id="agendaList"></ul>
           </div>
         </section>
 

@@ -173,6 +173,7 @@ sealed class MediaService : IDisposable
     public void PlayPause() => _ = _session?.TryTogglePlayPauseAsync();
     public void Next() => _ = _session?.TrySkipNextAsync();
     public void Previous() => _ = _session?.TrySkipPreviousAsync();
+    public void Stop() => _ = _session?.TryStopAsync();
 
     public void Dispose()
     {
