@@ -177,29 +177,24 @@
     walkRaf = requestAnimationFrame(step);
   }
 
-  // Ilha ociosa: 2 min sem o mouse em cima, sem aviso, sem som e sem Pomodoro → o mascote aparece
-  const IDLE_MS = 2 * 60 * 1000;
-  let idle = false, idleTimer = 0;
-  // Entra no modo ocioso agora (só o mascote; a ilha desce um pouco)
-  function rest() {
-    clearTimeout(idleTimer);
-    if (idle || pomoActive() || soundOn) return;
+  // Mascote: quem decide quando ele aparece é o C# (mensagem "pet"): com o PC parado há 10 min (fica até
+  // alguém mexer) e numa passadinha rápida a cada 30 min. Também logo depois do "bom dia".
+  // Com ele na tela, a ilha desce um pouco (o C# muda o tamanho ao receber "idle").
+  let idle = false, petTimer = 0;
+  function rest(ms) {
+    clearTimeout(petTimer);
+    if (idle || pomoActive() || soundOn || mode !== 'closed') return;   // ilha ocupada: fica para a próxima
     idle = true;
     showMini();
     post({ type: 'idle', on: true });
+    if (ms) petTimer = setTimeout(wake, ms);
   }
 
+  // Alguma atividade na ilha (abriu, aviso, som, Pomodoro): o mascote sai e a ilha volta ao normal
   function wake() {
-    clearTimeout(idleTimer);
+    clearTimeout(petTimer);
     if (idle) { idle = false; showMini(); post({ type: 'idle', on: false }); }
-    idleTimer = setTimeout(() => {
-      if (mode !== 'closed' || soundOn || pomoActive()) { wake(); return; }   // ainda tem algo acontecendo: espera mais
-      idle = true;
-      showMini();
-      post({ type: 'idle', on: true });   // o C# cresce a ilha um pouco para baixo
-    }, IDLE_MS);
   }
-
   /* ---------------- Onda de áudio: só aparece (e anda) com som saindo de verdade ---------------- */
   function showWave() {
     for (const w of [$('wave'), $('miniWave')]) {
@@ -397,6 +392,13 @@
   const NOTICE_ICONS = {
     drop: '<svg viewBox="0 0 24 24"><path d="M12 2.8c3.6 4.4 6.2 7.8 6.2 11a6.2 6.2 0 0 1-12.4 0c0-3.2 2.6-6.6 6.2-11z" fill="#38bdf8"/></svg>',
     keyboard: '<svg viewBox="0 0 16 16"><g fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"><rect x="1.75" y="4" width="12.5" height="8" rx="1.5"/><path d="M4.5 6.75h.01M7 6.75h.01M9.5 6.75h.01M12 6.75h.01M5.5 9.5h5"/></g></svg>',
+    // Indicadores (Caps Lock, Num Lock, volume, microfone)
+    caps: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 4.5 12H9v4h6v-4h4.5z"/><path d="M9 20h6"/></g></svg>',
+    num: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M10 9v6M8.5 10.2 10 9M13.5 9h2.5l-2.5 6"/></g></svg>',
+    vol: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5l4.5 4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8.5 8.5 0 0 1 0 11"/></g></svg>',
+    volmute: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5l4.5 4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></g></svg>',
+    mic: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4"/></g></svg>',
+    micoff: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M18.5 10.5a6.5 6.5 0 0 1-13 0M12 17v4M4 3l16 18"/></g></svg>',
     timer: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5M12 2.5V6"/></g></svg>',
     walk: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.8"/><path d="M9 21l3-6 2.5 2.5V21M12 15l-1.5-5 3.5-2 2.5 3 2.5 1M10.5 10l-3 1.5-1 3"/></g></svg>',
     sparkle: '<svg viewBox="0 0 24 24"><g fill="none" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3c.8 4.5 2.5 6.2 7 7-4.5.8-6.2 2.5-7 7-.8-4.5-2.5-6.2-7-7 4.5-.8 6.2-2.5 7-7z"/><path d="M19 15v6M16 18h6"/></g></svg>',
@@ -406,14 +408,18 @@
   let lastNotice = '';
   function showNotice(n) {
     const on = !!n.icon;
-    if (!on && lastNotice === 'greet') setTimeout(rest, 0);   // acabou o "bom dia": a ilha fica só com o mascote
+    if (!on && lastNotice === 'greet') setTimeout(() => rest(15000), 0);   // acabou o "bom dia": o mascote fica um pouquinho
     lastNotice = n.icon || '';
     island.classList.toggle('greeting', n.icon === 'greet');   // "bom dia": do tamanho da ilha com o mascote
     island.classList.toggle('walking', n.icon === 'walk');     // levantar: ilha mais alta, com a cena do bonequinho
     if (n.icon === 'walk') requestAnimationFrame(playWalk);   // a cena começa do início (depois de o aviso aparecer)
     $('notice').hidden = !on;
     if (!on) return;
-    $('notice').dataset.kind = n.icon;   // água: botão azul; o resto, branco; greet: só a frase do "bom dia"
+    $('notice').dataset.kind = n.kind || n.icon;   // água: botão azul; o resto, branco; greet: só a frase; osd: indicador rápido
+    island.classList.toggle('osd', n.kind === 'osd');
+    const bar = $('osdBar');   // volume: barrinha com o nível
+    bar.hidden = !(n.kind === 'osd' && n.level >= 0);
+    if (!bar.hidden) bar.firstElementChild.style.width = Math.round(n.level * 100) + '%';
     $('noticeIcon').innerHTML = n.icon === 'greet' ? '' : NOTICE_ICONS[n.icon] || NOTICE_ICONS.bell;   // ícones fixos daqui; o "bom dia" é só a frase
     $('noticeTitle').textContent = n.title || '';
     $('noticeBody').textContent = n.text || '';
@@ -463,6 +469,7 @@
         showPomodoro();
         break;
       case 'pomodoro': onPomodoro(m); break;
+      case 'pet': if (m.on) rest(m.ms || 0); else wake(); break;   // mascote: PC parado ou passadinha
       case 'mode':    setMode(m.mode); break;
       case 'media':   media = m.media; showMedia(); break;
       case 'water':   water = m.water; showWater(); break;
@@ -473,6 +480,5 @@
   });
 
   document.addEventListener('contextmenu', (e) => e.preventDefault());
-  wake();   // começa a contar o tempo ocioso
   post({ type: 'ready' });
 })();

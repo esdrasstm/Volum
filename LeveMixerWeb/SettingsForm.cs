@@ -137,6 +137,7 @@ sealed class SettingsForm : Form
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             water = new { enabled = w.Enabled, goalMl = w.GoalMl, intervalMin = w.IntervalMin, cupMl = w.CupMl, todayMl = w.TodayMl, sound = w.Sound },
             version = Updater.Version,
+            store = Updater.IsStore,
             island = _settings.IslandEnabled,
             focus = new
             {
@@ -145,6 +146,8 @@ sealed class SettingsForm : Form
                 shortMin = _settings.ShortBreakMin,
                 longMin = _settings.LongBreakMin,
                 every = _settings.LongBreakEvery,
+                pomoSound = _settings.PomodoroSound,
+                osd = _settings.IslandOsd,
                 standUp = _settings.StandUpEnabled,
                 standMin = _settings.StandUpMin
             }
@@ -251,13 +254,21 @@ sealed class SettingsForm : Form
                     _settings.ShortBreakMin = Get("shortMin", 5, 1, 30);
                     _settings.LongBreakMin = Get("longMin", 15, 5, 60);
                     _settings.LongBreakEvery = Get("every", 4, 2, 8);
+                    if (root.TryGetProperty("pomoSound", out var ps) && Array.IndexOf(PomodoroSound.Names, ps.GetString()) >= 0)
+                        _settings.PomodoroSound = ps.GetString()!;
                     _settings.StandUpEnabled = root.GetProperty("standUp").GetBoolean();
+                    if (root.TryGetProperty("osd", out var osd)) _settings.IslandOsd = osd.GetBoolean();
                     _settings.StandUpMin = Get("standMin", 60, 20, 240);
                     _settings.Save();
                     if (!_settings.PomodoroEnabled) Pomodoro.Stop();
                     Pomodoro.Configure();
                     StandUp.Apply();
+                    IslandForm.ApplyOsd();
                     IslandForm.SettingsChanged();
+                    break;
+
+                case "testPomoSound":   // escolheu um som do Pomodoro: toca para a pessoa ouvir
+                    PomodoroSound.Play(root.GetProperty("sound").GetString());
                     break;
 
                 case "testStand":   // "Testar aviso" do levantar

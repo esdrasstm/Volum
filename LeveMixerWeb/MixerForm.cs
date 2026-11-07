@@ -33,6 +33,7 @@ sealed class MixerForm : Form
         {
             "feedback" => $"{SiteUrl}?v={Uri.EscapeDataString(Updater.Version)}&w={Environment.OSVersion.Version.Build}#sugestoes",
             "github" => "https://github.com/esdrasstm/Volum",
+            "store" => "ms-windows-store://pdp/?productid=9PKPDGQ211L4",   // abre o app da Microsoft Store na página do Volum
             _ => SiteUrl,
         };
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
@@ -361,7 +362,7 @@ sealed class MixerForm : Form
     /// que o Volum já está instalado.</summary>
     internal static string WebViewDataFolder => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        Updater.IsInstalled ? "Volum" : "VolumDev", "WebView2");
+        Updater.IsRelease ? "Volum" : "VolumDev", "WebView2");
 
     internal static string? FindSourceWwwroot()
     {
@@ -536,7 +537,8 @@ sealed class MixerForm : Form
             systemDark = WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             version = Updater.Version,                 // a interface mostra as novidades se esta versão
-            newsSeen = _settings.LastSeenVersion,      // ainda não foi vista
+            newsSeen = _settings.LastSeenVersion,
+            store = Updater.IsStore,                   // pela Store: sem a novidade "está na Store"      // ainda não foi vista
             water = WaterDto()
         });
     }

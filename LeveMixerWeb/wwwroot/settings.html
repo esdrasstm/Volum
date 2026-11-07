@@ -14,7 +14,7 @@
   <!-- Menu de seções -->
   <nav class="nav" aria-label="Seções">
     <div class="nav-brand">
-      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="currentColor"/><g stroke="var(--bg)" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="var(--bg)" stroke="currentColor" stroke-width="1.6"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="#090909" stroke="#fff" stroke-opacity=".27"/><g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="7" x2="9" y2="25"/><line x1="16" y1="7" x2="16" y2="25"/><line x1="23" y1="7" x2="23" y2="25"/></g><g fill="#fff"><circle cx="9" cy="20" r="3.5"/><circle cx="16" cy="11" r="3.5"/><circle cx="23" cy="17" r="3.5"/></g></svg>
       <span data-i18n="settings">Configurações</span>
     </div>
 
@@ -193,6 +193,11 @@
             <span data-i18n="pomoEvery">Pausa longa a cada</span>
             <div class="stepper fstep" data-key="every" data-unit="cycles"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
           </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoSound">Som do fim</span>
+            <!-- Ao trocar, o som toca para a pessoa ouvir -->
+            <div class="stepper fstep" data-key="pomoSound" data-unit="sound"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
         </div>
       </div>
 
@@ -214,6 +219,18 @@
           </div>
         </div>
       </div>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="osdToggle">Indicadores na ilha</span>
+            <small data-i18n="osdHint">Mostra rapidinho Caps Lock, Num Lock, o volume e o microfone mudo</small>
+          </span>
+          <label class="switch">
+            <input id="osdOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+      </div>
       <div class="btn-row">
         <button class="btn" id="standTest" data-i18n="standTest">Testar aviso de levantar</button>
       </div>
@@ -226,7 +243,7 @@
       <h1 data-i18n="pageAbout">Sobre</h1>
       <div class="group about">
         <div class="about-head">
-          <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="currentColor"/><g stroke="var(--bg)" stroke-width="2.5" stroke-linecap="round"><line x1="9.5" y1="8" x2="9.5" y2="24"/><line x1="16" y1="8" x2="16" y2="24"/><line x1="22.5" y1="8" x2="22.5" y2="24"/></g><g fill="var(--bg)" stroke="currentColor" stroke-width="1.6"><circle cx="9.5" cy="19.5" r="3.4"/><circle cx="16" cy="11.5" r="3.4"/><circle cx="22.5" cy="17" r="3.4"/></g></svg>
+          <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="#090909" stroke="#fff" stroke-opacity=".27"/><g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="7" x2="9" y2="25"/><line x1="16" y1="7" x2="16" y2="25"/><line x1="23" y1="7" x2="23" y2="25"/></g><g fill="#fff"><circle cx="9" cy="20" r="3.5"/><circle cx="16" cy="11" r="3.5"/><circle cx="23" cy="17" r="3.5"/></g></svg>
           <div>
             <div class="about-name">Volum</div>
             <div class="about-version" id="aboutVersion"></div>

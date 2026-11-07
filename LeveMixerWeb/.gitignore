@@ -2,6 +2,7 @@
 **/obj/
 publish/
 Releases/
+Store/out/
 .vs/
 *.user
 *.suo

@@ -18,6 +18,7 @@
   let lang = 'pt';
   const t = (key) => V.t(lang, key);
   let version = '';
+  let fromStore = false;   // instalado pela Microsoft Store
 
   /* ---------------- Seções (menu à esquerda) ---------------- */
   const navItems = [...document.querySelectorAll('.nav-item')];
@@ -234,21 +235,23 @@
     longMin: [10, 15, 20, 25, 30],
     every: [2, 3, 4, 5, 6],
     standMin: [30, 45, 60, 75, 90, 120],
+    pomoSound: ['chime', 'drops', 'bell', 'none'],   // som do fim do Pomodoro (nomes no PomodoroSound do C#)
   };
-  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, standUp: true, standMin: 60 };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, standUp: true, standMin: 60 };
 
-  const fmtFocus = (v, unit) => unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
+  const fmtFocus = (v, unit) => unit === 'sound' ? t('snd_' + v) : unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
     : unit === 'time' ? V.fmtMin(v) : `${v} min`;
 
   function showFocus() {
     $('pomoOn').checked = focus.pomodoro;
     $('standOn').checked = focus.standUp;
+    $('osdOn').checked = focus.osd !== false;
     $('pomoOptions').hidden = !focus.pomodoro;
     $('standOptions').hidden = !focus.standUp;
     $('standTest').disabled = !islandOn;
     $('focusNote').hidden = islandOn;   // com a ilha desligada, avisa que tudo isso depende dela
     document.querySelectorAll('.fstep').forEach((st) => {
-      const key = st.dataset.key, list = FOCUS_STEPS[key], i = nearest(list, focus[key]);
+      const key = st.dataset.key, list = FOCUS_STEPS[key], i = typeof focus[key] === 'string' ? Math.max(0, list.indexOf(focus[key])) : nearest(list, focus[key]);
       st.querySelector('output').textContent = fmtFocus(focus[key], st.dataset.unit);
       st.querySelector('[data-step="-1"]').disabled = i <= 0;
       st.querySelector('[data-step="1"]').disabled = i >= list.length - 1;
@@ -259,11 +262,14 @@
 
   $('pomoOn').addEventListener('change', (e) => { focus.pomodoro = e.target.checked; showFocus(); saveFocus(); });
   $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
+  $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
   document.querySelectorAll('.fstep').forEach((st) => st.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
     const key = st.dataset.key, list = FOCUS_STEPS[key];
-    focus[key] = list[Math.min(list.length - 1, Math.max(0, nearest(list, focus[key]) + Number(b.dataset.step)))];
+    const at = typeof focus[key] === 'string' ? Math.max(0, list.indexOf(focus[key])) : nearest(list, focus[key]);
+    focus[key] = list[Math.min(list.length - 1, Math.max(0, at + Number(b.dataset.step)))];
+    if (key === 'pomoSound') post({ type: 'testPomoSound', sound: focus[key] });   // toca o som escolhido
     showFocus();
     saveFocus();
   }));
@@ -272,17 +278,22 @@
   /* ---------------- Sobre ---------------- */
   function showAbout() {
     $('aboutVersion').textContent = version ? t('aboutVersion').replace('{0}', version) : '';
-    $('aboutNews').replaceChildren(...V.newsItems(lang));
+    $('aboutNews').replaceChildren(...V.newsItems(lang, fromStore));
   }
 
   $('siteBtn').addEventListener('click', () => post({ type: 'openSite' }));
   $('feedbackBtn').addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));
   $('githubBtn').addEventListener('click', () => post({ type: 'openSite', section: 'github' }));
+  $('aboutNews').addEventListener('click', (e) => {   // botão dentro de uma novidade (ex.: Microsoft Store)
+    const b = e.target.closest('[data-site]');
+    if (b) post({ type: 'openSite', section: b.dataset.site });
+  });
 
   /* ---------------- Mensagens do C# ---------------- */
   function applySettings(s) {
     if (typeof s.systemDark === 'boolean') systemDark = s.systemDark;
     version = s.version || '';
+    fromStore = !!s.store;
     if (s.hotkey) hotkey = s.hotkey;
     if (s.water) water = s.water;
     recording = false;

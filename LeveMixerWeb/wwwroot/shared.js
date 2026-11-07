@@ -43,6 +43,8 @@ window.Volum = (() => {
       standToggle: 'Lembrete para levantar', standHint: 'Avisa pela ilha depois de um tempo sentado; zera quando você bloqueia a tela',
       standEvery: 'Avisar depois de', standTest: 'Testar aviso de levantar',
       focusNeedsIsland: 'Pomodoro e o lembrete para levantar funcionam com a ilha ligada.',
+      pomoSound: 'Som do fim', snd_chime: 'Sininho', snd_drops: 'Gotinhas', snd_bell: 'Campainha', snd_none: 'Sem som',
+      osdToggle: 'Indicadores na ilha', osdHint: 'Mostra rapidinho Caps Lock, Num Lock, o volume e o microfone mudo',
       waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso',
     },
     en: {
@@ -78,6 +80,8 @@ window.Volum = (() => {
       standToggle: 'Stand-up reminder', standHint: 'Reminds you on the island after sitting for a while; resets when you lock the screen',
       standEvery: 'Remind after', standTest: 'Test stand-up reminder',
       focusNeedsIsland: 'Pomodoro and the stand-up reminder work while the island is on.',
+      pomoSound: 'End sound', snd_chime: 'Chime', snd_drops: 'Drops', snd_bell: 'Bell', snd_none: 'No sound',
+      osdToggle: 'Island indicators', osdHint: 'Briefly shows Caps Lock, Num Lock, the volume and a muted microphone',
       waterTest: 'Test reminder', waterSound: 'Play a sound',
     },
     es: {
@@ -113,6 +117,8 @@ window.Volum = (() => {
       standToggle: 'Recordatorio para levantarse', standHint: 'Avisa en la isla después de un rato sentado; se reinicia al bloquear la pantalla',
       standEvery: 'Avisar después de', standTest: 'Probar aviso de levantarse',
       focusNeedsIsland: 'El Pomodoro y el recordatorio para levantarse funcionan con la isla activada.',
+      pomoSound: 'Sonido al terminar', snd_chime: 'Campanita', snd_drops: 'Gotitas', snd_bell: 'Campana', snd_none: 'Sin sonido',
+      osdToggle: 'Indicadores en la isla', osdHint: 'Muestra un momento Bloq Mayús, Bloq Num, el volumen y el micrófono silenciado',
       waterTest: 'Probar aviso', waterSound: 'Reproducir sonido',
     },
   };
@@ -131,22 +137,18 @@ window.Volum = (() => {
      Aparecem no popup do mixer (uma vez, depois de atualizar) e na página "Sobre" das configurações.
      Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS. */
   const NEWS = {
-    version: '0.3.0',
+    version: '0.3.1',
     items: [
-      { icon: 'island',
-        pt: ['A ilha agora vem ligada', 'Ela fica no topo da tela com a música, o Pomodoro e o mascote, e some sozinha em jogos e vídeos em tela cheia. Para desligar: Configurações → Ilha.'],
-        en: ['The island now comes on', 'It sits at the top of the screen with your music, the Pomodoro and the mascot, and hides during fullscreen games and videos. To turn it off: Settings → Island.'],
-        es: ['La isla ahora viene activada', 'Está arriba de la pantalla con la música, el Pomodoro y la mascota, y se esconde sola en juegos y videos en pantalla completa. Para desactivarla: Configuración → Isla.'] },
-      { icon: 'timer',
-        pt: ['Pomodoro na ilha', 'Foco e pausas com contagem direto na ilha: comece, pause e pule sem sair do que está fazendo. Os tempos ficam em Configurações → Ilha.'],
-        en: ['Pomodoro on the island', 'Focus and breaks with a countdown right on the island: start, pause and skip without leaving what you’re doing. Set the times in Settings → Island.'],
-        es: ['Pomodoro en la isla', 'Enfoque y descansos con la cuenta en la isla: empieza, pausa y salta sin dejar lo que haces. Los tiempos están en Configuración → Isla.'] },
-      { icon: 'walk',
-        pt: ['Hora de levantar', 'Depois de um tempo sentado, a ilha lembra você de dar uma volta. Durante um foco, ela espera a pausa.'],
-        en: ['Time to stand up', 'After sitting for a while, the island reminds you to take a walk. During a focus, it waits for the break.'],
-        es: ['Hora de levantarse', 'Después de un rato sentado, la isla te recuerda dar una vuelta. Durante un enfoque, espera al descanso.'] },
-    ],
-  };
+      { icon: 'fix',
+        pt: ['Correções de bugs', 'Esta versão corrige alguns problemas e deixa o Volum mais estável.'],
+        en: ['Bug fixes', 'This version fixes a few issues and makes Volum more stable.'],
+        es: ['Corrección de errores', 'Esta versión corrige algunos problemas y hace Volum más estable.'] },
+      // Só para quem instalou pelo site/GitHub: o Volum agora também está na Microsoft Store
+      { icon: 'store', githubOnly: true, link: 'store',
+        pt: ['O Volum está na Microsoft Store', 'Agora dá para instalar e atualizar o Volum direto pela Microsoft Store.', 'Ver na Microsoft Store'],
+        en: ['Volum is on the Microsoft Store', 'You can now install and update Volum right from the Microsoft Store.', 'View on Microsoft Store'],
+        es: ['Volum está en Microsoft Store', 'Ahora puedes instalar y actualizar Volum directamente desde Microsoft Store.', 'Ver en Microsoft Store'] },
+    ],  };
   // Ícones de traço em caixa de 24 (os mesmos do mixer e das configurações; classe .ico no style.css)
   const NEWS_ICONS = {
     keyboard: '<rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01" stroke-width="2.2"/><path d="M8.5 14h7"/>',
@@ -156,6 +158,8 @@ window.Volum = (() => {
     drop: '<path d="M12 2.8c3.7 4.3 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.8 8.3 7.1 12 2.8z"/>',
     cup: '<path d="M5 4h14l-1.6 15.2a2 2 0 0 1-2 1.8H8.6a2 2 0 0 1-2-1.8z"/><path d="M5.6 9.5h12.8"/>',
     sparkle: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/>',
+    store: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+    fix: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L4 16.8V20h3.2l5.3-5.3a4 4 0 0 0 5.2-5.4l-2.4 2.4-2.8-.8-.8-2.8z"/>',
     walk: '<circle cx="13" cy="4" r="1.8"/><path d="M9 21l3-6 2.5 2.5V21M12 15l-1.5-5 3.5-2 2.5 3 2.5 1M10.5 10l-3 1.5-1 3"/>',
     island: '<rect x="3" y="8" width="18" height="8" rx="4"/>',
     timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5M12 2.5V6"/>',
@@ -163,9 +167,10 @@ window.Volum = (() => {
   };
 
   // Itens da lista de novidades (<li> com ícone, título e texto), no idioma pedido
-  function newsItems(lang) {
-    return NEWS.items.map((item) => {
-      const [head, text] = item[lang] || item.pt;
+  // store: a cópia veio da Microsoft Store (aí os itens "githubOnly" não aparecem)
+  function newsItems(lang, store = false) {
+    return NEWS.items.filter((item) => !(item.githubOnly && store)).map((item) => {
+      const [head, text, linkLabel] = item[lang] || item.pt;
       const li = document.createElement('li');
       li.innerHTML = '<div class="news-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS[item.icon] +
         '</svg></div><div><b></b><span></span></div>';
@@ -177,6 +182,13 @@ window.Volum = (() => {
         li.querySelector('b').append(' ', tag);
       }
       li.querySelector('span').textContent = text;
+      if (item.link) {   // botão que abre um endereço fixo pelo C# (openSite)
+        const btn = document.createElement('button');
+        btn.className = 'news-link';
+        btn.dataset.site = item.link;
+        btn.textContent = linkLabel;
+        li.lastElementChild.append(btn);
+      }
       return li;
     });
   }

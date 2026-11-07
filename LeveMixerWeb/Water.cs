@@ -73,6 +73,8 @@ static class Water
         RollDay();
         s_data.TodayMl = Math.Clamp(s_data.TodayMl + ml, 0, 20000);
         Save();
+        // Som de confirmação do clique: uma gotinha ao marcar um copo, o tique ao tirar
+        if (ml > 0) DropSound.PlayOne(); else if (ml < 0) TickSound.Play();
         if (ml > 0) Reschedule();   // bebeu agora: o próximo lembrete é no intervalo inteiro
         if (s_data.TodayMl >= s_data.GoalMl) s_notice?.Close();
         Changed?.Invoke();

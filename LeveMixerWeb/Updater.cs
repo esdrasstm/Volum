@@ -26,9 +26,40 @@ static class Updater
         get { try { return Manager.IsInstalled; } catch { return false; } }
     }
 
+    /// <summary>Instalado pela Microsoft Store (pacote MSIX). Lá quem atualiza é a Store, não o Velopack.</summary>
+    public static bool IsStore { get; } = DetectPackage();
+
+    /// <summary>Versão "de verdade" (GitHub ou Store), e não a cópia de desenvolvimento da pasta bin.</summary>
+    public static bool IsRelease => IsInstalled || IsStore;
+
     /// <summary>Versão atual (instalada) ou a do projeto, na cópia de desenvolvimento.</summary>
     public static string Version =>
-        (IsInstalled ? Manager.CurrentVersion?.ToString() : null) ?? Application.ProductVersion.Split('+')[0];
+        (IsInstalled ? Manager.CurrentVersion?.ToString() : null) ?? StoreVersion() ?? Application.ProductVersion.Split('+')[0];
+
+    static bool DetectPackage()
+    {
+        try
+        {
+            int len = 0;
+            return GetCurrentPackageFullName(ref len, null) != 15700;   // APPMODEL_ERROR_NO_PACKAGE: não é pacote
+        }
+        catch { return false; }   // Windows antigo, sem essa função
+    }
+
+    // No pacote, a versão vem do manifesto (ex.: 0.3.0.0 → "0.3.0")
+    static string? StoreVersion()
+    {
+        if (!IsStore) return null;
+        try
+        {
+            var v = Windows.ApplicationModel.Package.Current.Id.Version;
+            return $"{v.Major}.{v.Minor}.{v.Build}";
+        }
+        catch { return null; }
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern int GetCurrentPackageFullName(ref int length, System.Text.StringBuilder? fullName);
 
     /// <param name="canRestart">Diz se dá para reiniciar agora (o mixer não está aberto).</param>
     /// <param name="beforeRestart">Esconde o ícone da bandeja antes de o app fechar.</param>

@@ -44,6 +44,7 @@ sealed class IslandForm : Form
     readonly Timer _noticeEnd = new() { Interval = NoticeMs };
     readonly Timer _watch = new() { Interval = 1500 };      // janela maximizada encostando? (2 chamadas ao Windows, nada pesado)
     readonly Timer _soundTimer = new() { Interval = 400 };  // tem som saindo? (lê o medidor do Windows; só com a ilha ligada)
+    readonly Timer _petTimer = new() { Interval = 30_000 }; // mascote: o PC está parado? (uma pergunta ao Windows a cada 30 s)
     MediaService? _media;
     Mode _mode = Mode.Closed;
     bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen;
@@ -106,6 +107,7 @@ sealed class IslandForm : Form
         _noticeEnd.Tick += (_, _) => EndNotice();
         _watch.Tick += (_, _) => OnWatch();
         _soundTimer.Tick += (_, _) => CheckSound();
+        _petTimer.Tick += (_, _) => CheckPet();
         Water.Changed += OnWaterChanged;
         Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
@@ -131,6 +133,7 @@ sealed class IslandForm : Form
     {
         const int WM_MOUSEACTIVATE = 0x21, MA_NOACTIVATE = 3;
         if (m.Msg == WM_MOUSEACTIVATE) { m.Result = (IntPtr)MA_NOACTIVATE; return; }
+        if (m.Msg == 0x00FF /* WM_INPUT */) OnRawKey(m.LParam);   // Caps Lock / Num Lock (indicadores)
         base.WndProc(ref m);
     }
 
@@ -152,6 +155,8 @@ sealed class IslandForm : Form
         _winEventHook = SetWinEventHook(3 /* EVENT_SYSTEM_FOREGROUND */, 3, IntPtr.Zero, _winEventProc, 0, 0, 0);
         _watch.Start();
         _soundTimer.Start();
+        _petTimer.Start();
+        if (AppSettings.Current.IslandOsd) StartOsd();
     }
 
     // ---------- tamanho e posição: centro do topo da tela principal, grudada na borda ----------
@@ -161,7 +166,8 @@ sealed class IslandForm : Form
         float k = DeviceDpi / 96f;
         bool greet = m == Mode.Notice && _noticeKind == "greet";   // "bom dia": do mesmo tamanho da ilha com o mascote
         bool tall = m == Mode.Notice && _noticeKind == "walk";     // levantar: largura do aviso, altura da ilha ociosa (cabe a cena)
-        int w = (int)Math.Round(((greet ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW }) + 2 * Ear) * k);
+        bool osd = m == Mode.Notice && _noticeKind == "osd";       // indicador rápido (volume, Caps Lock...): estreito
+        int w = (int)Math.Round(((greet || osd ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW }) + 2 * Ear) * k);
         int h = (int)Math.Round((greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH }) * k);
         var screen = Screen.PrimaryScreen!.Bounds;
         SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top, w, h);
@@ -323,14 +329,15 @@ sealed class IslandForm : Form
 
     // ---------- avisos ----------
 
-    void ShowNotice(string icon, string title, string text, string? actionLabel, Action? action, int ms)
+    void ShowNotice(string icon, string title, string text, string? actionLabel, Action? action, int ms, double level = -1, string? kind = null)
     {
         _notice = true;
-        bool resize = _mode == Mode.Notice && _noticeKind != icon;   // trocou de um aviso para outro de outro tamanho
-        _noticeKind = icon;
+        kind ??= icon;
+        bool resize = _mode == Mode.Notice && _noticeKind != kind;   // trocou de um aviso para outro de outro tamanho
+        _noticeKind = kind;
         if (resize) Place(Mode.Notice);
         _noticeAction = action;
-        Post(new { type = "notice", icon, title, text, action = actionLabel });
+        Post(new { type = "notice", icon, kind, title, text, action = actionLabel, level });
         SetMode(Mode.Notice);   // faixa fina, sem abrir a ilha inteira
         _noticeEnd.Stop();
         _noticeEnd.Interval = ms;
@@ -385,6 +392,226 @@ sealed class IslandForm : Form
         try { _web.CoreWebView2?.PostWebMessageAsJson(JsonSerializer.Serialize(message, Json)); }
         catch (Exception ex) { Debug.WriteLine(ex); }
     }
+
+    // ---------- indicadores: Caps Lock, Num Lock, volume e microfone (como no iPhone) ----------
+    // Teclado: "raw input" do Windows (a ilha recebe as teclas de qualquer app sem gancho no teclado),
+    // só para ver Caps Lock e Num Lock. Volume e microfone: o Windows avisa quando mudam (sem ficar checando).
+    // Liga/desliga em Configurações → Ilha (AppSettings.IslandOsd). Com o mixer aberto, não mostra (ele já mostra).
+
+    const int OsdMs = 1600;
+    NAudio.CoreAudioApi.MMDeviceEnumerator? _osdEnum;
+    NAudio.CoreAudioApi.MMDevice? _osdOut, _osdMic;
+    bool _osdOn, _capsDown, _numDown, _capsOn, _numOn, _lastMute, _lastMicMute;
+    float _lastVol = -1;
+
+    /// <summary>Ligou/desligou os indicadores nas configurações.</summary>
+    public static void ApplyOsd()
+    {
+        if (!IsOn) return;
+        if (AppSettings.Current.IslandOsd) s_island!.StartOsd(); else s_island!.StopOsd();
+    }
+
+    void StartOsd()
+    {
+        if (_osdOn || !IsHandleCreated) return;
+        _osdOn = true;
+        _capsOn = Control.IsKeyLocked(Keys.CapsLock);
+        _numOn = Control.IsKeyLocked(Keys.NumLock);
+        RegisterKeyboard(true);
+        HookAudio();
+    }
+
+    void StopOsd()
+    {
+        if (!_osdOn) return;
+        _osdOn = false;
+        RegisterKeyboard(false);
+        UnhookAudio();
+    }
+
+    void RegisterKeyboard(bool on)
+    {
+        try
+        {
+            var dev = new RAWINPUTDEVICE { usUsagePage = 1, usUsage = 6, dwFlags = on ? 0x100u /* INPUTSINK */ : 0x1u /* REMOVE */, hwndTarget = on ? Handle : IntPtr.Zero };
+            RegisterRawInputDevices(new[] { dev }, 1, (uint)Marshal.SizeOf<RAWINPUTDEVICE>());
+        }
+        catch { }
+    }
+
+    // Uma tecla foi apertada em qualquer app: só interessam Caps Lock (0x14) e Num Lock (0x90)
+    void OnRawKey(IntPtr hRaw)
+    {
+        if (!_osdOn) return;
+        try
+        {
+            uint size = 0, header = (uint)Marshal.SizeOf<RAWINPUTHEADER>();
+            GetRawInputData(hRaw, 0x10000003 /* RID_INPUT */, IntPtr.Zero, ref size, header);
+            if (size == 0 || size > 256) return;
+            IntPtr buf = Marshal.AllocHGlobal((int)size);
+            try
+            {
+                if (GetRawInputData(hRaw, 0x10000003, buf, ref size, header) != size) return;
+                if (Marshal.ReadInt32(buf) != 1 /* RIM_TYPEKEYBOARD */) return;
+                int off = (int)header;
+                ushort flags = (ushort)Marshal.ReadInt16(buf, off + 2);
+                ushort vkey = (ushort)Marshal.ReadInt16(buf, off + 6);
+                bool up = (flags & 1) != 0;   // RI_KEY_BREAK
+                if (vkey == 0x14) OnLockKey(ref _capsDown, up, caps: true);
+                else if (vkey == 0x90) OnLockKey(ref _numDown, up, caps: false);
+            }
+            finally { Marshal.FreeHGlobal(buf); }
+        }
+        catch { }
+    }
+
+    void OnLockKey(ref bool down, bool up, bool caps)
+    {
+        if (up) { down = false; return; }
+        if (down) return;   // tecla segurada (repetição): ignora
+        down = true;
+        // Espera o Windows trocar o estado e lê; se ainda não trocou, conta como trocado (apertou, trocou)
+        var t = new Timer { Interval = 80 };
+        t.Tick += (_, _) =>
+        {
+            t.Dispose();
+            if (IsDisposed) return;
+            bool now = Control.IsKeyLocked(caps ? Keys.CapsLock : Keys.NumLock);
+            ref bool state = ref (caps ? ref _capsOn : ref _numOn);
+            state = now != state ? now : !state;
+            var lang = AppSettings.Current.Language;
+            string key = caps ? (state ? "osdCapsOn" : "osdCapsOff") : (state ? "osdNumOn" : "osdNumOff");
+            ShowOsd(caps ? "caps" : "num", Strings.Get(lang, key), "", -1);
+        };
+        t.Start();
+    }
+
+    void HookAudio()
+    {
+        UnhookAudio();
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            _osdOut = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            _lastVol = _osdOut.AudioEndpointVolume.MasterVolumeLevelScalar;
+            _lastMute = _osdOut.AudioEndpointVolume.Mute;
+            _osdOut.AudioEndpointVolume.OnVolumeNotification += OnOutVolume;
+        }
+        catch { _osdOut = null; }
+        try
+        {
+            _osdMic = _osdEnum!.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Capture, NAudio.CoreAudioApi.Role.Console);
+            _lastMicMute = _osdMic.AudioEndpointVolume.Mute;
+            _osdMic.AudioEndpointVolume.OnVolumeNotification += OnMicVolume;
+        }
+        catch { _osdMic = null; }
+    }
+
+    void UnhookAudio()
+    {
+        if (_osdOut != null) { try { _osdOut.AudioEndpointVolume.OnVolumeNotification -= OnOutVolume; } catch { } _osdOut.Dispose(); _osdOut = null; }
+        if (_osdMic != null) { try { _osdMic.AudioEndpointVolume.OnVolumeNotification -= OnMicVolume; } catch { } _osdMic.Dispose(); _osdMic = null; }
+    }
+
+    // A cada 30 s: se a saída ou o microfone padrão mudou, passa a ouvir o novo
+    void RefreshAudioHook()
+    {
+        try
+        {
+            using var o = _osdEnum?.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            string? micId = null;
+            try { using var mi = _osdEnum?.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Capture, NAudio.CoreAudioApi.Role.Console); micId = mi?.ID; } catch { }
+            if (o?.ID != _osdOut?.ID || micId != _osdMic?.ID) HookAudio();
+        }
+        catch { }
+    }
+
+    // Avisos do Windows chegam em outra thread: passa para a da janela
+    void OnOutVolume(NAudio.CoreAudioApi.AudioVolumeNotificationData d)
+    {
+        float v = d.MasterVolume; bool muted = d.Muted;
+        try { BeginInvoke(new Action(() => ShowVolume(v, muted))); } catch { }
+    }
+
+    void OnMicVolume(NAudio.CoreAudioApi.AudioVolumeNotificationData d)
+    {
+        bool muted = d.Muted;
+        try { BeginInvoke(new Action(() => ShowMic(muted))); } catch { }
+    }
+
+    void ShowVolume(float v, bool muted)
+    {
+        if (Math.Abs(v - _lastVol) < 0.004f && muted == _lastMute) return;   // nada mudou de verdade
+        _lastVol = v; _lastMute = muted;
+        var lang = AppSettings.Current.Language;
+        bool silent = muted || v < 0.005f;
+        ShowOsd(silent ? "volmute" : "vol", Strings.Get(lang, muted ? "osdMuted" : "osdVolume"),
+            muted ? "" : $"{Math.Round(v * 100)}%", muted ? 0 : v);
+    }
+
+    void ShowMic(bool muted)
+    {
+        if (muted == _lastMicMute) return;   // só interessa quando muta ou desmuta
+        _lastMicMute = muted;
+        var lang = AppSettings.Current.Language;
+        ShowOsd(muted ? "micoff" : "mic", Strings.Get(lang, muted ? "osdMicOff" : "osdMicOn"), "", -1);
+    }
+
+    void ShowOsd(string icon, string title, string text, double level)
+    {
+        if (!_osdOn || !_ready || _hiddenByFullscreen) return;
+        if (_notice && _noticeKind != "osd") return;   // não atropela um aviso de verdade (água, Pomodoro...)
+        foreach (Form f in Application.OpenForms)
+            if (f is MixerForm mf && mf.IsOpen) return;   // com o mixer aberto, ele mesmo já mostra
+        ShowNotice(icon, title, text, null, null, OsdMs, level, kind: "osd");
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct RAWINPUTDEVICE { public ushort usUsagePage, usUsage; public uint dwFlags; public IntPtr hwndTarget; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct RAWINPUTHEADER { public uint dwType, dwSize; public IntPtr hDevice, wParam; }
+
+    [DllImport("user32.dll")] static extern bool RegisterRawInputDevices(RAWINPUTDEVICE[] devices, uint count, uint size);
+    [DllImport("user32.dll")] static extern uint GetRawInputData(IntPtr hRawInput, uint command, IntPtr data, ref uint size, uint headerSize);
+
+    // ---------- mascote: aparece com o PC parado e numa passadinha a cada 30 min ----------
+
+    const int PetIdleMin = 10, PetEveryMin = 30, PetPeekMs = 15_000;
+    bool _petIdle;
+    DateTime _lastPeek = DateTime.UtcNow;
+
+    void CheckPet()
+    {
+        if (_osdOn) RefreshAudioHook();   // trocou a saída ou o microfone padrão? (aproveita o mesmo relógio de 30 s)
+        if (!_ready || _hiddenByFullscreen) return;
+        bool idle = IdleMs() >= PetIdleMin * 60_000L;
+        if (idle != _petIdle)
+        {
+            _petIdle = idle;
+            Post(new { type = "pet", on = idle });          // parado: fica até alguém mexer
+            if (!idle) _lastPeek = DateTime.UtcNow;          // voltou agora: a próxima passadinha conta daqui
+            return;
+        }
+        if (!idle && (DateTime.UtcNow - _lastPeek).TotalMinutes >= PetEveryMin)
+        {
+            _lastPeek = DateTime.UtcNow;
+            Post(new { type = "pet", on = true, ms = PetPeekMs });   // passadinha rápida
+        }
+    }
+
+    // Há quanto tempo ninguém mexe no mouse nem no teclado
+    static long IdleMs()
+    {
+        var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+        if (!GetLastInputInfo(ref info)) return 0;
+        return (uint)Environment.TickCount - info.dwTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }
+
+    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
 
     // ---------- mascote: oi quando o PC liga ----------
 
@@ -484,7 +711,6 @@ sealed class IslandForm : Form
 
                 case "waterAdd":
                     Water.Add(root.GetProperty("ml").GetInt32());
-                    TickSound.Play();
                     break;
 
                 case "noticeAction":   // botão principal do aviso (ex.: "Bebi um copo")
@@ -521,6 +747,9 @@ sealed class IslandForm : Form
             _noticeEnd.Dispose();
             _watch.Dispose();
             _soundTimer.Dispose();
+            _petTimer.Dispose();
+            StopOsd();
+            _osdEnum?.Dispose();
             _out?.Dispose();
             _enum?.Dispose();
         }

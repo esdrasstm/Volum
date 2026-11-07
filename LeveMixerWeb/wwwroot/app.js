@@ -310,6 +310,7 @@
     // Novidades: a partir da versão do NEWS, para quem ainda não as viu (quem já viu guardou uma versão igual
     // ou maior). Não depende do número exato publicado. A demo do site não manda versão: nunca mostra.
     appVersion = s.version || '';
+    fromStore = !!s.store;   // instalado pela Microsoft Store: sem o aviso "está na Store"
     setNewsOpen(!!s.version && V.compareVersions(s.version, V.NEWS.version) >= 0 &&
       (!s.newsSeen || V.compareVersions(s.newsSeen, V.NEWS.version) < 0));
     forceResize = true;                             // o C# espera um "resize" para mostrar a janela
@@ -380,6 +381,7 @@
 
   const newsEl = $('news');
   let newsOpen = false;
+  let fromStore = false;
   let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra
 
   function renderNews() {
@@ -387,7 +389,7 @@
     const title = $('newsTitle');
     title.firstElementChild.textContent = `${t('newsEyebrow')} ${appVersion || V.NEWS.version}`;
     title.lastElementChild.textContent = t('newsTitle');
-    $('newsList').replaceChildren(...V.newsItems(lang));
+    $('newsList').replaceChildren(...V.newsItems(lang, fromStore));
     fitNews();
   }
 
@@ -409,6 +411,11 @@
     post({ type: 'newsSeen' });                     // o C# guarda que esta versão já foi vista
   }
   $('newsOk')?.addEventListener('click', dismissNews);
+  // Botão dentro de uma novidade (ex.: "Ver na Microsoft Store"): o C# abre o endereço
+  $('newsList')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-site]');
+    if (b) post({ type: 'openSite', section: b.dataset.site });
+  });
 
   /* ---------------- Água bebida hoje ---------------- */
   // Quem lembra e guarda o contador é o C# (Water.cs). As opções ficam na janela de configurações.

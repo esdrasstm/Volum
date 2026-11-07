@@ -11,10 +11,25 @@ static class AutoStart
     const string AppName = "Volum";
     const string OldAppName = "LeveMixer";   // nome antigo do app
 
+    // Na versão da Microsoft Store (pacote MSIX) a chave Run não vale: o pacote declara uma "tarefa de
+    // inicialização" (StartupTask, Store\AppxManifest.xml) que o Windows liga e desliga.
+    const string StoreTaskId = "VolumStartup";
+
+    static Windows.ApplicationModel.StartupTask? StoreTask()
+    {
+        try { return System.Threading.Tasks.Task.Run(async () => await Windows.ApplicationModel.StartupTask.GetAsync(StoreTaskId)).Result; }
+        catch { return null; }
+    }
+
     public static bool IsEnabled
     {
         get
         {
+            if (Updater.IsStore)
+            {
+                var s = StoreTask()?.State;
+                return s is Windows.ApplicationModel.StartupTaskState.Enabled or Windows.ApplicationModel.StartupTaskState.EnabledByPolicy;
+            }
             using var k = Registry.CurrentUser.OpenSubKey(RunKey);
             return k?.GetValue(AppName) != null;
         }
@@ -27,6 +42,15 @@ static class AutoStart
 
     public static void Set(bool on)
     {
+        if (Updater.IsStore)
+        {
+            var task = StoreTask();
+            if (task == null) return;
+            // Se a pessoa desligou no Gerenciador de Tarefas, o Windows não deixa o app religar sozinho
+            if (on) { try { System.Threading.Tasks.Task.Run(async () => await task.RequestEnableAsync()).Wait(); } catch { } }
+            else task.Disable();
+            return;
+        }
         using var k = Registry.CurrentUser.OpenSubKey(RunKey, true);
         if (k == null) return;
         if (on)
@@ -39,6 +63,7 @@ static class AutoStart
     // Se o usuário moveu o .exe de pasta, atualiza o caminho registrado (só se estiver ativado).
     public static void RefreshPath()
     {
+        if (Updater.IsStore) return;   // no pacote o Windows sabe onde está o .exe
         using var k = Registry.CurrentUser.OpenSubKey(RunKey, true);
         if (k == null || !CanRegister) return;
 
@@ -108,6 +133,15 @@ static class Strings
         ["standTitle"]    = new[] { "Hora de levantar", "Time to stand up", "Hora de levantarse" },
         ["standText"]     = new[] { "Sentado há {0}: dê uma volta", "Sitting for {0}: take a walk", "Sentado hace {0}: da una vuelta" },
         ["standOk"]       = new[] { "Levantei", "I'm up", "Ya me levanté" },
+        // Indicadores na ilha (Caps Lock, Num Lock, volume e microfone)
+        ["osdCapsOn"]  = new[] { "Caps Lock ativado", "Caps Lock on", "Bloq Mayús activado" },
+        ["osdCapsOff"] = new[] { "Caps Lock desativado", "Caps Lock off", "Bloq Mayús desactivado" },
+        ["osdNumOn"]   = new[] { "Num Lock ativado", "Num Lock on", "Bloq Num activado" },
+        ["osdNumOff"]  = new[] { "Num Lock desativado", "Num Lock off", "Bloq Num desactivado" },
+        ["osdVolume"]  = new[] { "Volume", "Volume", "Volumen" },
+        ["osdMuted"]   = new[] { "Som mudo", "Sound muted", "Sonido silenciado" },
+        ["osdMicOff"]  = new[] { "Microfone mudo", "Microphone muted", "Micrófono silenciado" },
+        ["osdMicOn"]   = new[] { "Microfone ligado", "Microphone on", "Micrófono activado" },
         // Mascote dando oi quando o PC liga (pela ilha), conforme a hora do dia
         ["hiMorning"]     = new[] { "Bom dia!", "Good morning!", "¡Buenos días!" },
         ["hiAfternoon"]     = new[] { "Boa tarde!", "Good afternoon!", "¡Buenas tardes!" },
@@ -246,25 +280,36 @@ static class DropSound
 {
     const double Volume = 0.16;    // sutil, mas dá para ouvir com música tocando
 
-    static System.Media.SoundPlayer? _player;
+    static System.Media.SoundPlayer? _player, _one;
 
     public static void Play()
     {
         try
         {
-            _player ??= Create();
+            _player ??= Create(single: false);
             _player.Play();
         }
         catch { /* sem dispositivo de áudio: fica em silêncio */ }
     }
 
-    static System.Media.SoundPlayer Create()
+    /// <summary>Uma gotinha só, mais baixinha: confirma o clique em "+ água" (mixer, ilha e aviso).</summary>
+    public static void PlayOne()
+    {
+        try
+        {
+            _one ??= Create(single: true);
+            _one.Play();
+        }
+        catch { }
+    }
+
+    static System.Media.SoundPlayer Create(bool single)
     {
         const int rate = 44100;
-        int samples = rate * 360 / 1000;                // 360 ms
+        int samples = rate * (single ? 200 : 360) / 1000;
         var data = new double[samples];
-        AddDrop(data, rate, start: 0.000, baseHz: 520, topHz: 1500, gain: 1.0);
-        AddDrop(data, rate, start: 0.120, baseHz: 640, topHz: 1850, gain: 0.55);
+        AddDrop(data, rate, start: 0.000, baseHz: 520, topHz: 1500, gain: single ? 0.75 : 1.0);
+        if (!single) AddDrop(data, rate, start: 0.120, baseHz: 640, topHz: 1850, gain: 0.55);
 
         var ms = new System.IO.MemoryStream();
         var w = new System.IO.BinaryWriter(ms);
@@ -311,13 +356,12 @@ static class IconFactory
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.Clear(System.Drawing.Color.Transparent);
 
-            // Círculo laranja em degradê (mesmas cores do logo e do site)
-            using var bg = new System.Drawing.Drawing2D.LinearGradientBrush(
-                new System.Drawing.Rectangle(0, 0, 32, 32),
-                System.Drawing.Color.FromArgb(255, 245, 137, 90),
-                System.Drawing.Color.FromArgb(255, 224, 74, 18), 45f);
+            // Círculo preto com uma borda clarinha (não some na barra de tarefas escura) e o logo branco.
+            // Mesmo desenho do Volum.ico, dos ícones da Store e do site (Store\make-assets.ps1).
+            using var bg = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(255, 9, 9, 9));
             g.FillEllipse(bg, 0, 0, 31, 31);
-
+            using var ring = new System.Drawing.Pen(System.Drawing.Color.FromArgb(70, 255, 255, 255), 1f);
+            g.DrawEllipse(ring, 0.5f, 0.5f, 30, 30);
             using var line = new System.Drawing.Pen(System.Drawing.Color.White, 2.5f)
             {
                 StartCap = System.Drawing.Drawing2D.LineCap.Round,

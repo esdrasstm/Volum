@@ -57,7 +57,7 @@ static class Program
 
         // Só a versão instalada mexe sozinha no "iniciar com o Windows": a cópia de desenvolvimento
         // (pasta bin) não pode trocar o caminho para ela mesma.
-        if (Updater.IsInstalled)
+        if (Updater.IsRelease)
         {
             // Primeira execução: já deixa para abrir com o Windows (dá para desligar nas configurações)
             var settings = AppSettings.Current;

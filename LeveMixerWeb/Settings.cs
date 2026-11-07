@@ -41,6 +41,9 @@ sealed class AppSettings
     // aviso de levantar já chegarem funcionando. Se a pessoa desligar depois, não liga de novo.
     public bool IslandAutoOnDone { get; set; }
 
+    // Indicadores na ilha: Caps Lock, Num Lock, volume e microfone mudo (aparecem por ~1,5 s)
+    public bool IslandOsd { get; set; } = true;
+
     // Pomodoro na ilha (só funciona com a ilha ligada): minutos de foco, pausa curta, pausa longa e
     // de quantos em quantos focos vem a pausa longa
     public bool PomodoroEnabled { get; set; } = true;
@@ -48,6 +51,8 @@ sealed class AppSettings
     public int ShortBreakMin { get; set; } = 5;
     public int LongBreakMin { get; set; } = 15;
     public int LongBreakEvery { get; set; } = 4;
+    // Som do fim do foco e da pausa: "chime" (sininho, padrão), "drops" (gotinhas), "bell" (campainha suave) ou "none"
+    public string PomodoroSound { get; set; } = "chime";
 
     // Aviso para levantar e andar (pela ilha): depois de X minutos sentado
     public bool StandUpEnabled { get; set; } = true;
@@ -58,7 +63,7 @@ sealed class AppSettings
 
     /// <summary>Pasta dos dados (configurações e água). A cópia de teste (pasta bin / --dev) usa outra,
     /// para os testes não mexerem na instalada (ex.: marcar as novidades como vistas).</summary>
-    public static string DataFolder => Folder(Updater.IsInstalled ? "Volum" : "VolumDev");
+    public static string DataFolder => Folder(Updater.IsRelease ? "Volum" : "VolumDev");
 
     static string FilePath => System.IO.Path.Combine(DataFolder, "settings.json");
 

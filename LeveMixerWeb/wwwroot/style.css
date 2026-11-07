@@ -1100,6 +1100,21 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
 .news-mascot { display: block; line-height: 0; }
 .news-mascot .mascot.px { display: block; width: 80px; height: 55px; margin: 2px auto 12px; }
 
+/* Botão dentro de uma novidade (ex.: "Ver na Microsoft Store") */
+.news-link {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 5px 12px;
+  border: 1px solid var(--track);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.news-link:hover { background: var(--ink-hover); border-color: var(--ink-dim); }
+
 /* Etiqueta "Em breve" (novidade que ainda vai chegar) */
 .news-soon {
   display: inline-block;

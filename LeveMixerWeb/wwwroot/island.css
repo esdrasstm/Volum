@@ -434,3 +434,13 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .noticebar[data-kind="walk"].scene-done .walk-scene { opacity: 0; }
 .noticebar[data-kind="walk"] > :not(.walk-scene):not(.notice-close) { opacity: 0; transform: translateY(3px); transition: opacity .45s ease .25s, transform .45s ease .25s; }
 .noticebar[data-kind="walk"].scene-done > :not(.walk-scene):not(.notice-close) { opacity: 1; transform: none; }
+
+/* ---------- Indicadores rápidos (Caps Lock, Num Lock, volume, microfone): faixa estreita, 1,6 s ---------- */
+.island.alerting.osd { --w: 250px; --h: 36px; --r: 18px; }
+.noticebar[data-kind="osd"] { width: 250px; padding: 0 16px; gap: 10px; }
+.noticebar[data-kind="osd"] .notice-close, .noticebar[data-kind="osd"] .notice-action { display: none; }
+.noticebar[data-kind="osd"] .notice-text { flex: none; }
+.noticebar[data-kind="osd"] .notice-text span { color: var(--text); font-variant-numeric: tabular-nums; }
+.osd-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--soft); overflow: hidden; }
+.osd-bar[hidden] { display: none; }
+.osd-bar i { display: block; height: 100%; border-radius: 2px; background: var(--text); transition: width .12s ease; }

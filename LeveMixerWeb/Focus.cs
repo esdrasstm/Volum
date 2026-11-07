@@ -106,7 +106,7 @@ static class Pomodoro
         Current = Phase.Idle;
         Paused = false;
         Changed?.Invoke();
-        ChimeSound.Play();
+        PomodoroSound.Play(S.PomodoroSound);
         var lang = S.Language;
         IslandForm.Notify("timer", Strings.Get(lang, "pomoDone"), Strings.Get(lang, "pomoDoneText"),
             Strings.Get(lang, "pomoGo"), Start, 30_000);
@@ -120,7 +120,7 @@ static class Pomodoro
         Begin(longBreak ? Phase.Long : Phase.Short);
         StandUp.BreakStarted();   // se o aviso de levantar estava esperando o foco acabar, sai agora
         if (!notify) return;
-        ChimeSound.Play();
+        PomodoroSound.Play(S.PomodoroSound);
         var lang = S.Language;
         int min = longBreak ? S.LongBreakMin : S.ShortBreakMin;
         IslandForm.Notify("timer", Strings.Get(lang, longBreak ? "pomoLong" : "pomoBreak"),
@@ -259,6 +259,75 @@ static class ChimeSound
             double t = i / (double)rate - start;
             double env = Math.Min(1, t / 0.006) * Math.Exp(-t * 5.5);
             data[i] += env * (Math.Sin(2 * Math.PI * hz * t) * 0.8 + Math.Sin(2 * Math.PI * hz * 2.01 * t) * 0.2);
+        }
+    }
+}
+
+/// <summary>
+/// Som do fim do foco e da pausa do Pomodoro, escolhido nas configurações (Ilha → Pomodoro).
+/// Todos curtos e baixinhos, para não assustar: sininho (padrão), gotinhas, campainha suave ou sem som.
+/// </summary>
+static class PomodoroSound
+{
+    public static readonly string[] Names = { "chime", "drops", "bell", "none" };
+
+    public static void Play(string? name)
+    {
+        switch (name)
+        {
+            case "none": break;
+            case "drops": DropSound.Play(); break;
+            case "bell": BellSound.Play(); break;
+            default: ChimeSound.Play(); break;
+        }
+    }
+}
+
+/// <summary>Campainha suave: duas batidinhas de sino, a segunda mais fraca (gerado por código).</summary>
+static class BellSound
+{
+    const double Volume = 0.12;
+    static System.Media.SoundPlayer? s_player;
+
+    public static void Play()
+    {
+        try { (s_player ??= Create()).Play(); }
+        catch { }
+    }
+
+    static System.Media.SoundPlayer Create()
+    {
+        const int rate = 44100;
+        int samples = rate * 1400 / 1000;
+        var data = new double[samples];
+        Ding(data, rate, 0.00, 1.0);
+        Ding(data, rate, 0.45, 0.6);
+
+        var ms = new System.IO.MemoryStream();
+        var w = new System.IO.BinaryWriter(ms);
+        w.Write("RIFF"u8); w.Write(36 + samples * 2); w.Write("WAVE"u8);
+        w.Write("fmt "u8); w.Write(16); w.Write((short)1); w.Write((short)1);
+        w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+        w.Write("data"u8); w.Write(samples * 2);
+        foreach (var s in data) w.Write((short)(Math.Clamp(s, -1, 1) * Volume * short.MaxValue));
+        w.Flush();
+        ms.Position = 0;
+        var player = new System.Media.SoundPlayer(ms);
+        player.Load();
+        return player;
+    }
+
+    // Sino: fundamental + parciais "inarmônicos" (o que dá o timbre de metal), queda longa e suave
+    static void Ding(double[] data, int rate, double start, double gain)
+    {
+        const double hz = 880;
+        for (int i = (int)(start * rate); i < data.Length; i++)
+        {
+            double t = i / (double)rate - start;
+            double env = Math.Min(1, t / 0.004) * Math.Exp(-t * 3.2) * gain;
+            data[i] += env * (Math.Sin(2 * Math.PI * hz * t) * 0.6
+                            + Math.Sin(2 * Math.PI * hz * 2.76 * t) * 0.25 * Math.Exp(-t * 4)
+                            + Math.Sin(2 * Math.PI * hz * 5.4 * t) * 0.1 * Math.Exp(-t * 8));
         }
     }
 }
