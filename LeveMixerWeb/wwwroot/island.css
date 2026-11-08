@@ -642,3 +642,6 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .mini-wx b { font-weight: 600; letter-spacing: -.2px; }
 .mini-wx-icon .wx-svg { width: 16px; height: 16px; }
 .island.idle .mini-wx { display: none; }
+
+/* Setas sempre por cima das páginas: a página que desliza (transform) ficava por cima da seta esquerda e engolia o clique */
+.page-arrow { z-index: 3; }
