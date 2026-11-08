@@ -342,6 +342,7 @@
     fromStore = !!s.store;
     // No Brasil, o Pix é o botão principal; de fora, só o Ko-fi
     $('pixBtn').hidden = !s.brazil;
+    $('pixQr').hidden = !s.brazil;
     $('kofiBtn').classList.toggle('primary', !s.brazil);
     if (s.hotkey) hotkey = s.hotkey;
     if (s.water) water = s.water;

@@ -786,6 +786,14 @@
     .support p { margin: 0 0 14px; color: var(--subtext); font-size: 14.5px; line-height: 1.55; }
     .support-steps { margin: 0 0 16px; padding-left: 20px; color: var(--subtext); font-size: 14px; line-height: 1.7; }
     .support-steps b { color: var(--text); font-weight: 600; }
+    .support { box-sizing: border-box; max-height: calc(100dvh - 24px); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; padding-top: 22px; }
+    .support p { margin-bottom: 10px; }
+    .pix-qr { display: grid; justify-items: center; gap: 10px; margin: 2px 0 12px; text-align: center; }
+    .pix-qr img { width: 160px; height: 160px; padding: 6px; border-radius: 14px; background: #fff; image-rendering: pixelated; }
+    .pix-qr span { max-width: 320px; color: var(--subtext); font-size: 13.5px; line-height: 1.5; }
+    .pix-qr b { color: var(--text); font-weight: 600; }
+    .pix-or { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+    .pix-or::before, .pix-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
     .pix-box { margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255, 255, 255, .03); }
     .pix-box code { display: block; font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--subtext); word-break: break-all; user-select: all; }
     .support .btn-primary { width: 100%; justify-content: center; }
@@ -1073,11 +1081,11 @@
     </button>
     <h3 id="supportTitle">Apoiar o Volum ♥</h3>
     <p>O Volum é grátis e vai continuar grátis. Se ele te ajuda, qualquer valor faz diferença. Obrigado!</p>
-    <ol class="support-steps">
-      <li>Copie o código Pix abaixo.</li>
-      <li>No app do seu banco, vá em <b>Pix → Pix Copia e Cola</b>.</li>
-      <li>Cole o código e escolha o valor.</li>
-    </ol>
+    <div class="pix-qr">
+      <img src="pix-qr.svg" width="180" height="180" alt="QR Code do Pix para apoiar o Volum">
+      <span>Abra o app do seu banco, vá em <b>Pix → Pagar com QR Code</b> e aponte a câmera. Você escolhe o valor.</span>
+    </div>
+    <div class="pix-or"><span>ou use o Pix Copia e Cola</span></div>
     <div class="pix-box"><code id="pixCode"></code></div>
     <button class="btn btn-primary" id="pixCopy" type="button">Copiar código Pix</button>
     <p class="support-alt">Mora fora do Brasil? <a href="https://ko-fi.com/volum" target="_blank" rel="noopener" data-goatcounter-click="apoiar-kofi-janela">Apoie pelo Ko-fi</a>.</p>
