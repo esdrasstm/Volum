@@ -315,7 +315,7 @@
     : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : c >= 95 ? 'storm' : 'cloudy';
   const wxIcon = (c, day) => {
     const g = wxGroup(c);
-    const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g;
+    const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g === 'cloudy' ? 'cloud' : g;
     return '<svg class="wx-svg" viewBox="0 0 24 24" aria-hidden="true">' + WX_PATHS[k] + '</svg>';
   };
   // A previsão vem em °C; com a unidade "f" (região que usa Fahrenheit ou escolhida nas configurações) converte aqui
@@ -761,6 +761,8 @@
     island.style.setProperty('--open-h', h + 'px');
     if (h && h !== lastH) { lastH = h; post({ type: 'height', h }); }
   }
+  // O conteúdo pode mudar de altura sozinho (ex.: a fonte terminou de carregar): mede de novo (só dispara quando muda)
+  new ResizeObserver(() => reportHeight()).observe($('full'));
 
   /* ---------------- Forma: mola física + cantos contínuos ----------------
      Cada estado define no CSS o tamanho-alvo (--w, --h, --r, --ear-size). Quando muda (classe da ilha, altura da
