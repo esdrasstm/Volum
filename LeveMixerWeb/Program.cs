@@ -14,6 +14,9 @@ static class Program
     /// <summary>Volum.exe --test-update-notice : mostra o aviso "Volum atualizado" ao iniciar (para testar o visual).</summary>
     internal static bool TestUpdateNotice { get; private set; }
 
+    /// <summary>Volum.exe --test-store-update : mostra o aviso de versão nova da Store em 3 s (o botão abre a página na Store).</summary>
+    internal static bool TestStoreUpdate { get; private set; }
+
     /// <summary>Volum.exe --test-greet : o mascote da ilha dá oi ao iniciar, como se o PC tivesse acabado de ligar.</summary>
     internal static bool TestGreeting { get; private set; }
 
@@ -34,6 +37,7 @@ static class Program
 
         DevMode = args.Contains("--dev", StringComparer.OrdinalIgnoreCase);
         TestUpdateNotice = args.Contains("--test-update-notice", StringComparer.OrdinalIgnoreCase);
+        TestStoreUpdate = args.Contains("--test-store-update", StringComparer.OrdinalIgnoreCase);
         TestGreeting = args.Contains("--test-greet", StringComparer.OrdinalIgnoreCase);
 
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);

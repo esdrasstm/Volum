@@ -635,3 +635,10 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .wx-hours { padding-top: 6px; }
 .wx-hours li { gap: 1px; }
 .wx-hicon .wx-svg { width: 16px; height: 16px; }
+
+/* ---------- Clima na ilha fechada: ícone + temperatura, à direita (antes da onda) ---------- */
+.mini-wx { display: inline-flex; align-items: center; gap: 4px; color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mini-wx[hidden] { display: none; }
+.mini-wx b { font-weight: 600; letter-spacing: -.2px; }
+.mini-wx-icon .wx-svg { width: 16px; height: 16px; }
+.island.idle .mini-wx { display: none; }

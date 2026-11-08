@@ -649,6 +649,10 @@ sealed class MixerForm : Form
                     SettingsForm.ShowWindow();
                     break;
 
+                case "openSupport":   // coração: abre as configurações direto em "Apoiar o Volum"
+                    SettingsForm.ShowWindow("support");
+                    break;
+
                 case "waterAdd":   // botões + / − do contador de água
                     Water.Add(root.GetProperty("ml").GetInt32());
                     break;

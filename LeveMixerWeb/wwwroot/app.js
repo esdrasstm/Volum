@@ -473,6 +473,7 @@
 
   /* ---------------- Botões do cabeçalho ---------------- */
   $('settingsBtn').addEventListener('click', () => post({ type: 'openSettings' }));   // o C# abre a janela de configurações
+  $('supportBtn')?.addEventListener('click', () => post({ type: 'openSupport' }));    // coração: configurações → Apoiar   // o C# abre a janela de configurações
   $('minimizeBtn').addEventListener('click', () => post({ type: 'hide' }));
   $('feedbackBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));   // sugestões e bugs, no site
   $('kbLockBtn')?.addEventListener('click', () => post({ type: 'lockKeyboard' }));   // o C# fecha o mixer e trava o teclado

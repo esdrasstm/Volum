@@ -60,6 +60,15 @@ static class UpdateNotice
         s_card.Show();
     }
 
+    /// <summary>Cartão perto da bandeja (usado também pelo aviso de versão nova da Store, com a ilha desligada).</summary>
+    public static void ShowCard(string title, string text, string action, Action onClick)
+    {
+        s_card?.Close();
+        s_card = new Card(title, text, action, onClick);
+        s_card.FormClosed += (_, _) => s_card = null;
+        s_card.Show();
+    }
+
     /// <summary>Cartão no canto de baixo à direita, na identidade do Volum (Ui em Water.cs).</summary>
     sealed class Card : Form
     {

@@ -259,6 +259,15 @@
   });
   $('wxCity').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('wxSave').click(); });
 
+  /* Clima: o que aparece na ilha fechada e a unidade */
+  const wxOpts = { show: 'both', unit: 'auto' };
+  [['wxShowSeg', 'show'], ['wxUnitSeg', 'unit']].forEach(([id, key]) =>
+    $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      selectSegment($(id), b.dataset.value);
+      wxOpts[key] = b.dataset.value;
+      post({ type: 'setWeatherOpts', ...wxOpts });
+    })));
+
   $('islandStyleSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     selectSegment($('islandStyleSeg'), b.dataset.value);
     post({ type: 'setIslandStyle', style: b.dataset.value });
@@ -355,6 +364,10 @@
     $('appNotesOn').checked = !!s.appNotes;
     $('calUrl').value = s.calendarUrl || '';
     $('wxCity').value = s.weatherCity || '';
+    wxOpts.show = s.weatherShow || 'both';
+    wxOpts.unit = s.weatherUnit || 'auto';
+    selectSegment($('wxShowSeg'), wxOpts.show);
+    selectSegment($('wxUnitSeg'), wxOpts.unit);
     showAppNotes('');
     if (s.focus) focus = s.focus;
     setTheme(s.theme || 'system');
@@ -365,6 +378,7 @@
     const m = e.data;
     switch (m.type) {
       case 'settings':    applySettings(m); break;
+      case 'page':        if (navItems.some((b) => b.dataset.page === m.page)) showPage(m.page); break;   // ex.: o coração do mixer abre "Apoiar"
       case 'systemTheme': systemDark = m.dark; applyScheme(); break;   // trocou o tema do Windows
       case 'hotkey':      hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey
       case 'water':       water = m.water; showWater(); break;          // contador mudou (mixer ou aviso)

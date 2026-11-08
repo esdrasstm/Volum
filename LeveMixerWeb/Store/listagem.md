@@ -32,7 +32,7 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Ilha nova: formato novo, animação mais fluida e opção de ilha flutuante. Volume, teclas de música e brilho aparecem na ilha no lugar dos avisos do Windows. Atividades ao vivo (microfone e câmera em uso, carregador, fone conectado), agenda na ilha pelo link iCal e notificações dos apps na ilha (opcional).
+Troque a saída de áudio (fone, caixa, soundbar) direto no mixer. Clima na ilha com ícone, temperatura (°C ou °F) e as próximas horas. Arraste a barra da música para ir a qualquer ponto. A ilha vai para o outro monitor quando o principal está em tela cheia. Configurações reorganizadas, ícones animados e aviso de versão nova na ilha.
 
 ### Recursos do produto (um por linha)
 Volume de cada aplicativo, com mudo e nível de som
@@ -86,7 +86,7 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-A new island: new shape, smoother animation and a floating option. Volume, media keys and brightness show up on the island instead of the Windows pop-ups. Live activities (microphone and camera in use, charger, headphones connected), calendar on the island via an iCal link and app notifications on the island (optional).
+Switch the audio output (headphones, speakers, soundbar) right in the mixer. Weather on the island with an icon, the temperature (°C or °F) and the next hours. Drag the song bar to jump anywhere. The island moves to your other monitor when the main one is in full screen. Reorganized settings, animated icons and a new-version notice on the island.
 
 ### Product features (one per line)
 Per-app volume with mute and sound level
@@ -140,7 +140,7 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Isla nueva: forma nueva, animación más fluida y opción de isla flotante. El volumen, las teclas de música y el brillo aparecen en la isla en lugar de los avisos de Windows. Actividades en vivo (micrófono y cámara en uso, cargador, auriculares conectados), agenda en la isla con un enlace iCal y notificaciones de las apps en la isla (opcional).
+Cambia la salida de audio (auriculares, parlantes, barra de sonido) directo en el mezclador. Clima en la isla con icono, temperatura (°C o °F) y las próximas horas. Arrastra la barra de la canción para ir a cualquier punto. La isla pasa al otro monitor cuando el principal está en pantalla completa. Configuración reorganizada, iconos animados y aviso de versión nueva en la isla.
 
 ### Características del producto (una por línea)
 Volumen de cada aplicación, con silencio y nivel de sonido
@@ -182,7 +182,7 @@ Volum is a system tray volume mixer built with .NET and WebView2. It needs runFu
 - Caps Lock / Num Lock indicators use Raw Input only to detect those two keys; no keystrokes are stored or sent anywhere.
 - Volume and media keys (VK 0xAD-0xB3 only) are intercepted with a low-level keyboard hook so the change is shown on the app's island instead of the Windows flyout; every other key is passed through immediately and nothing is stored or sent. It can be turned off in Settings > Island > Island indicators.
 - Optional app notifications on the island use the userNotificationListener capability; Windows asks the user for permission first. Notifications are only displayed locally, never stored or sent.
-- The only network connection in the Store version is optional: if the user pastes an iCal (.ics) calendar address in Settings > Island > Calendar, the app downloads that calendar every 15 minutes to show event reminders. Updates come from the Store.
+- Network connections in the Store version are optional: if the user pastes an iCal (.ics) calendar address in Settings > Calendar, the app downloads that calendar every 15 minutes; if the user types a city in Settings > Weather, it looks the city up and downloads the forecast from Open-Meteo (open-meteo.com) every 30 minutes. Updates come from the Store (the app only checks for them with StoreContext and shows a notice).
 - To test: click the Volum icon in the system tray (near the clock). Optional features are in Settings (gear icon): island at the top of the screen, Pomodoro, water reminder.
 
 ### Capturas de tela

@@ -122,6 +122,9 @@ static class Strings
         ["updTitle"]  = new[] { "Volum atualizado", "Volum updated", "Volum actualizado" },
         ["updText"]   = new[] { "Versão {0}: veja o que tem de novo", "Version {0}: see what's new", "Versión {0}: mira las novedades" },
         ["updOpen"]   = new[] { "Ver novidades", "See what's new", "Ver novedades" },
+        ["storeUpdTitle"]  = new[] { "Versão nova do Volum", "New Volum version", "Nueva versión de Volum" },
+        ["storeUpdText"]   = new[] { "Já está na Microsoft Store", "Available on the Microsoft Store", "Ya está en la Microsoft Store" },
+        ["storeUpdAction"] = new[] { "Atualizar", "Update", "Actualizar" },
         // Pomodoro e aviso de levantar (pela ilha)
         ["pomoBreak"]     = new[] { "Hora da pausa", "Break time", "Hora del descanso" },
         ["pomoBreakText"] = new[] { "{0} min para descansar", "{0} min to rest", "{0} min para descansar" },

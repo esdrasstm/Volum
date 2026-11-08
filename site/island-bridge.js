@@ -155,7 +155,7 @@
         send(pomoMsg());
         // Clima de exemplo (no app: Open-Meteo, pela cidade das configurações)
         const hr = new Date().getHours();
-        send({ type: 'weather', on: true, weather: { place: 'São Paulo', temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
+        send({ type: 'weather', on: true, unit: 'c', show: 'both', weather: { place: 'São Paulo', temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
           hours: [0, 1, 2, 3, 4].map((i) => {
             const h = (hr + 1 + i) % 24;
             return { hour: String(h).padStart(2, '0'), temp: [24, 25, 23, 21, 20][i], code: [2, 1, 3, 61, 61][i], day: h >= 6 && h < 18 };

@@ -318,7 +318,21 @@
     const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g;
     return '<svg class="wx-svg" viewBox="0 0 24 24" aria-hidden="true">' + WX_PATHS[k] + '</svg>';
   };
-  const deg = (v) => Math.round(v) + '°';
+  // A previsão vem em °C; com a unidade "f" (região que usa Fahrenheit ou escolhida nas configurações) converte aqui
+  let wxUnit = 'c', wxShow = 'both';
+  const deg = (v) => Math.round(wxUnit === 'f' ? v * 9 / 5 + 32 : v) + '°';
+
+  // Ilha fechada: ícone do tempo de agora e a temperatura (ou só o ícone), à direita
+  function showMiniWeather() {
+    const el = $('miniWx'), w = weather;
+    const on = weatherOn && !!w && wxShow !== 'off';
+    el.hidden = !on;
+    if (!on) return;
+    $('miniWxIcon').innerHTML = wxIcon(w.code, w.day);
+    $('miniWxTemp').textContent = wxShow === 'both' ? deg(w.temp) + (wxUnit === 'f' ? 'F' : 'C') : '';
+    el.title = w.place + ' · ' + t('wx_' + wxGroup(w.code)) + ' · ' + deg(w.temp) + (wxUnit === 'f' ? 'F' : 'C');
+    el.classList.toggle('icon-only', wxShow !== 'both');
+  }
   function showWeather() {
     const w = weather;
     if (!w) return;
@@ -853,7 +867,11 @@
       case 'level':   onLevel(m.v); break;
       case 'privacy': showPrivacy(m); break;
       case 'agenda':  agendaOn = !!m.on; agenda = m.events || []; showAgenda(); showPages(); break;
-      case 'weather': weatherOn = !!m.on; weather = m.weather; showWeather(); showPages(); break;
+      case 'weather':
+        weatherOn = !!m.on; weather = m.weather;
+        wxUnit = m.unit === 'f' ? 'f' : 'c'; wxShow = m.show || 'both';
+        showWeather(); showMiniWeather(); showPages();
+        break;
       case 'water':   water = m.water; showWater(); break;
       case 'battery': battery = m; showBattery(); break;
       case 'sound':   soundOn = m.on; showWave(); break;

@@ -32,6 +32,21 @@ static class Weather
 
     static Weather() => FetchTimer.Tick += async (_, _) => await FetchAsync();
 
+    // Países que usam Fahrenheit no dia a dia (EUA e territórios, Bahamas, Belize, Ilhas Cayman, Palau, Libéria, Micronésia, Ilhas Marshall)
+    static readonly string[] FahrenheitRegions = { "US", "PR", "GU", "VI", "AS", "MP", "UM", "BS", "BZ", "KY", "PW", "LR", "FM", "MH" };
+
+    /// <summary>Unidade usada agora: "c" ou "f" (no automático, pela região do Windows).</summary>
+    public static string Unit
+    {
+        get
+        {
+            var u = AppSettings.Current.WeatherUnit;
+            if (u is "c" or "f") return u;
+            try { return FahrenheitRegions.Contains(System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName) ? "f" : "c"; }
+            catch { return "c"; }
+        }
+    }
+
     static bool HasPlace => !string.IsNullOrWhiteSpace(AppSettings.Current.WeatherCity);
 
     /// <summary>Liga/desliga conforme a ilha e a cidade salva.</summary>

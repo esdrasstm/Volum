@@ -58,6 +58,10 @@ sealed class AppSettings
     public string WeatherPlace { get; set; } = "";
     public double WeatherLat { get; set; }
     public double WeatherLon { get; set; }
+    // Na ilha fechada: "both" (ícone + temperatura, padrão), "icon" (só o ícone) ou "off"
+    public string WeatherShow { get; set; } = "both";
+    // Unidade: "auto" (pela região do Windows: °F nos EUA e em poucos outros países), "c" ou "f"
+    public string WeatherUnit { get; set; } = "auto";
 
     // Pomodoro na ilha (só funciona com a ilha ligada): minutos de foco, pausa curta, pausa longa e
     // de quantos em quantos focos vem a pausa longa

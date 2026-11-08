@@ -104,6 +104,9 @@ sealed class TrayController : IDisposable
         // Atualizou sozinho: aviso discreto perto da bandeja (uma vez por versão) para ver as novidades
         UpdateNotice.Start(() => Toggle());
 
+        // Versão da Microsoft Store: avisa quando a Store tem versão nova (com o botão Atualizar)
+        StoreUpdate.Start();
+
         // Abriram o Volum de novo (ex.: ícone fixado no dock): a outra cópia avisa e sai.
         // Esperar o sinal não gasta nada: o Windows acorda a thread só quando ele chega.
         var ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();

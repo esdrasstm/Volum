@@ -27,18 +27,23 @@ sealed class SettingsForm : Form
     readonly AppSettings _settings = AppSettings.Current;   // a mesma do mixer
 
     /// <summary>Abre a janela (ou traz para a frente, se já estiver aberta).</summary>
-    public static void ShowWindow()
+    /// <param name="page">Seção para abrir direto (ex.: "support", pelo coração do mixer); nada = a última/Geral.</param>
+    public static void ShowWindow(string? page = null)
     {
         if (s_open != null && !s_open.IsDisposed)
         {
             if (s_open.WindowState == FormWindowState.Minimized) s_open.WindowState = FormWindowState.Normal;
+            if (page != null) s_open.Post(new { type = "page", page });
             s_open.Activate();
             return;
         }
+        s_pendingPage = page;
         s_open = new SettingsForm();
         s_open.Show();
         s_open.Activate();
     }
+
+    static string? s_pendingPage;   // seção pedida antes de a página carregar
 
     SettingsForm()
     {
@@ -167,6 +172,8 @@ sealed class SettingsForm : Form
             appNotesSupported = AppNotifications.Supported,
             calendarUrl = _settings.CalendarUrl ?? "",
             weatherCity = _settings.WeatherCity ?? "",
+            weatherShow = _settings.WeatherShow,
+            weatherUnit = _settings.WeatherUnit,
             focus = new
             {
                 pomodoro = _settings.PomodoroEnabled,
@@ -210,6 +217,7 @@ sealed class SettingsForm : Form
             {
                 case "ready":
                     PostSettings();
+                    if (s_pendingPage != null) { Post(new { type = "page", page = s_pendingPage }); s_pendingPage = null; }
                     break;
 
                 case "setTheme":   // vale para o mixer na próxima vez que ele abrir
@@ -280,6 +288,13 @@ sealed class SettingsForm : Form
                     _ = SetAppNotesAsync(root.GetProperty("on").GetBoolean());   // continua nesta thread (a da janela)
                     break;
                 }
+
+                case "setWeatherOpts":   // aba Clima: o que aparece na ilha fechada e a unidade
+                    if (root.TryGetProperty("show", out var wsh) && wsh.GetString() is "both" or "icon" or "off") _settings.WeatherShow = wsh.GetString()!;
+                    if (root.TryGetProperty("unit", out var wu) && wu.GetString() is "auto" or "c" or "f") _settings.WeatherUnit = wu.GetString()!;
+                    _settings.Save();
+                    IslandForm.WeatherOptionsChanged();
+                    break;
 
                 case "setWeather":   // cidade do clima: procura e baixa a previsão para conferir
                     _ = SetWeatherAsync((root.GetProperty("city").GetString() ?? "").Trim());

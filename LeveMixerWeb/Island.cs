@@ -446,8 +446,13 @@ sealed class IslandForm : Form
     {
         if (!_ready) return;
         var w = Weather.Current;
-        Post(new { type = "weather", on = w != null, weather = w });
+        var s = AppSettings.Current;
+        // unit: o JS converte (a previsão vem sempre em °C); show: o que aparece na ilha fechada
+        Post(new { type = "weather", on = w != null, weather = w, unit = Weather.Unit, show = s.WeatherShow is "icon" or "off" ? s.WeatherShow : "both" });
     }
+
+    /// <summary>Mudaram o que aparece na ilha fechada ou a unidade (aba Clima).</summary>
+    public static void WeatherOptionsChanged() => s_island?.PostWeather();
 
     /// <summary>Salvaram outra cidade nas configurações. Devolve o nome achado ("" = apagou, null = erro).</summary>
     public static async Task<string?> WeatherCityChangedAsync(string city)

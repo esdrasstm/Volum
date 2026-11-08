@@ -185,6 +185,8 @@
         break;
       case 'setMicDevice': model.mic.id = m.id; send(state()); break;
       case 'setOutputDevice': model.output.id = m.id; send(state()); break;
+      // Coração do mixer: na página do site, abre o mesmo "Apoiar o Volum" (Pix no Brasil, Ko-fi fora)
+      case 'openSupport': try { window.parent.document.querySelector('[data-support]')?.click(); } catch (e) { /* demo aberta sozinha */ } break;
       case 'hide': close(); break;
       case 'tick': tick(); break;
       case 'setHotkey':   // no site não há atalho de verdade: só guarda e confirma
