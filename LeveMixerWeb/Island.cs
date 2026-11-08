@@ -52,7 +52,10 @@ sealed class IslandForm : Form
     readonly Timer _petTimer = new() { Interval = 30_000 }; // mascote: o PC está parado? (uma pergunta ao Windows a cada 30 s)
     MediaService? _media;
     Mode _mode = Mode.Closed;
-    bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen;
+    readonly Timer _dwell = new() { Interval = 100 };       // recolhida (escondida): o mouse parou no topo? (só roda escondida)
+    bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen, _hiddenByTuck, _dwellOpened;
+    Point _dwellPt;
+    int _dwellMs;
     string _noticeKind = "";   // "greet" (bom dia) e "walk" (levantar, com a cena animada) usam a ilha mais alta
     int _openH = 160, _watchTicks;
     IntPtr _winEventHook;
@@ -115,6 +118,7 @@ sealed class IslandForm : Form
         _watch.Tick += (_, _) => OnWatch();
         _soundTimer.Tick += (_, _) => CheckSound();
         _petTimer.Tick += (_, _) => CheckPet();
+        _dwell.Tick += (_, _) => CheckDwell();
         Water.Changed += OnWaterChanged;
         Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
@@ -182,7 +186,13 @@ sealed class IslandForm : Form
     }
 
     // Janela no tamanho exato do estado (quando a forma já parou)
-    void Place(Mode m) { _shown = SizeOf(m); PlaceSize(_shown, 0); }
+    // Recolhida (em cima de abas, menus, botões) a ilha some de vez quando a forma termina de encolher
+    void Place(Mode m)
+    {
+        _shown = SizeOf(m);
+        PlaceSize(_shown, 0);
+        if (m == Mode.Tucked && !_hiddenByTuck) { _hiddenByTuck = true; UpdateShown(); }
+    }
 
     // A forma vai mudar de tamanho (o que está na tela → o novo estado): janela com folga até ela parar
     void MoveTo(Mode m) { var to = SizeOf(m); PlaceMoving(_shown, to); _shown = to; }
@@ -221,6 +231,7 @@ sealed class IslandForm : Form
     {
         if (m == _mode) return;
         _mode = m;
+        if (m != Mode.Tucked && _hiddenByTuck) { _hiddenByTuck = false; UpdateShown(); }   // aviso, lembrete ou saiu de cima das abas: aparece
         MoveTo(m);
         PostMode();
         var t = new Timer { Interval = AnimMs };
@@ -301,12 +312,51 @@ sealed class IslandForm : Form
         if (hide != _hiddenByFullscreen)
         {
             _hiddenByFullscreen = hide;
-            if (hide) Hide();
-            else ShowWindow(Handle, 4 /* SW_SHOWNOACTIVATE */);
+            UpdateShown();
         }
         var fg = full ? IntPtr.Zero : ForegroundTouchingIsland();
         if (fg == IntPtr.Zero) { SetTuck(false); return; }   // ninguém encosta: ilha fechada normal
         CheckObstruction(fg);
+    }
+
+    // Escondida por tela cheia ou por estar recolhida em cima das abas
+    void UpdateShown()
+    {
+        bool hide = _hiddenByFullscreen || _hiddenByTuck;
+        if (hide && Visible) Hide();
+        else if (!hide && !Visible) ShowWindow(Handle, 4 /* SW_SHOWNOACTIVATE */);
+        if (_hiddenByTuck && !_hiddenByFullscreen) { _dwellMs = 0; _dwell.Start(); }
+        else if (!_dwellOpened) _dwell.Stop();
+    }
+
+    // Escondida em cima das abas: abre só com o mouse PARADO na borda de cima, no meio da tela, por 0,6 s,
+    // sem botão apertado (clicar e arrastar abas nunca abre). Depois de aberta assim, fecha quando o mouse sai.
+    void CheckDwell()
+    {
+        var p = Cursor.Position;
+        if (_dwellOpened)
+        {
+            var b = Bounds; b.Inflate(4, 4);
+            if (_mode != Mode.Open || !b.Contains(p))
+            {
+                _dwellOpened = false;
+                if (_mode == Mode.Open && !b.Contains(p)) { _hover = false; _collapse.Stop(); _collapse.Start(); }
+                if (!_hiddenByTuck) _dwell.Stop();
+            }
+            return;
+        }
+        if (!_hiddenByTuck || _hiddenByFullscreen) { _dwell.Stop(); return; }
+        var r = ClosedRect();
+        bool atTop = p.X >= r.Left && p.X < r.Right && p.Y <= IslandScreen.Bounds.Top + 1;
+        bool still = Math.Abs(p.X - _dwellPt.X) <= 3 && Math.Abs(p.Y - _dwellPt.Y) <= 3;
+        _dwellPt = p;
+        if (!atTop || !still || MouseButtons != MouseButtons.None) { _dwellMs = 0; return; }
+        if ((_dwellMs += _dwell.Interval) < 600) return;
+        _dwellMs = 0;
+        _dwellOpened = true;   // o timer continua, agora vigiando a saída do mouse
+        _hover = true;
+        _collapse.Stop();
+        SetMode(Mode.Open);
     }
 
     void SetTuck(bool tuck)
@@ -1204,6 +1254,7 @@ sealed class IslandForm : Form
             _watch.Dispose();
             _soundTimer.Dispose();
             _petTimer.Dispose();
+            _dwell.Dispose();
             StopOsd();
             StopActivities();
             StopAppNotes();
