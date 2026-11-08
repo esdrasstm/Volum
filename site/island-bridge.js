@@ -32,7 +32,7 @@
   const mediaMsg = () => {
     const s = SONGS[song];
     return { type: 'media', media: { title: s.title, artist: s.artist, album: s.album, app: 'Player', playing, position: nowPos(),
-      duration: s.duration, updatedAt: Date.now(), cover: s.cover, canPrev: true, canNext: true } };
+      duration: s.duration, updatedAt: Date.now(), cover: s.cover, canPrev: true, canNext: true, canSeek: true } };
   };
   function changeSong(step) {
     song = (song + step + SONGS.length) % SONGS.length;
@@ -153,6 +153,13 @@
         send(mediaMsg());
         syncSound();
         send(pomoMsg());
+        // Clima de exemplo (no app: Open-Meteo, pela cidade das configurações)
+        const hr = new Date().getHours();
+        send({ type: 'weather', on: true, weather: { place: 'São Paulo', temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
+          hours: [0, 1, 2, 3, 4].map((i) => {
+            const h = (hr + 1 + i) % 24;
+            return { hour: String(h).padStart(2, '0'), temp: [24, 25, 23, 21, 20][i], code: [2, 1, 3, 61, 61][i], day: h >= 6 && h < 18 };
+          }) } });
         send({ type: 'agenda', on: true, events: [
           { title: 'Reunião de design', start: now + 40 * 60000, end: now + 100 * 60000, allDay: false },
           { title: 'Academia', start: now + 4 * 3600000, end: now + 5 * 3600000, allDay: false },
@@ -168,6 +175,7 @@
       case 'hover': break;   // a demo decide o hover pela posição do mouse (acima)
       case 'playPause': togglePlay(); break;
       case 'next': changeSong(1); break;
+      case 'seek': position = Math.min(SONGS[song].duration, Math.max(0, m.s)); positionAt = Date.now(); send(mediaMsg()); break;
       case 'prev': changeSong(-1); break;
       case 'volStep': volume = Math.min(1, Math.max(0, volume + m.d * 0.02)); send({ type: 'volume', v: volume, muted: false }); break;
       case 'openMixer': toPage({ type: 'openMixer' }); break;

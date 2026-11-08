@@ -43,12 +43,21 @@ sealed class AppSettings
 
     // Indicadores na ilha: Caps Lock, Num Lock, volume e microfone mudo (aparecem por ~1,5 s)
     public bool IslandOsd { get; set; } = true;
+
+    // Com o monitor principal em tela cheia (jogo, vídeo), a ilha vai para o topo de outro monitor (se houver)
+    public bool IslandOtherScreen { get; set; } = true;
     /// <summary>Formato da ilha: "notch" (grudada na borda de cima, com as orelhas) ou "float" (pílula solta, um pouco abaixo do topo).</summary>
     public string IslandStyle { get; set; } = "notch";
     /// <summary>Notificações dos outros apps na ilha (só na versão da Store; precisa da permissão do Windows).</summary>
     public bool IslandAppNotes { get; set; }
     /// <summary>Endereço iCal (.ics) da agenda (Google Agenda, Outlook). Vazio = sem agenda. Fica só neste PC.</summary>
     public string CalendarUrl { get; set; } = "";
+
+    // Clima na ilha (Open-Meteo): cidade digitada pela pessoa (vazio = desligado), nome achado e coordenadas
+    public string WeatherCity { get; set; } = "";
+    public string WeatherPlace { get; set; } = "";
+    public double WeatherLat { get; set; }
+    public double WeatherLon { get; set; }
 
     // Pomodoro na ilha (só funciona com a ilha ligada): minutos de foco, pausa curta, pausa longa e
     // de quantos em quantos focos vem a pausa longa

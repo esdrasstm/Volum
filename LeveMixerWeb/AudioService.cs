@@ -16,7 +16,9 @@ sealed record MasterDto(float Volume, bool Muted, float Peak);
 sealed record DeviceDto(string Id, string Name);
 // Volume = ganho do microfone; Devices = microfones conectados (para escolher o padrão)
 sealed record MicDto(float Volume, bool Muted, string Device, string Id, List<DeviceDto> Devices);
-sealed record StateDto(string Type, MasterDto Master, List<AppDto> Apps, MicDto? Mic = null);
+// Saída de áudio padrão (fone, caixa, soundbar...) e as conectadas, para trocar rápido
+sealed record OutputDto(string Device, string Id, List<DeviceDto> Devices);
+sealed record StateDto(string Type, MasterDto Master, List<AppDto> Apps, MicDto? Mic = null, OutputDto? Output = null);
 sealed record PeaksDto(string Type, float Master, Dictionary<string, float> Apps, float Mic = 0f);
 
 /// <summary>Toda a lógica de áudio (Core Audio / WASAPI). Não sabe nada de interface.</summary>
@@ -101,7 +103,15 @@ sealed class AudioService : IDisposable
             catch { /* microfone desconectado entre um ciclo e outro */ }
         }
 
-        return new StateDto("state", new MasterDto(vol.MasterVolumeLevelScalar, vol.Mute, 0f), apps, mic);
+        // Saída: na primeira leitura, só o nome guardado (a lista chega no próximo estado, como a dos microfones)
+        OutputDto output;
+        bool firstOut = _firstOutRead;
+        _firstOutRead = false;
+        output = firstOut
+            ? new OutputDto(MicNameCache.GetValueOrDefault(_device!.ID, ""), _device.ID, new List<DeviceDto>())
+            : new OutputDto(OutputName(_device), _device.ID, OutputDevices());
+
+        return new StateDto("state", new MasterDto(vol.MasterVolumeLevelScalar, vol.Mute, 0f), apps, mic, output);
     }
 
     public PeaksDto Peaks()
@@ -204,51 +214,63 @@ sealed class AudioService : IDisposable
 
     // Ler os nomes dos dispositivos é lento (~130 ms): a lista fica guardada e só é refeita
     // quando o Windows avisa que algum microfone foi conectado, desconectado ou trocado.
-    List<DeviceDto>? _micDevices;
-    bool _firstMicRead = true;
+    List<DeviceDto>? _micDevices, _outDevices;
+    int _micDevicesVer = -1, _outDevicesVer = -1;
+    bool _firstMicRead = true, _firstOutRead = true;
     readonly DeviceWatcher _deviceWatcher = new();
     bool _watcherRegistered;
 
     // Microfones conectados (ativos), em ordem alfabética
-    List<DeviceDto> MicDevices()
+    List<DeviceDto> MicDevices() => Devices(DataFlow.Capture, ref _micDevices, ref _micDevicesVer);
+
+    // Saídas conectadas (fone, caixa, soundbar, monitor...), em ordem alfabética
+    List<DeviceDto> OutputDevices() => Devices(DataFlow.Render, ref _outDevices, ref _outDevicesVer);
+
+    List<DeviceDto> Devices(DataFlow flow, ref List<DeviceDto>? cache, ref int cacheVer)
     {
         if (!_watcherRegistered)
         {
             try { _enumerator.RegisterEndpointNotificationCallback(_deviceWatcher); } catch { }
             _watcherRegistered = true;
         }
-        if (_micDevices != null && !_deviceWatcher.TakeChanged()) return _micDevices;
+        int ver = _deviceWatcher.Version;
+        if (cache != null && cacheVer == ver) return cache;
 
         var list = new List<DeviceDto>();
         try
         {
-            foreach (var d in _enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active))
+            foreach (var d in _enumerator.EnumerateAudioEndPoints(flow, DeviceState.Active))
             {
                 using (d) list.Add(new DeviceDto(d.ID, CleanName(d.FriendlyName)));
             }
         }
         catch { }
         list.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCultureIgnoreCase));
-        return _micDevices = list;
+        cacheVer = ver;
+        return cache = list;
     }
 
     // Nome do microfone atual, tirado da lista guardada (sem ler as propriedades do dispositivo de novo)
     string MicName(MMDevice mic) =>
         MicNameCache[mic.ID] = MicDevices().Find(d => d.Id == mic.ID)?.Name ?? CleanName(mic.FriendlyName);
 
-    // Nomes de microfone já lidos (por id), guardados enquanto o app roda
+    string OutputName(MMDevice dev) =>
+        MicNameCache[dev.ID] = OutputDevices().Find(d => d.Id == dev.ID)?.Name ?? CleanName(dev.FriendlyName);
+
+    // Nomes de dispositivos já lidos (por id; microfones e saídas), guardados enquanto o app roda
     static readonly Dictionary<string, string> MicNameCache = new();
 
     /// <summary>Recebe os avisos do Windows sobre dispositivos de áudio (chegam em outra thread).</summary>
     sealed class DeviceWatcher : IMMNotificationClient
     {
-        volatile bool _changed;
-        public bool TakeChanged() { bool c = _changed; _changed = false; return c; }
+        volatile int _version;
+        public int Version => _version;   // muda a cada aviso: as listas guardadas sabem que precisam ser refeitas
+        void Bump() => System.Threading.Interlocked.Increment(ref _version);
 
-        public void OnDeviceStateChanged(string deviceId, DeviceState newState) => _changed = true;
-        public void OnDeviceAdded(string pwstrDeviceId) => _changed = true;
-        public void OnDeviceRemoved(string deviceId) => _changed = true;
-        public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId) => _changed = true;
+        public void OnDeviceStateChanged(string deviceId, DeviceState newState) => Bump();
+        public void OnDeviceAdded(string pwstrDeviceId) => Bump();
+        public void OnDeviceRemoved(string deviceId) => Bump();
+        public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId) => Bump();
         public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key) { }   // volume etc.: ignora
     }
 
@@ -260,6 +282,9 @@ sealed class AudioService : IDisposable
         DefaultDevice.Set(id);
         SyncMic();
     }
+
+    /// <summary>Torna esta saída (fone, soundbar...) a padrão do Windows; a lista de apps é refeita no próximo estado.</summary>
+    public void SetDefaultOutput(string id) => DefaultDevice.Set(id);
 
     // Microfone padrão (o mesmo que aparece como padrão nas configurações de som do Windows)
     void SyncMic()

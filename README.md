@@ -44,5 +44,8 @@ Precisa do [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 ## Contribuir
 Ideias e correções são bem-vindas: abra uma [issue](https://github.com/esdrasstm/Volum/issues) ou um pull request. Para mudar o visual, quase tudo está em `LeveMixerWeb/wwwroot/style.css` (cores em variáveis no topo).
 
+## Apoiar
+O Volum é grátis e vai continuar grátis. Se ele te ajuda e você quiser apoiar: no Brasil, pelo Pix (botão "Apoiar o Volum" no [site](https://esdrasstm.github.io/Volum/) ou em Configurações → Sobre, no app); de fora, pelo [Ko-fi](https://ko-fi.com/volum). ♥
+
 ## Licença
 [MIT](LICENSE). Usa [NAudio](https://github.com/naudio/NAudio), [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) e [Velopack](https://velopack.io/).

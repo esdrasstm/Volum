@@ -766,6 +766,34 @@
       .features { grid-template-columns: 1fr; }
       .hero-mascot { width: 162px; height: 126px; }
     }
+
+    /* ---------- Apoiar o Volum ---------- */
+    .support-link svg { width: 18px; height: 18px; }
+    .faq .support-link svg { width: 16px; height: 16px; }
+    .support {
+      width: min(440px, calc(100vw - 32px));
+      padding: 28px 26px 22px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text);
+      background: #0f0f0f;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+    }
+    .support::backdrop { background: rgba(0, 0, 0, .6); backdrop-filter: blur(4px); }
+    .support[open] { animation: support-in .28s cubic-bezier(.32, .72, 0, 1); }
+    @keyframes support-in { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+    .support h3 { margin: 0 0 8px; font-size: 20px; }
+    .support p { margin: 0 0 14px; color: var(--subtext); font-size: 14.5px; line-height: 1.55; }
+    .support-steps { margin: 0 0 16px; padding-left: 20px; color: var(--subtext); font-size: 14px; line-height: 1.7; }
+    .support-steps b { color: var(--text); font-weight: 600; }
+    .pix-box { margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255, 255, 255, .03); }
+    .pix-box code { display: block; font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--subtext); word-break: break-all; user-select: all; }
+    .support .btn-primary { width: 100%; justify-content: center; }
+    .support .support-alt { margin: 14px 0 0; font-size: 13px; text-align: center; }
+    .support-alt a { color: var(--text); }
+    .support-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 10px; color: var(--subtext); background: transparent; cursor: pointer; }
+    .support-close:hover { color: var(--text); background: var(--glass); }
+    .support-close svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
@@ -820,6 +848,10 @@
             Microsoft Store
           </a>
           <a class="btn btn-ghost" href="#experimente">Experimentar agora</a>
+          <a class="btn btn-ghost support-link" data-support="hero" href="https://ko-fi.com/volum" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>
+            Apoiar o Volum
+          </a>
         </div>
         <div class="meta intro" style="--i:5"><span>Tão leve que você esquece que está aberto</span><span>Instala em segundos</span><span>Sem cadastro</span></div>
       </div>
@@ -976,6 +1008,11 @@
           <p>Não. A única conexão que ele faz é com o GitHub, para ver se existe versão nova.</p>
         </details>
         <details class="glass">
+          <summary>Como posso apoiar o Volum?</summary>
+          <p>O Volum é grátis e vai continuar grátis. Se ele te ajuda e você quiser apoiar, qualquer valor ajuda a manter o projeto andando: no Brasil, pelo Pix; de fora, pelo Ko-fi.</p>
+          <p><a class="btn btn-ghost btn-small support-link" data-support="faq" href="https://ko-fi.com/volum" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg> Apoiar o Volum</a></p>
+        </details>
+        <details class="glass">
           <summary>Como desinstalar?</summary>
           <p>Configurações do Windows → Aplicativos → Aplicativos instalados → Volum → Desinstalar.</p>
         </details>
@@ -1029,10 +1066,27 @@
     </div>
   </main>
 
+  <!-- Apoiar pelo Pix (quem está no Brasil). De fora, o botão abre o Ko-fi. -->
+  <dialog class="support" id="supportDialog" aria-labelledby="supportTitle">
+    <button class="support-close" id="supportClose" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h3 id="supportTitle">Apoiar o Volum ♥</h3>
+    <p>O Volum é grátis e vai continuar grátis. Se ele te ajuda, qualquer valor faz diferença. Obrigado!</p>
+    <ol class="support-steps">
+      <li>Copie o código Pix abaixo.</li>
+      <li>No app do seu banco, vá em <b>Pix → Pix Copia e Cola</b>.</li>
+      <li>Cole o código e escolha o valor.</li>
+    </ol>
+    <div class="pix-box"><code id="pixCode"></code></div>
+    <button class="btn btn-primary" id="pixCopy" type="button">Copiar código Pix</button>
+    <p class="support-alt">Mora fora do Brasil? <a href="https://ko-fi.com/volum" target="_blank" rel="noopener" data-goatcounter-click="apoiar-kofi-janela">Apoie pelo Ko-fi</a>.</p>
+  </dialog>
+
   <footer>
     <div class="wrap">
       <span>© <span id="year">2026</span> Volum · Feito por Esdras</span>
-      <span><a href="https://github.com/esdrasstm/Volum">GitHub</a> · <a href="https://github.com/esdrasstm/Volum/releases">Todas as versões</a> · <a href="privacidade.html">Privacidade</a></span>
+      <span><a class="support-link" data-support="rodape" href="https://ko-fi.com/volum" target="_blank" rel="noopener">Apoiar o Volum ♥</a> · <a href="https://github.com/esdrasstm/Volum">GitHub</a> · <a href="https://github.com/esdrasstm/Volum/releases">Todas as versões</a> · <a href="privacidade.html">Privacidade</a></span>
     </div>
   </footer>
 
@@ -1111,6 +1165,40 @@
       s.addEventListener('load', () => gcQueue.splice(0).forEach(track));
       document.head.appendChild(s);
     }
+
+    // ---------- Apoiar o Volum ----------
+    // No Brasil (fuso horário brasileiro ou navegador em pt-BR), abre a janela com o Pix copia e cola;
+    // de fora, o link segue para o Ko-fi (é o href do botão, então funciona até sem script).
+    const PIX = '00020101021126580014BR.GOV.BCB.PIX013601169a5b-bd84-4373-9526-9108e3a33e055204000053039865802BR5912Esdras Silva6009SAO PAULO62080504daqr6304297F';
+    const inBrazil = (() => {
+      let tz = '';
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { /* sem Intl */ }
+      const BR_TZ = ['Sao_Paulo', 'Fortaleza', 'Recife', 'Bahia', 'Belem', 'Maceio', 'Araguaina', 'Santarem', 'Manaus',
+        'Cuiaba', 'Campo_Grande', 'Porto_Velho', 'Boa_Vista', 'Rio_Branco', 'Eirunepe', 'Noronha'];
+      return BR_TZ.some((z) => tz === 'America/' + z) || (navigator.languages || [navigator.language]).some((l) => /^pt-BR/i.test(l || ''));
+    })();
+    const supportDialog = document.getElementById('supportDialog');
+    document.getElementById('pixCode').textContent = PIX;
+    document.querySelectorAll('[data-support]').forEach((a) => a.addEventListener('click', (e) => {
+      if (!inBrazil || !supportDialog.showModal) { track('apoiar-kofi-' + a.dataset.support); return; }   // de fora: segue para o Ko-fi
+      e.preventDefault();
+      track('apoiar-pix-' + a.dataset.support);
+      supportDialog.showModal();
+    }));
+    document.getElementById('supportClose').addEventListener('click', () => supportDialog.close());
+    supportDialog.addEventListener('click', (e) => { if (e.target === supportDialog) supportDialog.close(); });   // clique fora fecha
+    const pixCopy = document.getElementById('pixCopy');
+    pixCopy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(PIX); }
+      catch (e) {   // sem permissão da área de transferência: seleciona o código e copia do jeito antigo
+        const r = document.createRange(); r.selectNodeContents(document.getElementById('pixCode'));
+        const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        document.execCommand('copy');
+      }
+      track('pix-copiado');
+      pixCopy.textContent = 'Copiado! Agora cole no app do banco';
+      setTimeout(() => { pixCopy.textContent = 'Copiar código Pix'; }, 3000);
+    });
 
     // ---------- Menu ----------
     // Fica compacto e mais sólido depois que a página começa a rolar

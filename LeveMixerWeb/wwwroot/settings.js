@@ -249,6 +249,16 @@
   });
   $('calUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('calSave').click(); });
 
+  /* Clima: salva a cidade e o C# procura e baixa a previsão para conferir */
+  $('wxSave').addEventListener('click', () => {
+    const city = $('wxCity').value.trim();
+    $('wxSave').disabled = true;
+    $('wxStatus').classList.remove('bad');
+    $('wxStatus').textContent = city ? t('wxLoading') : '';
+    post({ type: 'setWeather', city });
+  });
+  $('wxCity').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('wxSave').click(); });
+
   $('islandStyleSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     selectSegment($('islandStyleSeg'), b.dataset.value);
     post({ type: 'setIslandStyle', style: b.dataset.value });
@@ -263,7 +273,7 @@
     standMin: [30, 45, 60, 75, 90, 120],
     pomoSound: ['chime', 'drops', 'bell', 'none'],   // som do fim do Pomodoro (nomes no PomodoroSound do C#)
   };
-  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, standUp: true, standMin: 60 };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, standUp: true, standMin: 60 };
 
   const fmtFocus = (v, unit) => unit === 'sound' ? t('snd_' + v) : unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
     : unit === 'time' ? V.fmtMin(v) : `${v} min`;
@@ -272,10 +282,11 @@
     $('pomoOn').checked = focus.pomodoro;
     $('standOn').checked = focus.standUp;
     $('osdOn').checked = focus.osd !== false;
+    $('otherScreenOn').checked = focus.otherScreen !== false;
     $('pomoOptions').hidden = !focus.pomodoro;
     $('standOptions').hidden = !focus.standUp;
     $('standTest').disabled = !islandOn;
-    $('focusNote').hidden = islandOn;   // com a ilha desligada, avisa que tudo isso depende dela
+    document.querySelectorAll('.needs-island').forEach((n) => { n.hidden = islandOn; });   // com a ilha desligada, avisa que depende dela
     document.querySelectorAll('.fstep').forEach((st) => {
       const key = st.dataset.key, list = FOCUS_STEPS[key], i = typeof focus[key] === 'string' ? Math.max(0, list.indexOf(focus[key])) : nearest(list, focus[key]);
       st.querySelector('output').textContent = fmtFocus(focus[key], st.dataset.unit);
@@ -289,6 +300,7 @@
   $('pomoOn').addEventListener('change', (e) => { focus.pomodoro = e.target.checked; showFocus(); saveFocus(); });
   $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
   $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
+  $('otherScreenOn').addEventListener('change', (e) => { focus.otherScreen = e.target.checked; saveFocus(); });
   document.querySelectorAll('.fstep').forEach((st) => st.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -310,6 +322,14 @@
   $('siteBtn').addEventListener('click', () => post({ type: 'openSite' }));
   $('feedbackBtn').addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));
   $('githubBtn').addEventListener('click', () => post({ type: 'openSite', section: 'github' }));
+  /* Apoiar o Volum: Pix (Brasil) copia o código pelo C#; Ko-fi abre no navegador */
+  $('kofiBtn').addEventListener('click', () => post({ type: 'openSite', section: 'kofi' }));
+  $('pixBtn').addEventListener('click', () => {
+    post({ type: 'copyPix' });
+    $('pixBtn').textContent = t('supportCopied');
+    $('pixHint').hidden = false;
+    setTimeout(() => { $('pixBtn').textContent = t('supportPix'); }, 3000);
+  });
   $('aboutNews').addEventListener('click', (e) => {   // botão dentro de uma novidade (ex.: Microsoft Store)
     const b = e.target.closest('[data-site]');
     if (b) post({ type: 'openSite', section: b.dataset.site });
@@ -320,6 +340,9 @@
     if (typeof s.systemDark === 'boolean') systemDark = s.systemDark;
     version = s.version || '';
     fromStore = !!s.store;
+    // No Brasil, o Pix é o botão principal; de fora, só o Ko-fi
+    $('pixBtn').hidden = !s.brazil;
+    $('kofiBtn').classList.toggle('primary', !s.brazil);
     if (s.hotkey) hotkey = s.hotkey;
     if (s.water) water = s.water;
     recording = false;
@@ -330,6 +353,7 @@
     appNotesSupported = !!s.appNotesSupported;
     $('appNotesOn').checked = !!s.appNotes;
     $('calUrl').value = s.calendarUrl || '';
+    $('wxCity').value = s.weatherCity || '';
     showAppNotes('');
     if (s.focus) focus = s.focus;
     setTheme(s.theme || 'system');
@@ -346,6 +370,12 @@
       case 'appNotes':    // resposta do setAppNotes (o Windows pode ter negado a permissão)
         $('appNotesOn').checked = !!m.on;
         showAppNotes(m.denied ? t('appNotesDenied') : '');
+        break;
+      case 'weatherCity': // resposta do setWeather: a cidade achada, ou erro
+        $('wxSave').disabled = false;
+        $('wxStatus').textContent = m.empty ? '' : m.place == null ? t(m.error === 'notFound' ? 'wxNotFound' : 'wxError')
+          : t('wxOk').replace('{0}', m.place);
+        $('wxStatus').classList.toggle('bad', !m.empty && m.place == null);
         break;
       case 'calendar':    // resposta do setCalendar: quantos compromissos hoje e amanhã, ou erro
         $('calSave').disabled = false;

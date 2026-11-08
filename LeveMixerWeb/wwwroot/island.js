@@ -294,6 +294,56 @@
     list.replaceChildren(...items);
   }
 
+  /* ---------------- Clima ----------------
+     O C# manda o clima de agora e as próximas 5 horas (Open-Meteo, códigos WMO). Ícones de traço, como os outros. */
+  let weatherOn = false, weather = null;
+  const WX_PATHS = {
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
+    moon: '<path d="M19.5 14.5A7.5 7.5 0 1 1 9.5 4.5a6 6 0 0 0 10 10z"/>',
+    sunCloud: '<path d="M8 2.8v1.4M3.3 4.7l1 1M1.8 9.3h1.4M12.7 4.7l-1 1"/><path d="M4.7 12a3.6 3.6 0 0 1 6.8-3.9"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8.4 13.8 3.1 3.1 0 0 0 9 20z"/>',
+    moonCloud: '<path d="M11.5 3.5a4.6 4.6 0 0 0-6.2 6.9"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8.4 13.8 3.1 3.1 0 0 0 9 20z"/>',
+    cloud: '<path d="M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 11.6 3.5 3.5 0 0 0 7 18.5z"/>',
+    fog: '<path d="M7 12.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 5.6"/><path d="M4 16h16M6 19.5h12"/>',
+    drizzle: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7.6 3.5 3.5 0 0 0 7 14.5z"/><path d="M9 18v.01M13 18v.01M11 21v.01M15 21v.01"/>',
+    rain: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7.6 3.5 3.5 0 0 0 7 14.5z"/><path d="M9 17.5l-1 3M13 17.5l-1 3M17 17.5l-1 3"/>',
+    snow: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7.6 3.5 3.5 0 0 0 7 14.5z"/><path d="M8.5 18.5v.01M12 18.5v.01M15.5 18.5v.01M10.2 21.5v.01M13.8 21.5v.01"/>',
+    storm: '<path d="M7 14.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 7.6 3.5 3.5 0 0 0 7 14.5z"/><path d="M12.5 16l-2 3h3l-2 3"/>',
+  };
+  // Código WMO → grupo (texto) e ícone (dia/noite)
+  const wxGroup = (c) => c === 0 ? 'clear' : c === 1 ? 'mostly' : c === 2 ? 'partly' : c === 3 ? 'cloudy'
+    : c === 45 || c === 48 ? 'fog' : c >= 51 && c <= 57 ? 'drizzle' : (c >= 61 && c <= 67) || (c >= 80 && c <= 82) ? 'rain'
+    : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : c >= 95 ? 'storm' : 'cloudy';
+  const wxIcon = (c, day) => {
+    const g = wxGroup(c);
+    const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g;
+    return '<svg class="wx-svg" viewBox="0 0 24 24" aria-hidden="true">' + WX_PATHS[k] + '</svg>';
+  };
+  const deg = (v) => Math.round(v) + '°';
+  function showWeather() {
+    const w = weather;
+    if (!w) return;
+    $('wxPlace').textContent = w.place;
+    $('wxTemp').textContent = deg(w.temp);
+    $('wxIcon').innerHTML = wxIcon(w.code, w.day);
+    $('wxCond').textContent = t('wx_' + wxGroup(w.code));
+    $('wxRange').textContent = t('wxMax') + ' ' + deg(w.max) + '  ' + t('wxMin') + ' ' + deg(w.min);
+    const hours = (w.hours || []).map((h) => {
+      const li = document.createElement('li');
+      const hr = document.createElement('span');
+      hr.className = 'wx-hour';
+      hr.textContent = lang === 'en' ? ((+h.hour % 12) || 12) + (+h.hour < 12 ? ' AM' : ' PM') : h.hour + 'h';
+      const ic = document.createElement('span');
+      ic.className = 'wx-hicon';
+      ic.innerHTML = wxIcon(h.code, h.day);
+      const tp = document.createElement('span');
+      tp.className = 'wx-htemp';
+      tp.textContent = deg(h.temp);
+      li.append(hr, ic, tp);
+      return li;
+    });
+    $('wxHours').replaceChildren(...hours);
+  }
+
   /* ---------------- Microfone e câmera em uso ---------------- */
   function showPrivacy(m) {
     const mic = (m.mic || []).length > 0, cam = (m.cam || []).length > 0;
@@ -324,11 +374,48 @@
     const has = media && media.duration > 0;
     $('progress').hidden = !has;
     if (!has) return;
+    seekBar.classList.toggle('seekable', !!media.canSeek);   // alguns players não deixam mudar o ponto
+    if (seeking) return;                                     // enquanto arrasta, quem manda é o dedo
     const p = position();
     $('elapsed').textContent = fmtTime(p);
     $('remaining').textContent = '-' + fmtTime(media.duration - p);
     $('barFill').style.width = (p / media.duration) * 100 + '%';
   }
+
+  // Arrastar (ou clicar) na barra do tempo muda o ponto da música
+  const seekBar = document.querySelector('.progress .bar');
+  let seeking = false;
+  const seekAt = (e) => {
+    const r = seekBar.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * media.duration;
+  };
+  const seekShow = (s) => {
+    $('elapsed').textContent = fmtTime(s);
+    $('remaining').textContent = '-' + fmtTime(media.duration - s);
+    $('barFill').style.width = (s / media.duration) * 100 + '%';
+  };
+  seekBar.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || !media || !media.canSeek || !(media.duration > 0)) return;
+    e.stopPropagation();
+    seeking = true;
+    seekBar.classList.add('seeking');
+    seekBar.setPointerCapture(e.pointerId);
+    seekShow(seekAt(e));
+  });
+  seekBar.addEventListener('pointermove', (e) => { if (seeking) seekShow(seekAt(e)); });
+  const endSeek = (e, apply) => {
+    if (!seeking) return;
+    seeking = false;
+    seekBar.classList.remove('seeking');
+    if (!apply) { showProgress(); return; }
+    const s = seekAt(e);
+    media.position = s;                 // resposta na hora; o player confirma depois
+    media.updatedAt = Date.now();
+    showProgress();
+    post({ type: 'seek', s });
+  };
+  seekBar.addEventListener('pointerup', (e) => endSeek(e, true));
+  seekBar.addEventListener('pointercancel', (e) => endSeek(e, false));
 
   // O tempo só anda com a ilha aberta e a música tocando
   let progressTimer = 0;
@@ -461,7 +548,7 @@
   /* ---------------- Páginas (setas ‹ › e bolinhas) ---------------- */
   let page = 0;
   const pages = () => [...document.querySelectorAll('.page')].filter((p) =>
-    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn));
+    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn) && (p.dataset.page !== 'weather' || weatherOn));
   function goToPage(name) {
     const i = pages().findIndex((p) => p.dataset.page === name);
     if (i >= 0) { page = i; showPages(); }
@@ -531,7 +618,7 @@
   let drag = null;
   const rubber = (dx) => Math.sign(dx) * Math.min(60, Math.abs(dx) * 0.4);   // a página vem junto, mas "pesada"
   $('full').addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || mode !== 'open' || e.target.closest('button, .dots')) return;
+    if (e.button !== 0 || mode !== 'open' || e.target.closest('button, .dots, .bar.seekable')) return;
     const cur = pages()[page];
     drag = { x: e.clientX, dx: 0, moved: false, cur };
     drag.hold = setTimeout(() => {   // segurou sem arrastar: abre o mixer
@@ -766,6 +853,7 @@
       case 'level':   onLevel(m.v); break;
       case 'privacy': showPrivacy(m); break;
       case 'agenda':  agendaOn = !!m.on; agenda = m.events || []; showAgenda(); showPages(); break;
+      case 'weather': weatherOn = !!m.on; weather = m.weather; showWeather(); showPages(); break;
       case 'water':   water = m.water; showWater(); break;
       case 'battery': battery = m; showBattery(); break;
       case 'sound':   soundOn = m.on; showWave(); break;

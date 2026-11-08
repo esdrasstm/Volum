@@ -131,6 +131,12 @@ sealed class SettingsForm : Form
         if (!IsDisposed) Post(new { type = "appNotes", on = _settings.IslandAppNotes, denied = want && !ok });
     }
 
+    async Task SetWeatherAsync(string city)
+    {
+        string? place = await IslandForm.WeatherCityChangedAsync(city);
+        if (!IsDisposed) Post(new { type = "weatherCity", place, empty = city.Length == 0, error = place == null ? Weather.LastError : "" });
+    }
+
     async Task SetCalendarAsync(string url)
     {
         _settings.CalendarUrl = url;
@@ -154,11 +160,13 @@ sealed class SettingsForm : Form
             water = new { enabled = w.Enabled, goalMl = w.GoalMl, intervalMin = w.IntervalMin, cupMl = w.CupMl, todayMl = w.TodayMl, sound = w.Sound },
             version = Updater.Version,
             store = Updater.IsStore,
+            brazil = Support.InBrazil,
             island = _settings.IslandEnabled,
             islandStyle = _settings.IslandStyle == "float" ? "float" : "notch",
             appNotes = _settings.IslandAppNotes && AppNotifications.Supported,
             appNotesSupported = AppNotifications.Supported,
             calendarUrl = _settings.CalendarUrl ?? "",
+            weatherCity = _settings.WeatherCity ?? "",
             focus = new
             {
                 pomodoro = _settings.PomodoroEnabled,
@@ -168,6 +176,7 @@ sealed class SettingsForm : Form
                 every = _settings.LongBreakEvery,
                 pomoSound = _settings.PomodoroSound,
                 osd = _settings.IslandOsd,
+                otherScreen = _settings.IslandOtherScreen,
                 standUp = _settings.StandUpEnabled,
                 standMin = _settings.StandUpMin
             }
@@ -272,6 +281,10 @@ sealed class SettingsForm : Form
                     break;
                 }
 
+                case "setWeather":   // cidade do clima: procura e baixa a previsão para conferir
+                    _ = SetWeatherAsync((root.GetProperty("city").GetString() ?? "").Trim());
+                    break;
+
                 case "setCalendar":   // endereço iCal da agenda: salva e baixa para conferir
                 {
                     _ = SetCalendarAsync((root.GetProperty("url").GetString() ?? "").Trim());
@@ -296,6 +309,7 @@ sealed class SettingsForm : Form
                         _settings.PomodoroSound = ps.GetString()!;
                     _settings.StandUpEnabled = root.GetProperty("standUp").GetBoolean();
                     if (root.TryGetProperty("osd", out var osd)) _settings.IslandOsd = osd.GetBoolean();
+                    if (root.TryGetProperty("otherScreen", out var os)) _settings.IslandOtherScreen = os.GetBoolean();
                     _settings.StandUpMin = Get("standMin", 60, 20, 240);
                     _settings.Save();
                     if (!_settings.PomodoroEnabled) Pomodoro.Stop();
@@ -311,6 +325,10 @@ sealed class SettingsForm : Form
 
                 case "testStand":   // "Testar aviso" do levantar
                     StandUp.Test();
+                    break;
+
+                case "copyPix":   // "Apoiar o Volum": copia o Pix copia e cola para colar no app do banco
+                    try { Clipboard.SetText(Support.Pix); } catch (Exception ex) { Debug.WriteLine(ex); }
                     break;
 
                 case "openSite":   // "Sobre": site, sugestões e GitHub (a janela continua aberta)

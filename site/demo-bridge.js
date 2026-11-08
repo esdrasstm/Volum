@@ -4,7 +4,7 @@
    Aqui, este arquivo faz o papel do C#: guarda volumes, simula o som dos apps,
    os medidores e o microfone, e responde às mesmas mensagens:
      interface -> "C#": ready | resize | setVolume | setMute | setTheme | setAutostart
-                        | setLightMode | setLanguage | setMicDevice | hide | tick
+                        | setLightMode | setLanguage | setMicDevice | setOutputDevice | hide | tick
      "C#" -> interface: settings | state | peaks | open | close
    Avisa a página de fora (a LP) por postMessage: resize, hide, lite.
    Precisa ser carregado ANTES do app.js.
@@ -42,6 +42,14 @@
         { id: 'mic-array', name: 'Microphone Array (Realtek Audio)' },
       ],
     },
+    output: {
+      id: 'out-headset',
+      devices: [
+        { id: 'out-headset', name: 'Fone de ouvido (Bluetooth)' },
+        { id: 'out-soundbar', name: 'Soundbar (HDMI)' },
+        { id: 'out-speakers', name: 'Alto-falantes (Realtek Audio)' },
+      ],
+    },
     apps: [
       { id: 'chamada', name: 'Chamada', volume: 1, muted: false, active: true, icon: ICONS.chamada },
       { id: 'jogo', name: 'Jogo', volume: 0.35, muted: false, active: true, icon: ICONS.jogo },
@@ -61,6 +69,10 @@
       mic: {
         volume: mic.volume, muted: mic.muted, id: mic.id, devices: mic.devices,
         device: (mic.devices.find((d) => d.id === mic.id) || mic.devices[0]).name,
+      },
+      output: {
+        id: model.output.id, devices: model.output.devices,
+        device: (model.output.devices.find((d) => d.id === model.output.id) || model.output.devices[0]).name,
       },
     };
   }
@@ -172,6 +184,7 @@
         if (timers.length) { clearInterval(timers[1]); timers[1] = setInterval(() => send(peaks()), m.enabled ? 150 : 60); }
         break;
       case 'setMicDevice': model.mic.id = m.id; send(state()); break;
+      case 'setOutputDevice': model.output.id = m.id; send(state()); break;
       case 'hide': close(); break;
       case 'tick': tick(); break;
       case 'setHotkey':   // no site não há atalho de verdade: só guarda e confirma

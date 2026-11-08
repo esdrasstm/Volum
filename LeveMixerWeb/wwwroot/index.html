@@ -40,6 +40,22 @@
     <!-- Volume geral + microfone (a linha do microfone some se não houver microfone) -->
     <section class="panel master">
       <div id="master"></div>
+      <!-- Escolher a saída (fone, soundbar...): mesmo jeito do microfone, embaixo do volume geral -->
+      <div id="out" class="out" hidden>
+        <div class="mic-picker">
+          <button id="outPickBtn" class="mic-current" aria-expanded="false"
+                  title="Escolher saída de áudio" data-i18n-title="outPick">
+            <span id="outCurrent"></span>
+            <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4 6.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div id="outList" class="mic-list" inert>
+            <div class="mic-list-inner" role="listbox"></div>
+          </div>
+        </div>
+      </div>
       <div id="mic" class="mic" hidden>
         <div id="micRow"></div>
         <!-- Escolher o microfone: nome do atual, discreto; o clique abre a lista dos conectados -->

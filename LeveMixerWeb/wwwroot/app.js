@@ -27,6 +27,7 @@
   const appsEl = $('apps');
   const masterEl = $('master');
   const micEl = $('mic');
+  const outEl = $('out');
   const micRowEl = $('micRow');
   const micPickBtn = $('micPickBtn');
   const micCurrentEl = $('micCurrent');
@@ -209,6 +210,13 @@
     }
     micEl.hidden = !s.mic;
 
+    // Saída de áudio (fone, soundbar...): só aparece com mais de uma conectada (com uma só, não há o que trocar)
+    const out = s.output;
+    // (na 1ª leitura a lista vem vazia: mantém como estava, para o mixer não mudar de altura ao abrir)
+    const showOut = !!out && (out.devices.length ? out.devices.length > 1 : !outEl.hidden);
+    if (showOut) outPicker.update(out);
+    outEl.hidden = !showOut;
+
     // Apps
     const ids = s.apps.map((a) => a.id);
     for (const [id, r] of [...rows]) {
@@ -239,41 +247,52 @@
   const ICON_CHECK =
     '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" ' +
     'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  let micListSig = '';
-
-  // Mostra o microfone atual e (re)monta a lista só quando os microfones conectados mudam
-  function updateMicPicker(m) {
-    if (m.device) micCurrentEl.textContent = m.device;   // vazio = ainda lendo (chega no próximo estado)
-    const sig = m.id + '|' + m.devices.map((d) => d.id + '=' + d.name).join('|');
-    if (sig === micListSig) return;
-    micListSig = sig;
-
-    micListInner.textContent = '';
-    for (const d of m.devices) {
-      const b = document.createElement('button');
-      b.className = 'mic-option';
-      b.setAttribute('role', 'option');
-      b.setAttribute('aria-selected', String(d.id === m.id));
-      b.innerHTML = '<span></span>' + ICON_CHECK;
-      b.firstChild.textContent = d.name;
-      b.title = d.name;
-      b.addEventListener('click', () => {
-        // Resposta imediata na tela; o C# troca o padrão do Windows e manda o estado novo
-        micListInner.querySelectorAll('.mic-option').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
-        micCurrentEl.textContent = d.name;
-        setMicListOpen(false);
-        post({ type: 'setMicDevice', id: d.id });
-      });
-      micListInner.appendChild(b);
-    }
+  // Lista para escolher o dispositivo padrão do Windows (microfone ou saída de áudio).
+  // Mostra o atual e só (re)monta a lista quando os dispositivos conectados mudam.
+  function makePicker(btn, currentEl, listEl, msgType) {
+    const inner = listEl.firstElementChild;
+    let sig = '';
+    const setOpen = (open) => {
+      listEl.classList.toggle('open', open);
+      listEl.inert = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    };
+    btn.addEventListener('click', () => {
+      const open = !listEl.classList.contains('open');
+      closePickers();          // uma lista aberta por vez
+      setOpen(open);
+    });
+    const update = (m) => {
+      if (m.device) currentEl.textContent = m.device;   // vazio = ainda lendo (chega no próximo estado)
+      const s = m.id + '|' + m.devices.map((d) => d.id + '=' + d.name).join('|');
+      if (s === sig) return;
+      sig = s;
+      inner.textContent = '';
+      for (const d of m.devices) {
+        const b = document.createElement('button');
+        b.className = 'mic-option';
+        b.setAttribute('role', 'option');
+        b.setAttribute('aria-selected', String(d.id === m.id));
+        b.innerHTML = '<span></span>' + ICON_CHECK;
+        b.firstChild.textContent = d.name;
+        b.title = d.name;
+        b.addEventListener('click', () => {
+          // Resposta imediata na tela; o C# troca o padrão do Windows e manda o estado novo
+          inner.querySelectorAll('.mic-option').forEach((o) => o.setAttribute('aria-selected', String(o === b)));
+          currentEl.textContent = d.name;
+          setOpen(false);
+          post({ type: msgType, id: d.id });
+        });
+        inner.appendChild(b);
+      }
+    };
+    return { update, setOpen };
   }
-
-  function setMicListOpen(open) {
-    micListEl.classList.toggle('open', open);
-    micListEl.inert = !open;
-    micPickBtn.setAttribute('aria-expanded', String(open));
-  }
-  micPickBtn.addEventListener('click', () => setMicListOpen(!micListEl.classList.contains('open')));
+  const micPicker = makePicker(micPickBtn, micCurrentEl, micListEl, 'setMicDevice');
+  const outPicker = makePicker($('outPickBtn'), $('outCurrent'), $('outList'), 'setOutputDevice');
+  function closePickers() { micPicker.setOpen(false); outPicker.setOpen(false); }
+  const updateMicPicker = (m) => micPicker.update(m);
+  const setMicListOpen = () => closePickers();
 
   // Medidor do microfone: ignora o chiado de fundo (silêncio = barra parada) e,
   // como a voz tem nível baixo, usa a raiz para a barra crescer bem visível ao falar.

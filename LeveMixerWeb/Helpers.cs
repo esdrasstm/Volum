@@ -191,9 +191,21 @@ static class Strings
 static class Fullscreen
 {
     /// <param name="primaryOnly">Só conta se for na tela principal (onde fica a ilha).</param>
-    public static bool ForegroundIsFullscreen(bool primaryOnly = false)
+    public static bool ForegroundIsFullscreen(bool primaryOnly = false) => ForegroundFullscreenWindow(primaryOnly) != System.IntPtr.Zero;
+
+    /// <summary>A janela da frente, se estiver em tela cheia (senão, zero).</summary>
+    public static System.IntPtr ForegroundFullscreenWindow(bool primaryOnly = false)
     {
         var fg = GetForegroundWindow();
+        return IsFullscreenWindow(fg, primaryOnly) ? fg : System.IntPtr.Zero;
+    }
+
+    /// <summary>Esta janela continua aberta, visível e cobrindo a tela (mesmo sem estar na frente)?</summary>
+    public static bool StillFullscreen(System.IntPtr hwnd, bool primaryOnly = false) =>
+        hwnd != System.IntPtr.Zero && IsWindow(hwnd) && IsWindowVisible(hwnd) && !IsIconic(hwnd) && IsFullscreenWindow(hwnd, primaryOnly);
+
+    static bool IsFullscreenWindow(System.IntPtr fg, bool primaryOnly)
+    {
         if (fg == System.IntPtr.Zero || fg == GetShellWindow() || fg == GetDesktopWindow()) return false;
         var cls = new System.Text.StringBuilder(64);
         GetClassName(fg, cls, cls.Capacity);
@@ -212,6 +224,9 @@ static class Fullscreen
 
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetForegroundWindow();
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetShellWindow();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsWindow(System.IntPtr hwnd);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsWindowVisible(System.IntPtr hwnd);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsIconic(System.IntPtr hwnd);
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern System.IntPtr GetDesktopWindow();
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool GetWindowRect(System.IntPtr hwnd, out RECT rect);
     [System.Runtime.InteropServices.DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(System.IntPtr hwnd, out uint pid);

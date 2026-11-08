@@ -26,13 +26,25 @@
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="3"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01" stroke-width="2.2"/><path d="M8.5 14h7"/></svg>
       <span data-i18n="pageShortcut">Atalho</span>
     </button>
+    <button class="nav-item" data-page="island">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>
+      <span data-i18n="pageIsland">Ilha</span>
+    </button>
+    <button class="nav-item" data-page="focus">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>
+      <span data-i18n="pageFocus">Foco</span>
+    </button>
     <button class="nav-item" data-page="water">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c3.7 4.3 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.8 8.3 7.1 12 2.8z"/></svg>
       <span data-i18n="pageWater">Água</span>
     </button>
-    <button class="nav-item" data-page="island">
-      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="4"/></svg>
-      <span data-i18n="pageIsland">Ilha</span>
+    <button class="nav-item" data-page="agenda">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <span data-i18n="calTitle">Agenda</span>
+    </button>
+    <button class="nav-item" data-page="weather">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.8v1.4M3.3 4.7l1 1M1.8 9.3h1.4M12.7 4.7l-1 1"/><path d="M4.7 12a3.6 3.6 0 0 1 6.8-3.9"/><path d="M9 20h8.5a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8.4 13.8 3.1 3.1 0 0 0 9 20z"/></svg>
+      <span data-i18n="wxTitle">Clima</span>
     </button>
     <button class="nav-item" data-page="about">
       <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.8v.01" stroke-width="2"/></svg>
@@ -98,6 +110,131 @@
       <p class="page-note" data-i18n="shortcutHint"></p>
     </section>
 
+    <!-- Ilha (estilo Dynamic Island): pílula no topo da tela com o player, a água e os avisos do Volum -->
+    <section class="page" id="page-island" hidden>
+      <h1 data-i18n="pageIsland">Ilha</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="islandToggle">Mostrar a ilha no topo da tela</span>
+            <small data-i18n="islandHint">Passe o mouse para ver a música tocando e a água; os avisos do Volum aparecem nela</small>
+          </span>
+          <label class="switch">
+            <input id="islandOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <!-- Formato: grudada na borda de cima (com as curvinhas) ou pílula solta, um pouco abaixo do topo -->
+        <div class="label label-gap" data-i18n="islandStyle">Formato</div>
+        <div class="segmented two" id="islandStyleSeg" role="radiogroup" aria-label="Formato" data-i18n-aria="islandStyle">
+          <button data-value="notch" role="radio" aria-checked="true" data-i18n="islandNotch">Grudada no topo</button>
+          <button data-value="float" role="radio" aria-checked="false" data-i18n="islandFloat">Flutuante</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="osdToggle">Indicadores na ilha</span>
+            <small data-i18n="osdHint">Mostra rapidinho Caps Lock, Num Lock, o volume e o microfone mudo</small>
+          </span>
+          <label class="switch">
+            <input id="osdOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="otherScreen">Outro monitor em tela cheia</span>
+            <small data-i18n="otherScreenHint">Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor</small>
+          </span>
+          <label class="switch">
+            <input id="otherScreenOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+      </div>
+      <!-- Notificações dos outros apps (só na versão da Store: o Windows exige) -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="appNotesToggle">Notificações dos apps</span>
+            <small id="appNotesHint" data-i18n="appNotesHint">WhatsApp, Discord, e-mail... aparecem na ilha. Ligue o "Não incomodar" do Windows para elas aparecerem só aqui</small>
+          </span>
+          <label class="switch">
+            <input id="appNotesOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+      </div>
+
+      <p class="page-note" data-i18n="islandNote"></p>
+    </section>
+
+    <!-- Foco: Pomodoro e lembrete para levantar (aparecem na ilha) -->
+    <section class="page" id="page-focus" hidden>
+      <h1 data-i18n="pageFocus">Foco</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="pomoToggle">Pomodoro na ilha</span>
+            <small data-i18n="pomoHint">Foco e pausas com a contagem na ilha</small>
+          </span>
+          <label class="switch">
+            <input id="pomoOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="pomoOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="pomoFocus">Foco</span>
+            <div class="stepper fstep" data-key="focusMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoShort">Pausa curta</span>
+            <div class="stepper fstep" data-key="shortMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoLong">Pausa longa</span>
+            <div class="stepper fstep" data-key="longMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoEvery">Pausa longa a cada</span>
+            <div class="stepper fstep" data-key="every" data-unit="cycles"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="stepper-row">
+            <span data-i18n="pomoSound">Som do fim</span>
+            <!-- Ao trocar, o som toca para a pessoa ouvir -->
+            <div class="stepper fstep" data-key="pomoSound" data-unit="sound"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="standToggle">Lembrete para levantar</span>
+            <small data-i18n="standHint">Avisa pela ilha depois de um tempo sentado</small>
+          </span>
+          <label class="switch">
+            <input id="standOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="standOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="standEvery">Avisar depois de</span>
+            <div class="stepper fstep" data-key="standMin" data-unit="time"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
+          <div class="btn-row inline">
+            <button class="btn" id="standTest" data-i18n="standTest">Testar aviso de levantar</button>
+          </div>
+        </div>
+      </div>
+      <p class="page-note needs-island" data-i18n="needsIsland"></p>
+    </section>
+
     <!-- Lembrete de água: ligado, mostra as opções (o contador fica no mixer) -->
     <section class="page" id="page-water" hidden>
       <h1 data-i18n="pageWater">Água</h1>
@@ -148,114 +285,13 @@
       <p class="page-note" id="waterToday"></p>
     </section>
 
-    <!-- Ilha (estilo Dynamic Island): pílula no topo da tela com o player, a água e os avisos do Volum -->
-    <section class="page" id="page-island" hidden>
-      <h1 data-i18n="pageIsland">Ilha</h1>
+    <!-- Agenda: endereço iCal do Google Agenda ou do Outlook (avisos na ilha) -->
+    <section class="page" id="page-agenda" hidden>
+      <h1 data-i18n="calTitle">Agenda</h1>
       <div class="group">
         <div class="setting-row">
           <span class="setting-text">
-            <span data-i18n="islandToggle">Mostrar a ilha no topo da tela</span>
-            <small data-i18n="islandHint">Passe o mouse para ver a música tocando e a água; os avisos do Volum aparecem nela</small>
-          </span>
-          <label class="switch">
-            <input id="islandOn" type="checkbox">
-            <span></span>
-          </label>
-        </div>
-        <!-- Formato: grudada na borda de cima (com as curvinhas) ou pílula solta, um pouco abaixo do topo -->
-        <div class="label label-gap" data-i18n="islandStyle">Formato</div>
-        <div class="segmented two" id="islandStyleSeg" role="radiogroup" aria-label="Formato" data-i18n-aria="islandStyle">
-          <button data-value="notch" role="radio" aria-checked="true" data-i18n="islandNotch">Grudada no topo</button>
-          <button data-value="float" role="radio" aria-checked="false" data-i18n="islandFloat">Flutuante</button>
-        </div>
-      </div>
-
-      <!-- Pomodoro e lembrete para levantar: só funcionam com a ilha ligada -->
-      <div class="group">
-        <div class="setting-row">
-          <span class="setting-text">
-            <span data-i18n="pomoToggle">Pomodoro na ilha</span>
-            <small data-i18n="pomoHint">Foco e pausas com a contagem na ilha</small>
-          </span>
-          <label class="switch">
-            <input id="pomoOn" type="checkbox">
-            <span></span>
-          </label>
-        </div>
-        <div id="pomoOptions" class="water-options" hidden>
-          <div class="stepper-row">
-            <span data-i18n="pomoFocus">Foco</span>
-            <div class="stepper fstep" data-key="focusMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-          <div class="stepper-row">
-            <span data-i18n="pomoShort">Pausa curta</span>
-            <div class="stepper fstep" data-key="shortMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-          <div class="stepper-row">
-            <span data-i18n="pomoLong">Pausa longa</span>
-            <div class="stepper fstep" data-key="longMin" data-unit="min"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-          <div class="stepper-row">
-            <span data-i18n="pomoEvery">Pausa longa a cada</span>
-            <div class="stepper fstep" data-key="every" data-unit="cycles"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-          <div class="stepper-row">
-            <span data-i18n="pomoSound">Som do fim</span>
-            <!-- Ao trocar, o som toca para a pessoa ouvir -->
-            <div class="stepper fstep" data-key="pomoSound" data-unit="sound"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="group">
-        <div class="setting-row">
-          <span class="setting-text">
-            <span data-i18n="standToggle">Lembrete para levantar</span>
-            <small data-i18n="standHint">Avisa pela ilha depois de um tempo sentado</small>
-          </span>
-          <label class="switch">
-            <input id="standOn" type="checkbox">
-            <span></span>
-          </label>
-        </div>
-        <div id="standOptions" class="water-options" hidden>
-          <div class="stepper-row">
-            <span data-i18n="standEvery">Avisar depois de</span>
-            <div class="stepper fstep" data-key="standMin" data-unit="time"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
-          </div>
-        </div>
-      </div>
-      <div class="group">
-        <div class="setting-row">
-          <span class="setting-text">
-            <span data-i18n="osdToggle">Indicadores na ilha</span>
-            <small data-i18n="osdHint">Mostra rapidinho Caps Lock, Num Lock, o volume e o microfone mudo</small>
-          </span>
-          <label class="switch">
-            <input id="osdOn" type="checkbox" checked>
-            <span></span>
-          </label>
-        </div>
-      </div>
-      <!-- Notificações dos outros apps (só na versão da Store: o Windows exige) -->
-      <div class="group">
-        <div class="setting-row">
-          <span class="setting-text">
-            <span data-i18n="appNotesToggle">Notificações dos apps</span>
-            <small id="appNotesHint" data-i18n="appNotesHint">WhatsApp, Discord, e-mail... aparecem na ilha. Ligue o "Não incomodar" do Windows para elas aparecerem só aqui</small>
-          </span>
-          <label class="switch">
-            <input id="appNotesOn" type="checkbox">
-            <span></span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Agenda: endereço iCal do Google Agenda ou do Outlook -->
-      <div class="group">
-        <div class="setting-row">
-          <span class="setting-text">
-            <span data-i18n="calTitle">Agenda</span>
+            <span data-i18n="calField">Endereço da agenda (iCal)</span>
             <small data-i18n="calHint">Cole o endereço iCal (.ics) da sua agenda. No Google Agenda: Configurações → sua agenda → "Endereço secreto no formato iCal". A ilha avisa 10 min antes de cada compromisso</small>
           </span>
         </div>
@@ -266,11 +302,27 @@
         <small class="cal-status" id="calStatus"></small>
       </div>
 
-      <div class="btn-row">
-        <button class="btn" id="standTest" data-i18n="standTest">Testar aviso de levantar</button>
+      <p class="page-note needs-island" data-i18n="needsIsland"></p>
+    </section>
+
+    <!-- Clima: a pessoa digita a cidade (página na ilha) -->
+    <section class="page" id="page-weather" hidden>
+      <h1 data-i18n="wxTitle">Clima</h1>
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="wxField">Sua cidade</span>
+            <small data-i18n="wxHint">Digite a sua cidade para ver o clima e as próximas horas na ilha. Deixe vazio para desligar</small>
+          </span>
+        </div>
+        <div class="cal-row">
+          <input id="wxCity" class="text-input" type="text" spellcheck="false" autocomplete="off" data-i18n-placeholder="wxPlaceholder" placeholder="Ex.: São Paulo">
+          <button class="btn" id="wxSave" data-i18n="calSave">Salvar</button>
+        </div>
+        <small class="cal-status" id="wxStatus"></small>
       </div>
-      <p class="page-note" id="focusNote" data-i18n="focusNeedsIsland"></p>
-      <p class="page-note" data-i18n="islandNote"></p>
+
+      <p class="page-note needs-island" data-i18n="needsIsland"></p>
     </section>
 
     <!-- Sobre: versão, links e as novidades -->
@@ -290,6 +342,21 @@
           <button class="btn" id="feedbackBtn" data-i18n="feedback">Sugestões e bugs</button>
           <button class="btn" id="githubBtn" data-i18n="github">Código no GitHub</button>
         </div>
+      </div>
+
+      <!-- Apoiar o Volum: no Brasil, Pix copia e cola (o C# copia o código); de fora, Ko-fi -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="supportTitle">Apoiar o Volum ♥</span>
+            <small data-i18n="supportText">O Volum é grátis e vai continuar grátis. Se ele te ajuda, qualquer valor faz diferença.</small>
+          </span>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="pixBtn" data-i18n="supportPix" hidden>Copiar código Pix</button>
+          <button class="btn" id="kofiBtn" data-i18n="supportKofi">Apoiar pelo Ko-fi</button>
+        </div>
+        <small class="cal-status" id="pixHint" data-i18n="supportPixHint" hidden>Depois, no app do seu banco: Pix → Pix Copia e Cola, cole o código e escolha o valor.</small>
       </div>
 
       <div class="group">

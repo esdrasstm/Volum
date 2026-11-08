@@ -75,6 +75,7 @@ sealed class IslandForm : Form
         }
         StandUp.Apply();
         Agenda.Apply(enabled);   // a agenda só avisa com a ilha ligada
+        Weather.Apply(enabled);  // o clima só é baixado com a ilha ligada
     }
 
     /// <summary>Mudou algo nas configurações que a ilha mostra (ex.: Pomodoro ligado, tempos).</summary>
@@ -197,7 +198,7 @@ sealed class IslandForm : Form
         float k = DeviceDpi / 96f;
         int w = (int)Math.Round((s.Width + 2 * Ear) * k);
         int h = (int)Math.Round((s.Height + slack) * k);
-        var screen = Screen.PrimaryScreen!.Bounds;
+        var screen = IslandScreen.Bounds;
         SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
     }
 
@@ -272,14 +273,35 @@ sealed class IslandForm : Form
         if (++_watchTicks % 40 == 0) PostBattery();   // bateria a cada ~1 min (e quando o Windows avisa)
     }
 
+    // Monitor onde a ilha está: o principal; com ele em tela cheia, outro monitor (opção, ligada por padrão)
+    Screen IslandScreen => _otherScreen != null && Screen.AllScreens.Any(s => s.DeviceName == _otherScreen.DeviceName)
+        ? _otherScreen : Screen.PrimaryScreen!;
+    Screen? _otherScreen;   // null = no principal
+    IntPtr _fullWnd;        // janela em tela cheia no monitor principal que fez a ilha mudar de monitor
+
     void CheckScreen()
     {
         if (IsDisposed) return;
-        bool full = Fullscreen.ForegroundIsFullscreen(primaryOnly: true);
-        if (full != _hiddenByFullscreen)
+        var fullWnd = Fullscreen.ForegroundFullscreenWindow(primaryOnly: true);
+        // Já mudou de monitor: fica lá enquanto aquela janela continuar em tela cheia no principal,
+        // mesmo que a pessoa clique em algo no outro monitor (senão a ilha voltaria para cima do vídeo/jogo)
+        if (fullWnd == IntPtr.Zero && _otherScreen != null && Fullscreen.StillFullscreen(_fullWnd, primaryOnly: true)) fullWnd = _fullWnd;
+        _fullWnd = fullWnd;
+        bool full = fullWnd != IntPtr.Zero;
+
+        var other = full && AppSettings.Current.IslandOtherScreen ? Screen.AllScreens.FirstOrDefault(s => !s.Primary) : null;
+        if (other?.DeviceName != _otherScreen?.DeviceName)
         {
-            _hiddenByFullscreen = full;
-            if (full) Hide();
+            _otherScreen = other;
+            Place(_mode);
+            BeginInvoke(() => { if (!IsDisposed) Place(_mode); });   // de novo depois do Windows ajustar a escala (DPI) do outro monitor
+        }
+
+        bool hide = full && other == null;   // um monitor só (ou opção desligada): some, como antes
+        if (hide != _hiddenByFullscreen)
+        {
+            _hiddenByFullscreen = hide;
+            if (hide) Hide();
             else ShowWindow(Handle, 4 /* SW_SHOWNOACTIVATE */);
         }
         var fg = full ? IntPtr.Zero : ForegroundTouchingIsland();
@@ -298,7 +320,7 @@ sealed class IslandForm : Form
     Rectangle ClosedRect()
     {
         float k = DeviceDpi / 96f;
-        var screen = Screen.PrimaryScreen!.Bounds;
+        var screen = IslandScreen.Bounds;
         int w = (int)((ClosedW + 2 * Ear) * k), h = (int)(ClosedH * k);
         return new Rectangle(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
     }
@@ -413,6 +435,26 @@ sealed class IslandForm : Form
         _privacy.Changed += (mic, cam) => { try { BeginInvoke(new Action(() => OnPrivacy(mic, cam))); } catch { } };
         Agenda.Changed += OnAgendaChanged;
         Agenda.Alert += OnAgendaAlert;
+        Weather.Changed += OnWeatherChanged;
+    }
+
+    // ---------- clima (Weather.cs): página na ilha ----------
+
+    void OnWeatherChanged(WeatherNow? w) { if (!IsDisposed) BeginInvoke(new Action(PostWeather)); }
+
+    void PostWeather()
+    {
+        if (!_ready) return;
+        var w = Weather.Current;
+        Post(new { type = "weather", on = w != null, weather = w });
+    }
+
+    /// <summary>Salvaram outra cidade nas configurações. Devolve o nome achado ("" = apagou, null = erro).</summary>
+    public static async Task<string?> WeatherCityChangedAsync(string city)
+    {
+        var r = await Weather.SetCityAsync(city, IsOn);
+        s_island?.PostWeather();
+        return r;
     }
 
     // ---------- agenda (Agenda.cs): página na ilha + avisos 10 min antes e na hora ----------
@@ -1085,6 +1127,7 @@ sealed class IslandForm : Form
                     _ = _media?.RefreshAsync();
                     CheckScreen();
                     PostAgenda();
+                    PostWeather();
                     _ = StartAppNotesAsync();
                     Greet();
                     break;
@@ -1107,6 +1150,7 @@ sealed class IslandForm : Form
 
                 case "playPause": _media?.PlayPause(); break;
                 case "next": _media?.Next(); break;
+                case "seek": _media?.Seek(root.GetProperty("s").GetDouble()); break;   // arrastou a barra do tempo
                 case "prev": _media?.Previous(); break;
                 case "openMixer": OpenMixer?.Invoke(); break;
                 case "animDone":   // a forma parou: janela no tamanho exato (sem a folga), se não mudou de estado nesse meio-tempo
@@ -1160,6 +1204,7 @@ sealed class IslandForm : Form
             StopAppNotes();
             Agenda.Changed -= OnAgendaChanged;
             Agenda.Alert -= OnAgendaAlert;
+            Weather.Changed -= OnWeatherChanged;
             _osdEnum?.Dispose();
             _out?.Dispose();
             _enum?.Dispose();

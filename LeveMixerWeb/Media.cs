@@ -10,7 +10,7 @@ namespace Volum;
 /// Tempo em segundos; <paramref name="UpdatedAt"/> (ms desde 1970) é quando o player informou a posição:
 /// a interface anda o relógio sozinha a partir dela, sem o C# ficar mandando a posição a cada segundo.</summary>
 sealed record MediaInfo(string Title, string Artist, string Album, string App, bool Playing, bool CanPrev, bool CanNext,
-                        string? Cover, double Position, double Duration, long UpdatedAt);
+                        string? Cover, double Position, double Duration, long UpdatedAt, bool CanSeek = false);
 
 /// <summary>
 /// Música tocando no Windows (Spotify, navegador, player do Windows…) e os botões ⏮ ⏯ ⏭, pelos
@@ -118,7 +118,8 @@ sealed class MediaService : IDisposable
                 playback.PlaybackStatus == GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing,
                 playback.Controls.IsPreviousEnabled,
                 playback.Controls.IsNextEnabled,
-                _cover, pos, dur, at);
+                _cover, pos, dur, at,
+                playback.Controls.IsPlaybackPositionEnabled);   // o player deixa mudar o ponto da música?
             Changed?.Invoke(_last);
         }
         catch { /* o player fechou no meio da leitura: o próximo aviso do Windows corrige */ }
@@ -174,6 +175,19 @@ sealed class MediaService : IDisposable
     public void Next() => _ = _session?.TrySkipNextAsync();
     public void Previous() => _ = _session?.TrySkipPreviousAsync();
     public void Stop() => _ = _session?.TryStopAsync();
+
+    /// <summary>Vai para este ponto da música (segundos desde o começo). Só funciona se o player permitir (CanSeek).</summary>
+    public void Seek(double seconds)
+    {
+        var s = _session;
+        if (s == null) return;
+        try
+        {
+            var t = s.GetTimelineProperties();
+            _ = s.TryChangePlaybackPositionAsync((t.StartTime + TimeSpan.FromSeconds(Math.Max(0, seconds))).Ticks);
+        }
+        catch { /* o player fechou */ }
+    }
 
     public void Dispose()
     {

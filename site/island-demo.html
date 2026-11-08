@@ -10,7 +10,6 @@
   <title>Volum</title>
   <link rel="stylesheet" href="../LeveMixerWeb/wwwroot/island.css">
   <link rel="stylesheet" href="../LeveMixerWeb/wwwroot/mascot.css">
-  <!-- Demo do site: gerada a partir do island.html do app (o workflow site.yml gera de novo a cada publicação) -->
   <style>html, body { background: transparent !important; }</style>
 </head>
 <body>
@@ -171,6 +170,24 @@
           <div class="agenda">
             <b class="agenda-head" data-i18n="islandAgenda">Agenda</b>
             <ul class="agenda-list" id="agendaList"></ul>
+          </div>
+        </section>
+
+        <!-- Página: clima (só com a cidade salva nas configurações); o JS preenche -->
+        <section class="page" data-page="weather" hidden>
+          <div class="wx">
+            <div class="wx-top">
+              <div class="wx-main">
+                <span class="wx-place" id="wxPlace"></span>
+                <span class="wx-temp" id="wxTemp">—</span>
+              </div>
+              <div class="wx-side">
+                <span class="wx-icon" id="wxIcon"></span>
+                <span class="wx-cond" id="wxCond"></span>
+                <span class="wx-range" id="wxRange"></span>
+              </div>
+            </div>
+            <ul class="wx-hours" id="wxHours"></ul>
           </div>
         </section>
 

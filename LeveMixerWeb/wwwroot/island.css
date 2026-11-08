@@ -572,3 +572,66 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .agenda-title { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .agenda-list li.now .agenda-when { color: #30d158; font-weight: 700; }
 .agenda-empty { font-size: 13px; color: var(--subtext); }
+
+/* ---------- Barra do tempo que dá para arrastar (players que deixam mudar o ponto da música) ----------
+   A área de clique é mais alta que o traço (14 px); o traço engrossa ao passar o mouse e ganha uma bolinha. */
+.progress .bar.seekable {
+  --track: 4px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  border-radius: 0;
+  cursor: pointer;
+  touch-action: none;
+  background: linear-gradient(rgba(255, 255, 255, .25), rgba(255, 255, 255, .25)) center / 100% var(--track) no-repeat;
+  transition: --track .15s ease;
+}
+.progress .bar.seekable span { position: relative; height: var(--track); flex: none; }
+.progress .bar.seekable:hover, .progress .bar.seekable.seeking { --track: 6px; }
+.progress .bar.seekable span::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, .5);
+  transform: scale(0);
+  transition: transform .15s ease;
+}
+.progress .bar.seekable:hover span::after, .progress .bar.seekable.seeking span::after { transform: scale(1); }
+.progress .bar.seeking span { transition: none; }
+@property --track { syntax: "<length>"; inherits: true; initial-value: 4px; }
+
+/* ---------- Página do clima ----------
+   Em cima: cidade e temperatura grande à esquerda; ícone, condição e máx./mín. à direita.
+   Embaixo: as próximas 5 horas (hora, ícone, temperatura). Mesmo traço dos outros ícones. */
+.wx { display: grid; gap: 10px; padding-top: 2px; }
+.wx-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.wx-main { display: grid; min-width: 0; }
+.wx-place { font-size: 12px; font-weight: 600; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-temp { font-size: 38px; font-weight: 300; line-height: 1; letter-spacing: -1.5px; font-variant-numeric: tabular-nums; }
+.wx-side { display: grid; justify-items: end; gap: 2px; text-align: right; min-width: 0; }
+.wx-icon .wx-svg { width: 22px; height: 22px; }
+.wx-cond { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.wx-range { font-size: 11.5px; color: var(--subtext); white-space: pre; font-variant-numeric: tabular-nums; }
+.wx-hours { list-style: none; margin: 0; padding: 8px 0 0; display: grid; grid-template-columns: repeat(5, 1fr);
+  border-top: 1px solid rgba(255, 255, 255, .08); }
+.wx-hours li { display: grid; justify-items: center; gap: 3px; }
+.wx-hour { font-size: 11px; color: var(--subtext); font-variant-numeric: tabular-nums; }
+.wx-hicon .wx-svg { width: 18px; height: 18px; }
+.wx-htemp { font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.wx-svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Compacta: a página do clima não pode passar da altura do player (senão a ilha aberta cresce em todas as páginas) */
+.wx { gap: 6px; padding-top: 0; }
+.wx-temp { font-size: 30px; }
+.wx-side { grid-template-columns: auto auto; align-items: center; column-gap: 6px; row-gap: 1px; }
+.wx-side .wx-range { grid-column: 1 / -1; }
+.wx-icon .wx-svg { width: 18px; height: 18px; }
+.wx-hours { padding-top: 6px; }
+.wx-hours li { gap: 1px; }
+.wx-hicon .wx-svg { width: 16px; height: 16px; }

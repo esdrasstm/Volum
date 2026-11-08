@@ -828,6 +828,7 @@ button:focus-visible, input:focus-visible + span { outline: 2px solid var(--acce
   --ink-faint: rgba(255, 255, 255, .09);/* trilhos */
   --ink-hover: rgba(255, 255, 255, .06);
   --edge-mid: #262626;                  /* meio do degradê da borda (antes marrom) */
+  --card-edge: #1a1a1a;                 /* borda do mixer: cinza quase preto, bem sutil */
   --blue: #0084ff;
   --blue-mid: #0d5598;
 
@@ -859,6 +860,7 @@ button:focus-visible, input:focus-visible + span { outline: 2px solid var(--acce
   --ink-faint: rgba(17, 17, 17, .09);
   --ink-hover: rgba(17, 17, 17, .05);
   --edge-mid: #e2e2e2;
+  --card-edge: #e8e8e8;
   --blue-mid: #6db8ff;
   --accent-ring: rgba(17, 17, 17, .14);
   --accent-glow: rgba(17, 17, 17, .15);
@@ -888,13 +890,13 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
   background: var(--bg);
   box-shadow: none;
 }
-/* Borda de 0,5 px em degradê (branco em cima e embaixo) num ::before com máscara */
+/* Borda de 1 px, cinza quase preto e uniforme em toda a volta, num ::before com máscara */
 .card::before, :root.lite .card::before {
   display: block;
   z-index: 2;
-  padding: .5px;
+  padding: 1px;
   opacity: 1;
-  background: linear-gradient(180deg, var(--ink), var(--edge-mid) 50%, var(--ink));
+  background: var(--card-edge);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -985,6 +987,9 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
 .mic { margin: 0; border: 0; }
 .mic .row { padding-bottom: 3px; }
 .mic-picker { padding: 0 14px 6px 54px; }
+/* Saída de áudio: logo abaixo do volume geral (a linha de cima perde um pouco do espaço de baixo) */
+.out[hidden] { display: none; }
+.master:has(.out:not([hidden])) #master .row { padding-bottom: 3px; }
 .mic-current { padding: 0; font-size: 10.5px; color: var(--ink-dim); }
 .mic-current:hover, .mic-current[aria-expanded="true"] { color: var(--text); }
 .mic-option { font-size: 11px; color: var(--ink-dim); }
@@ -1062,15 +1067,15 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
   background: var(--bg);
   box-shadow: 0 18px 48px rgba(0, 0, 0, .55);
 }
-/* Borda de 0,5 px em degradê, igual à do mixer */
+/* Borda igual à do mixer */
 .news-box::before {
   content: "";
   position: absolute;
   inset: 0;
-  padding: .5px;
+  padding: 1px;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(180deg, var(--ink), var(--edge-mid) 50%, var(--ink));
+  background: var(--card-edge);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -1141,3 +1146,24 @@ button:focus-visible, input:focus-visible + span { outline: 1.5px solid var(--in
 
 /* Modo leve: sem animação da onda */
 :root.lite .wave-btn path { animation: none; }
+
+/* ---------- Barra de rolagem (mixer e janela de configurações) ----------
+   Fininha, sem setas e sem trilho: só uma pílula cinza que clareia ao passar o mouse.
+   A lista de apps tem altura máxima de 6 apps e meio (a metade do 7º mostra que dá para rolar). */
+.apps { max-height: 340px; overscroll-behavior: contain; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-thumb,
+.apps::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .12);
+  border: 2px solid transparent;
+  border-radius: 99px;
+  background-clip: padding-box;
+  min-height: 32px;
+}
+::-webkit-scrollbar-thumb:hover,
+.apps::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, .24); }
+.apps::-webkit-scrollbar { width: 8px; }
+:root[data-scheme="light"] ::-webkit-scrollbar-thumb { background-color: rgba(0, 0, 0, .14); }
+:root[data-scheme="light"] ::-webkit-scrollbar-thumb:hover { background-color: rgba(0, 0, 0, .26); }

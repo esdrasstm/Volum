@@ -172,6 +172,24 @@
           </div>
         </section>
 
+        <!-- Página: clima (só com a cidade salva nas configurações); o JS preenche -->
+        <section class="page" data-page="weather" hidden>
+          <div class="wx">
+            <div class="wx-top">
+              <div class="wx-main">
+                <span class="wx-place" id="wxPlace"></span>
+                <span class="wx-temp" id="wxTemp">—</span>
+              </div>
+              <div class="wx-side">
+                <span class="wx-icon" id="wxIcon"></span>
+                <span class="wx-cond" id="wxCond"></span>
+                <span class="wx-range" id="wxRange"></span>
+              </div>
+            </div>
+            <ul class="wx-hours" id="wxHours"></ul>
+          </div>
+        </section>
+
         <button class="page-arrow right" id="pageNext" aria-label="›">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>

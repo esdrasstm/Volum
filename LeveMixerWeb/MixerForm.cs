@@ -34,6 +34,7 @@ sealed class MixerForm : Form
             "feedback" => $"{SiteUrl}?v={Uri.EscapeDataString(Updater.Version)}&w={Environment.OSVersion.Version.Build}#sugestoes",
             "github" => "https://github.com/esdrasstm/Volum",
             "store" => "ms-windows-store://pdp/?productid=9PKPDGQ211L4",   // abre o app da Microsoft Store na página do Volum
+            "kofi" => "https://ko-fi.com/volum",                            // apoiar o Volum (quem está fora do Brasil)
             _ => SiteUrl,
         };
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
@@ -625,6 +626,15 @@ sealed class MixerForm : Form
                     try
                     {
                         _audio?.SetDefaultMic(root.GetProperty("id").GetString()!);
+                    }
+                    catch (Exception ex) { Debug.WriteLine(ex); }
+                    PushState();
+                    break;
+
+                case "setOutputDevice":   // escolheu outra saída (fone → soundbar): vira a padrão do Windows
+                    try
+                    {
+                        _audio?.SetDefaultOutput(root.GetProperty("id").GetString()!);
                     }
                     catch (Exception ex) { Debug.WriteLine(ex); }
                     PushState();
