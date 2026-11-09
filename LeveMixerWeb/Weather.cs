@@ -78,15 +78,17 @@ static class Weather
         try
         {
             string lang = Strings.Normalize(s.Language);
-            string url = "https://geocoding-api.open-meteo.com/v1/search?count=1&format=json&language=" + lang +
-                         "&name=" + Uri.EscapeDataString(city);
+            // "Ubá MG", "Ubá, MG" ou "Ubá, Minas Gerais": procura só o nome e usa o resto (estado/país) para escolher
+            var (query, hint) = SplitPlace(city);
+            string url = "https://geocoding-api.open-meteo.com/v1/search?count=10&format=json&language=" + lang +
+                         "&name=" + Uri.EscapeDataString(query);
             using var doc = JsonDocument.Parse(await Http.GetStringAsync(url));
             if (!doc.RootElement.TryGetProperty("results", out var res) || res.GetArrayLength() == 0)
             {
                 LastError = "notFound";
                 return null;
             }
-            var r = res[0];
+            var r = BestMatch(res, query, hint);
             string name = r.GetProperty("name").GetString() ?? city;
             string region = r.TryGetProperty("admin1", out var a) ? a.GetString() ?? "" : "";
             s.WeatherCity = city;
@@ -104,6 +106,61 @@ static class Weather
             LastError = "fetch";
             return null;
         }
+    }
+
+    // ---------- escolher a cidade certa ----------
+    // O Open-Meteo devolve as cidades que COMEÇAM com o nome, das maiores para as menores: "Ubá" trazia Uberaba
+    // primeiro. Agora ganha a que tem o nome exato (sem ligar para acento e maiúscula), do estado/país digitado.
+
+    static readonly Dictionary<string, string> BrazilStates = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["AC"] = "Acre", ["AL"] = "Alagoas", ["AP"] = "Amapá", ["AM"] = "Amazonas", ["BA"] = "Bahia", ["CE"] = "Ceará",
+        ["DF"] = "Distrito Federal", ["ES"] = "Espírito Santo", ["GO"] = "Goiás", ["MA"] = "Maranhão", ["MT"] = "Mato Grosso",
+        ["MS"] = "Mato Grosso do Sul", ["MG"] = "Minas Gerais", ["PA"] = "Pará", ["PB"] = "Paraíba", ["PR"] = "Paraná",
+        ["PE"] = "Pernambuco", ["PI"] = "Piauí", ["RJ"] = "Rio de Janeiro", ["RN"] = "Rio Grande do Norte",
+        ["RS"] = "Rio Grande do Sul", ["RO"] = "Rondônia", ["RR"] = "Roraima", ["SC"] = "Santa Catarina", ["SP"] = "São Paulo",
+        ["SE"] = "Sergipe", ["TO"] = "Tocantins",
+    };
+
+    /// <summary>Separa "cidade" e "estado/país": pela vírgula ou pela sigla do estado no fim ("Ubá MG").</summary>
+    static (string query, string hint) SplitPlace(string text)
+    {
+        int comma = text.IndexOf(',');
+        if (comma > 0) return (text[..comma].Trim(), text[(comma + 1)..].Trim());
+        var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 1 && BrazilStates.ContainsKey(parts[^1])) return (string.Join(' ', parts[..^1]), parts[^1]);
+        return (text, "");
+    }
+
+    static string Plain(string? s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        var d = s.Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(d.Length);
+        foreach (var c in d)
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark) sb.Append(char.ToLowerInvariant(c));
+        return sb.ToString().Trim();
+    }
+
+    /// <summary>Pontua cada resultado: nome exato vale mais; estado/país igual ao digitado também; empate = a primeira (maior).</summary>
+    static JsonElement BestMatch(JsonElement results, string query, string hint)
+    {
+        string q = Plain(query), h = Plain(BrazilStates.TryGetValue(hint, out var st) ? st : hint);
+        JsonElement best = results[0];
+        int bestScore = int.MinValue, i = 0;
+        foreach (var r in results.EnumerateArray())
+        {
+            string name = Plain(r.TryGetProperty("name", out var n) ? n.GetString() : "");
+            string admin = Plain(r.TryGetProperty("admin1", out var a) ? a.GetString() : "");
+            string country = Plain(r.TryGetProperty("country", out var c) ? c.GetString() : "");
+            string code = Plain(r.TryGetProperty("country_code", out var cc) ? cc.GetString() : "");
+            int score = -i;                                    // ordem do Open-Meteo como desempate
+            if (name == q) score += 100;
+            if (h.Length > 0 && (admin == h || country == h || code == h || admin.StartsWith(h) || country.StartsWith(h))) score += 50;
+            if (score > bestScore) { bestScore = score; best = r; }
+            i++;
+        }
+        return best;
     }
 
     /// <summary>Baixa a previsão agora (só com a ilha ligada e uma cidade salva).</summary>

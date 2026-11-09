@@ -54,6 +54,8 @@ sealed class MixerForm : Form
     bool _initStarted, _ready, _wantOpen, _pendingPresent, _shown, _closing, _contentShown;
     // Última altura conhecida: a janela já aparece no tamanho certo, mesmo depois de ser descartada
     static int s_heightDip = 420;
+    // Quanto o WebView desenha a mais que a escala do monitor (ex.: "Tamanho do texto" do Windows em 125%); vem do JS ("dpr")
+    static float _webScale = 1f;
     int _slideOffsetPx;
     Point _anchor;                 // canto inferior direito (em pixels) onde a janela assenta
     DateTime _presentedAt, _contentAt;
@@ -75,7 +77,7 @@ sealed class MixerForm : Form
         ShowInTaskbar = false;
         TopMost = true;
         Text = "Volum";
-        Size = new Size((int)Math.Round(WidthDip * DeviceDpi / 96f), 300);
+        Size = new Size((int)Math.Round(WidthDip * DeviceDpi / 96f * _webScale), 300);
         _web.Dock = DockStyle.Fill;
         ApplyBackdrop();
         Controls.Add(_web);
@@ -281,7 +283,7 @@ sealed class MixerForm : Form
 
     void ShowShell()
     {
-        float k = DeviceDpi / 96f;
+        float k = DeviceDpi / 96f * _webScale;
         var wa = (_targetScreen ?? Screen.FromPoint(Cursor.Position)).WorkingArea;
         _anchor = new Point(wa.Right - (int)(MarginDip * k), wa.Bottom - (int)(MarginDip * k));
 
@@ -454,7 +456,7 @@ sealed class MixerForm : Form
         Post(new { type = "close" });  // a interface toca a animação de saída (CSS)
         if (_settings.LightMode) { HideNow(); return; }
 
-        int to = (int)Math.Round(6 * DeviceDpi / 96f);
+        int to = (int)Math.Round(6 * DeviceDpi / 96f * _webScale);
         await Tween(CloseMs, EaseInCubic, t => { _slideOffsetPx = (int)Math.Round(to * t); Reposition(); });
         HideNow();
     }
@@ -493,7 +495,7 @@ sealed class MixerForm : Form
     void Reposition()
     {
         if (IsDisposed) return;
-        float k = DeviceDpi / 96f;
+        float k = DeviceDpi / 96f * _webScale;
         int w = (int)Math.Round(WidthDip * k);
         int h = (int)Math.Round(s_heightDip * k);
         SetBounds(_anchor.X - w, _anchor.Y - h + _slideOffsetPx, w, h);
@@ -590,6 +592,14 @@ sealed class MixerForm : Form
 
             switch (root.GetProperty("type").GetString())
             {
+                case "dpr":   // escala real do WebView (monitor × tamanho do texto do Windows): a janela acompanha
+                {
+                    double dpr = root.GetProperty("v").GetDouble();
+                    float extra = (float)Math.Clamp(dpr / (DeviceDpi / 96.0), 0.5, 4.0);
+                    if (Math.Abs(extra - _webScale) > 0.01f) { _webScale = extra; if (_shown) Reposition(); }
+                    break;
+                }
+
                 case "ready":
                     DevLog.Write("interface pronta (ready)");
                     _ready = true;

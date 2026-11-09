@@ -201,7 +201,8 @@ sealed class IslandForm : Form
 
     // A forma vai mudar de tamanho (o que está na tela → o novo estado): janela com folga até ela parar
     void MoveTo(Mode m) { var to = SizeOf(m); PlaceMoving(_shown, to); _shown = to; }
-    Size _shown = new(ClosedW, ClosedH);   // tamanho que a forma tem (ou para onde está indo)
+    Size _shown = new(ClosedW, ClosedH);
+    float _webScale = 1f;   // quanto o WebView desenha a mais que a escala do monitor (ex.: "Tamanho do texto" do Windows em 125%)   // tamanho que a forma tem (ou para onde está indo)
 
     // Durante a animação: a janela fica com o maior dos dois tamanhos + uma folga embaixo, para a mola
     // (que passa um pouquinho do tamanho) não ser cortada. Quando a forma para, o JS manda "animDone".
@@ -210,7 +211,7 @@ sealed class IslandForm : Form
 
     void PlaceSize(Size s, int slack)
     {
-        float k = DeviceDpi / 96f;
+        float k = DeviceDpi / 96f * _webScale;
         int w = (int)Math.Round((s.Width + 2 * Ear) * k);
         int h = (int)Math.Round((s.Height + slack) * k);
         var box = IslandBox(w, h, k);
@@ -437,7 +438,7 @@ sealed class IslandForm : Form
     // Lugar da ilha fechada na tela (pixels de verdade)
     Rectangle ClosedRect()
     {
-        float k = DeviceDpi / 96f;
+        float k = DeviceDpi / 96f * _webScale;
         int w = (int)((ClosedW + 2 * Ear) * k), h = (int)(ClosedH * k);
         return IslandBox(w, h, k);
     }
@@ -474,7 +475,7 @@ sealed class IslandForm : Form
         _lastKey = key;
         _lastCheck = DateTime.UtcNow;
 
-        float k = DeviceDpi / 96f;
+        float k = DeviceDpi / 96f * _webScale;
         var area = ClosedRect();
         area.Inflate((int)(24 * k), 0);                                // "chegar perto" também conta
         int bandBottom = area.Bottom + (int)(6 * k);
@@ -1274,6 +1275,14 @@ sealed class IslandForm : Form
             var root = doc.RootElement;
             switch (root.GetProperty("type").GetString())
             {
+                case "dpr":   // escala real do WebView (monitor × tamanho do texto do Windows): a janela acompanha
+                {
+                    double dpr = root.GetProperty("v").GetDouble();
+                    float extra = (float)Math.Clamp(dpr / (DeviceDpi / 96.0), 0.5, 4.0);
+                    if (Math.Abs(extra - _webScale) > 0.01f) { _webScale = extra; Place(_mode); }
+                    break;
+                }
+
                 case "ready":
                     _ready = true;
                     PostSettings();

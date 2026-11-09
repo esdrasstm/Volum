@@ -507,4 +507,11 @@
   document.addEventListener('contextmenu', (e) => e.preventDefault());
 
   post({ type: 'ready' });
+  // Escala em que o WebView desenha de verdade (monitor × "Tamanho do texto" do Windows): o C# ajusta o tamanho da janela.
+  // Avisa ao abrir e sempre que mudar (trocou de monitor, mudou a escala ou o tamanho do texto).
+  (function watchScale() {
+    post({ type: 'dpr', v: window.devicePixelRatio });
+    matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', watchScale, { once: true });
+  })();
+
 })();
