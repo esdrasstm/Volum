@@ -32,7 +32,7 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Troque a saída de áudio (fone, caixa, soundbar) direto no mixer. Clima na ilha com ícone, temperatura (°C ou °F) e as próximas horas. Arraste a barra da música para ir a qualquer ponto. A ilha vai para o outro monitor quando o principal está em tela cheia. Configurações reorganizadas, ícones animados e aviso de versão nova na ilha.
+Escolha o monitor e a posição da ilha (esquerda, centro ou direita; em cima ou embaixo, acima da barra de tarefas). Nova opção para esconder a ilha quando não estiver em uso (telas OLED). Em cima das abas do navegador a ilha some de vez. O Volum agora se atualiza sozinho pela Store. Correção: a hora não pisca mais ao abrir e fechar a ilha.
 
 ### Recursos do produto (um por linha)
 Volume de cada aplicativo, com mudo e nível de som
@@ -86,7 +86,7 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Switch the audio output (headphones, speakers, soundbar) right in the mixer. Weather on the island with an icon, the temperature (°C or °F) and the next hours. Drag the song bar to jump anywhere. The island moves to your other monitor when the main one is in full screen. Reorganized settings, animated icons and a new-version notice on the island.
+Pick the monitor and the island position (left, center or right; top or bottom, above the taskbar). New option to hide the island when not in use (OLED screens). Over browser tabs the island hides completely. Volum now updates itself through the Store. Fix: the clock no longer flickers when the island opens and closes.
 
 ### Product features (one per line)
 Per-app volume with mute and sound level
@@ -140,7 +140,7 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Cambia la salida de audio (auriculares, parlantes, barra de sonido) directo en el mezclador. Clima en la isla con icono, temperatura (°C o °F) y las próximas horas. Arrastra la barra de la canción para ir a cualquier punto. La isla pasa al otro monitor cuando el principal está en pantalla completa. Configuración reorganizada, iconos animados y aviso de versión nueva en la isla.
+Elige el monitor y la posición de la isla (izquierda, centro o derecha; arriba o abajo, encima de la barra de tareas). Nueva opción para ocultar la isla cuando no se use (pantallas OLED). Sobre las pestañas del navegador la isla se oculta del todo. Volum ahora se actualiza solo desde la Store. Corrección: la hora ya no parpadea al abrir y cerrar la isla.
 
 ### Características del producto (una por línea)
 Volumen de cada aplicación, con silencio y nivel de sonido

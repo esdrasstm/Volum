@@ -105,7 +105,7 @@ sealed class TrayController : IDisposable
         UpdateNotice.Start(() => Toggle());
 
         // Versão da Microsoft Store: avisa quando a Store tem versão nova (com o botão Atualizar)
-        StoreUpdate.Start();
+        StoreUpdate.Start(canInstall: () => _form == null || _form.IsDisposed || !_form.IsOpen);
 
         // Abriram o Volum de novo (ex.: ícone fixado no dock): a outra cópia avisa e sai.
         // Esperar o sinal não gasta nada: o Windows acorda a thread só quando ele chega.

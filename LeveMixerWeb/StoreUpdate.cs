@@ -13,6 +13,9 @@ namespace Volum;
 /// desligada) com o botão "Atualizar", que pede para a Store baixar e instalar (a Store mostra a confirmação e
 /// fecha o Volum para trocar a versão). Se não der, abre a página do Volum na Store. Uma vez por execução;
 /// com jogo/vídeo em tela cheia, espera e tenta de novo em 1 min. Na versão do GitHub não faz nada.
+/// Desde a 0.6.0: antes do aviso, tenta ATUALIZAR SOZINHO (como a versão do GitHub): com o mixer fechado e sem tela cheia,
+/// pede para a Store baixar e instalar em silêncio; o Windows fecha o Volum para trocar a versão e, como o app se registrou
+/// com RegisterApplicationRestart, abre ele de novo sozinho. Se a Store não deixar (ou falhar), sai o aviso com "Atualizar".
 /// Testar o aviso (sem a Store): Volum.exe --test-store-update
 /// </summary>
 static class StoreUpdate
@@ -22,10 +25,19 @@ static class StoreUpdate
     static bool s_shown;
     static StoreContext? s_ctx;
     static Form? s_owner;   // janela invisível: a Store precisa de uma janela "dona" para mostrar a confirmação
+    static Func<bool> s_canInstall = () => true;
+    static bool s_triedSilent;
 
-    public static void Start()
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern int RegisterApplicationRestart(string? commandLine, int flags);
+
+    /// <param name="canInstall">Pode instalar agora? (o mixer não está aberto)</param>
+    public static void Start(Func<bool> canInstall)
     {
         if (!Updater.IsStore && !Program.TestStoreUpdate) return;
+        s_canInstall = canInstall;
+        // Quando a Store fecha o Volum para instalar a versão nova, o Windows abre ele de novo (vale depois de 60 s rodando)
+        if (Updater.IsStore) { try { RegisterApplicationRestart(null, 0); } catch { } }
         s_timer = new Timer { Interval = Program.TestStoreUpdate ? 3000 : FirstMs };
         s_timer.Tick += async (_, _) => { s_timer.Stop(); await CheckAsync(); if (!s_shown) s_timer.Start(); };
         s_timer.Start();
@@ -44,7 +56,24 @@ static class StoreUpdate
             }
             catch (Exception ex) { DevLog.Write("Store: " + ex.Message); return; }
         }
-        if (Fullscreen.ForegroundIsFullscreen()) { s_timer.Interval = RetryMs; return; }   // não atrapalha jogo/vídeo
+        if (Fullscreen.ForegroundIsFullscreen() || !s_canInstall()) { s_timer.Interval = RetryMs; return; }   // não atrapalha jogo/vídeo nem o mixer aberto
+
+        // Primeiro tenta atualizar sozinho, sem perguntar nada (uma vez por execução)
+        if (updates != null && !s_triedSilent)
+        {
+            s_triedSilent = true;
+            try
+            {
+                var ctx = Ctx();
+                if (ctx.CanSilentlyDownloadStorePackageUpdates)
+                {
+                    DevLog.Write("Store: atualizando em silêncio");
+                    var r = await ctx.TrySilentDownloadAndInstallStorePackageUpdatesAsync(updates);
+                    if (r.OverallState is StorePackageUpdateState.Completed or StorePackageUpdateState.Deploying) return;   // o Windows fecha e reabre o Volum
+                }
+            }
+            catch (Exception ex) { DevLog.Write("Store (silencioso): " + ex.Message); }
+        }
         Show(updates);
     }
 

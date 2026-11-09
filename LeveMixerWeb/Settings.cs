@@ -46,6 +46,18 @@ sealed class AppSettings
 
     // Com o monitor principal em tela cheia (jogo, vídeo), a ilha vai para o topo de outro monitor (se houver)
     public bool IslandOtherScreen { get; set; } = true;
+
+    // Esconder a ilha quando não estiver em uso (pedido para telas OLED). Desligado por padrão: o Volum é para a ilha ficar à vista.
+    // Some depois de IslandAutoHideSec segundos parada e volta quando o mouse passa no lugar dela; avisos continuam aparecendo.
+    public bool IslandAutoHide { get; set; }
+    public int IslandAutoHideSec { get; set; } = 10;
+
+    // Monitor da ilha: "primary" (principal, padrão) ou o nome do monitor no Windows (ex.: \\.\DISPLAY2); "other" = o primeiro que não é o principal
+    public string IslandMonitor { get; set; } = "primary";
+
+    // Posição da ilha: na horizontal "left" | "center" (padrão) | "right"; na vertical "top" (padrão) | "bottom" (acima da barra de tarefas, sempre flutuante)
+    public string IslandPosH { get; set; } = "center";
+    public string IslandPosV { get; set; } = "top";
     /// <summary>Formato da ilha: "notch" (grudada na borda de cima, com as orelhas) ou "float" (pílula solta, um pouco abaixo do topo).</summary>
     public string IslandStyle { get; set; } = "notch";
     /// <summary>Notificações dos outros apps na ilha (só na versão da Store; precisa da permissão do Windows).</summary>

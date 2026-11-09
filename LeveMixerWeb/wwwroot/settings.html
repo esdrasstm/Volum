@@ -134,6 +134,23 @@
           <button data-value="notch" role="radio" aria-checked="true" data-i18n="islandNotch">Grudada no topo</button>
           <button data-value="float" role="radio" aria-checked="false" data-i18n="islandFloat">Flutuante</button>
         </div>
+        <!-- Posição: esquerda/centro/direita e em cima/embaixo (embaixo = acima da barra de tarefas, sempre flutuante) -->
+        <div class="label label-gap" data-i18n="islandPos">Posição</div>
+        <div class="segmented" id="posHSeg" role="radiogroup" aria-label="Posição" data-i18n-aria="islandPos">
+          <button data-value="left" role="radio" aria-checked="false" data-i18n="posLeft">Esquerda</button>
+          <button data-value="center" role="radio" aria-checked="true" data-i18n="posCenter">Centro</button>
+          <button data-value="right" role="radio" aria-checked="false" data-i18n="posRight">Direita</button>
+        </div>
+        <div class="segmented two seg-gap" id="posVSeg" role="radiogroup" aria-label="Posição" data-i18n-aria="islandPos">
+          <button data-value="top" role="radio" aria-checked="true" data-i18n="posTop">Em cima</button>
+          <button data-value="bottom" role="radio" aria-checked="false" data-i18n="posBottom">Embaixo</button>
+        </div>
+        <small class="cal-status" id="posNote" data-i18n="posBottomNote" hidden>Embaixo, a ilha fica logo acima da barra de tarefas e usa o formato flutuante</small>
+        <!-- Monitor da ilha: um botão por monitor (só aparece com mais de um) -->
+        <div id="monitorRow" hidden>
+          <div class="label label-gap" data-i18n="islandMonitor">Monitor</div>
+          <div class="segmented dyn" id="monitorSeg" role="radiogroup" aria-label="Monitor" data-i18n-aria="islandMonitor"></div>
+        </div>
       </div>
 
       <div class="group">
@@ -156,6 +173,26 @@
             <input id="otherScreenOn" type="checkbox" checked>
             <span></span>
           </label>
+        </div>
+      </div>
+
+      <!-- Esconder quando não estiver em uso (para telas OLED). Desligado por padrão: a ideia do Volum é a ilha à vista -->
+      <div class="group">
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="autoHide">Esconder quando não estiver em uso</span>
+            <small data-i18n="autoHideHint">Bom para telas OLED: a ilha some depois de um tempo e volta quando você passa o mouse no lugar dela. Avisos continuam aparecendo</small>
+          </span>
+          <label class="switch">
+            <input id="autoHideOn" type="checkbox">
+            <span></span>
+          </label>
+        </div>
+        <div id="autoHideOptions" class="water-options" hidden>
+          <div class="stepper-row">
+            <span data-i18n="autoHideAfter">Esconder depois de</span>
+            <div class="stepper fstep" data-key="autoHideSec" data-unit="sec"><button data-step="-1" aria-label="−">−</button><output></output><button data-step="1" aria-label="+">+</button></div>
+          </div>
         </div>
       </div>
       <!-- Notificações dos outros apps (só na versão da Store: o Windows exige) -->

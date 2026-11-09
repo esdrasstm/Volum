@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -184,6 +185,15 @@ sealed class SettingsForm : Form
                 pomoSound = _settings.PomodoroSound,
                 osd = _settings.IslandOsd,
                 otherScreen = _settings.IslandOtherScreen,
+                autoHide = _settings.IslandAutoHide,
+                autoHideSec = _settings.IslandAutoHideSec,
+                monitor = _settings.IslandMonitor ?? "primary",
+                // Monitores da esquerda para a direita (o principal vira "primary"), para os botões da página Ilha
+                monitors = Screen.AllScreens.OrderBy(s => s.Bounds.X).ThenBy(s => s.Bounds.Y)
+                    .Select(s => new { id = s.Primary ? "primary" : s.DeviceName, primary = s.Primary, w = s.Bounds.Width, h = s.Bounds.Height }).ToArray(),
+                screens = Screen.AllScreens.Length,
+                posH = _settings.IslandPosH,
+                posV = _settings.IslandPosV,
                 standUp = _settings.StandUpEnabled,
                 standMin = _settings.StandUpMin
             }
@@ -325,12 +335,18 @@ sealed class SettingsForm : Form
                     _settings.StandUpEnabled = root.GetProperty("standUp").GetBoolean();
                     if (root.TryGetProperty("osd", out var osd)) _settings.IslandOsd = osd.GetBoolean();
                     if (root.TryGetProperty("otherScreen", out var os)) _settings.IslandOtherScreen = os.GetBoolean();
+                    if (root.TryGetProperty("autoHide", out var ah)) _settings.IslandAutoHide = ah.GetBoolean();
+                    _settings.IslandAutoHideSec = Get("autoHideSec", 10, 5, 300);
+                    if (root.TryGetProperty("monitor", out var mo) && mo.GetString() is { Length: > 0 } mon) _settings.IslandMonitor = mon;
+                    if (root.TryGetProperty("posH", out var ph) && ph.GetString() is "left" or "center" or "right") _settings.IslandPosH = ph.GetString()!;
+                    if (root.TryGetProperty("posV", out var pv) && pv.GetString() is "top" or "bottom") _settings.IslandPosV = pv.GetString()!;
                     _settings.StandUpMin = Get("standMin", 60, 20, 240);
                     _settings.Save();
                     if (!_settings.PomodoroEnabled) Pomodoro.Stop();
                     Pomodoro.Configure();
                     StandUp.Apply();
                     IslandForm.ApplyOsd();
+                    IslandForm.ApplyHideAndScreen();
                     IslandForm.SettingsChanged();
                     break;
 

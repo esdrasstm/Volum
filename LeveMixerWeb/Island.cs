@@ -53,7 +53,8 @@ sealed class IslandForm : Form
     MediaService? _media;
     Mode _mode = Mode.Closed;
     readonly Timer _dwell = new() { Interval = 100 };       // recolhida (escondida): o mouse parou no topo? (só roda escondida)
-    bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen, _hiddenByTuck, _dwellOpened;
+    readonly Timer _autoHide = new();                       // opção "esconder quando não estiver em uso": tempo parada até sumir
+    bool _ready, _hover, _notice, _tuck, _idle, _hiddenByFullscreen, _hiddenByTuck, _hiddenByAuto, _dwellOpened;
     Point _dwellPt;
     int _dwellMs;
     string _noticeKind = "";   // "greet" (bom dia) e "walk" (levantar, com a cena animada) usam a ilha mais alta
@@ -109,7 +110,10 @@ sealed class IslandForm : Form
         Text = "Volum";
         BackColor = Color.Black;                          // preto = transparente para o DWM (frame em toda a janela)
         _web.DefaultBackgroundColor = Color.Transparent;  // só a pílula do CSS aparece
-        _web.Dock = DockStyle.Fill;
+        // O WebView NÃO acompanha o tamanho da janela: fica sempre do mesmo tamanho e parado no mesmo lugar da tela
+        // (centralizado em cima), e a janela só recorta o pedaço que aparece (PlaceSize). Antes, ao fechar, a janela
+        // encolhia e o WebView2 redesenhava com atraso: por um quadro o conteúdo aparecia deslocado (a hora "piscava").
+        _web.Dock = DockStyle.None;
         Controls.Add(_web);
         Place(Mode.Closed);
 
@@ -119,6 +123,7 @@ sealed class IslandForm : Form
         _soundTimer.Tick += (_, _) => CheckSound();
         _petTimer.Tick += (_, _) => CheckPet();
         _dwell.Tick += (_, _) => CheckDwell();
+        _autoHide.Tick += (_, _) => { _autoHide.Stop(); if (CanAutoHide) { _hiddenByAuto = true; UpdateShown(); } };
         Water.Changed += OnWaterChanged;
         Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
@@ -208,12 +213,39 @@ sealed class IslandForm : Form
         float k = DeviceDpi / 96f;
         int w = (int)Math.Round((s.Width + 2 * Ear) * k);
         int h = (int)Math.Round((s.Height + slack) * k);
-        var screen = IslandScreen.Bounds;
-        SetBounds(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
+        var box = IslandBox(w, h, k);
+        SetBounds(box.X, box.Y, w, h);
+        // WebView do tamanho da maior ilha possível, sempre no mesmo lugar da tela: só a posição dele dentro da janela muda.
+        // Embaixo, ele fica preso pela borda de baixo (a ilha cresce para cima).
+        int webW = (int)Math.Round((OpenW + 2 * Ear) * k), webH = (int)Math.Round((400 + MoveSlack) * k);
+        var web = IslandBox(webW, webH, k);
+        if (AtBottom) web.Y = box.Bottom - webH;
+        var wb = new Rectangle(web.X - box.X, web.Y - box.Y, webW, webH);
+        if (_web.Bounds != wb) _web.Bounds = wb;
     }
 
-    static bool Floating => AppSettings.Current.IslandStyle == "float";
+    static bool AtBottom => AppSettings.Current.IslandPosV == "bottom";
+    static bool Floating => AppSettings.Current.IslandStyle == "float" || AtBottom;   // embaixo não tem como "grudar" na borda: sempre flutuante
     static int TopGap(float k) => Floating ? (int)Math.Round(FloatGap * k) : 0;
+
+    // Onde a ilha fica na tela (pixels de verdade) para um tamanho w×h: centro da tela ou perto do canto escolhido,
+    // em cima (na borda) ou embaixo (acima da barra de tarefas). Nos cantos, o centro fica onde a ilha ABERTA encosta
+    // na margem, para ela crescer e encolher sempre a partir do mesmo ponto (sem andar de lado).
+    Rectangle IslandBox(int w, int h, float k)
+    {
+        var s = AppSettings.Current;
+        var scr = IslandScreen;
+        var area = AtBottom ? scr.WorkingArea : scr.Bounds;
+        int half = (int)Math.Round((OpenW / 2f + Ear) * k), margin = (int)Math.Round(12 * k);
+        int cx = s.IslandPosH switch
+        {
+            "left" => area.Left + margin + half,
+            "right" => area.Right - margin - half,
+            _ => area.Left + area.Width / 2,
+        };
+        int y = AtBottom ? area.Bottom - (int)Math.Round(FloatGap * k) - h : area.Top + TopGap(k);
+        return new Rectangle(cx - w / 2, y, w, h);
+    }
 
     /// <summary>Trocou o formato da ilha nas configurações (grudada no topo ou flutuante).</summary>
     public static void ApplyStyle()
@@ -229,9 +261,11 @@ sealed class IslandForm : Form
     // e, quando a forma para ("animDone"), a janela fica do tamanho exato. O temporizador é só por garantia.
     void SetMode(Mode m)
     {
-        if (m == _mode) return;
+        if (m == _mode) { ArmAutoHide(); return; }
         _mode = m;
         if (m != Mode.Tucked && _hiddenByTuck) { _hiddenByTuck = false; UpdateShown(); }   // aviso, lembrete ou saiu de cima das abas: aparece
+        if (m is Mode.Open or Mode.Notice && _hiddenByAuto) { _hiddenByAuto = false; UpdateShown(); }   // escondida pela opção: aviso aparece
+        ArmAutoHide();
         MoveTo(m);
         PostMode();
         var t = new Timer { Interval = AnimMs };
@@ -293,6 +327,25 @@ sealed class IslandForm : Form
     void CheckScreen()
     {
         if (IsDisposed) return;
+        // "Sempre no outro monitor" (opção): a ilha fica no primeiro monitor que não é o principal e some se ele estiver em tela cheia
+        var second = ChosenScreen();
+        if (second != null)
+        {
+            var fw = Fullscreen.ForegroundFullscreenWindow();
+            bool fullThere = fw != IntPtr.Zero && Screen.FromHandle(fw).DeviceName == second.DeviceName;
+            _fullWnd = IntPtr.Zero;
+            if (second.DeviceName != _otherScreen?.DeviceName)
+            {
+                _otherScreen = second;
+                Place(_mode);
+                BeginInvoke(() => { if (!IsDisposed) Place(_mode); });
+            }
+            if (fullThere != _hiddenByFullscreen) { _hiddenByFullscreen = fullThere; UpdateShown(); }
+            var fg2 = fullThere || AtBottom ? IntPtr.Zero : ForegroundTouchingIsland();
+            if (fg2 == IntPtr.Zero) { SetTuck(false); return; }
+            CheckObstruction(fg2);
+            return;
+        }
         var fullWnd = Fullscreen.ForegroundFullscreenWindow(primaryOnly: true);
         // Já mudou de monitor: fica lá enquanto aquela janela continuar em tela cheia no principal,
         // mesmo que a pessoa clique em algo no outro monitor (senão a ilha voltaria para cima do vídeo/jogo)
@@ -314,7 +367,7 @@ sealed class IslandForm : Form
             _hiddenByFullscreen = hide;
             UpdateShown();
         }
-        var fg = full ? IntPtr.Zero : ForegroundTouchingIsland();
+        var fg = full || AtBottom ? IntPtr.Zero : ForegroundTouchingIsland();   // embaixo não fica em cima de abas
         if (fg == IntPtr.Zero) { SetTuck(false); return; }   // ninguém encosta: ilha fechada normal
         CheckObstruction(fg);
     }
@@ -322,10 +375,10 @@ sealed class IslandForm : Form
     // Escondida por tela cheia ou por estar recolhida em cima das abas
     void UpdateShown()
     {
-        bool hide = _hiddenByFullscreen || _hiddenByTuck;
+        bool hide = _hiddenByFullscreen || _hiddenByTuck || _hiddenByAuto;
         if (hide && Visible) Hide();
         else if (!hide && !Visible) ShowWindow(Handle, 4 /* SW_SHOWNOACTIVATE */);
-        if (_hiddenByTuck && !_hiddenByFullscreen) { _dwellMs = 0; _dwell.Start(); }
+        if ((_hiddenByTuck || _hiddenByAuto) && !_hiddenByFullscreen) { _dwellMs = 0; _dwell.Start(); }
         else if (!_dwellOpened) _dwell.Stop();
     }
 
@@ -343,6 +396,21 @@ sealed class IslandForm : Form
                 if (_mode == Mode.Open && !b.Contains(p)) { _hover = false; _collapse.Stop(); _collapse.Start(); }
                 if (!_hiddenByTuck) _dwell.Stop();
             }
+            return;
+        }
+        if (!_hiddenByTuck && _hiddenByAuto && !_hiddenByFullscreen)
+        {
+            // Escondida pela opção: volta assim que o mouse passa no lugar dela (sem precisar ficar parado), sem botão apertado
+            var zone = ClosedRect();
+            var scr = IslandScreen.Bounds;
+            var area = AtBottom ? Rectangle.FromLTRB(zone.Left, zone.Top - 2, zone.Right, scr.Bottom)
+                                : Rectangle.FromLTRB(zone.Left, scr.Top, zone.Right, zone.Bottom + 2);
+            if (!area.Contains(p) || MouseButtons != MouseButtons.None) { _dwellMs = 0; return; }
+            if ((_dwellMs += _dwell.Interval) < 200) return;
+            _dwellMs = 0;
+            _hiddenByAuto = false;
+            UpdateShown();
+            ArmAutoHide();
             return;
         }
         if (!_hiddenByTuck || _hiddenByFullscreen) { _dwell.Stop(); return; }
@@ -370,9 +438,8 @@ sealed class IslandForm : Form
     Rectangle ClosedRect()
     {
         float k = DeviceDpi / 96f;
-        var screen = IslandScreen.Bounds;
         int w = (int)((ClosedW + 2 * Ear) * k), h = (int)(ClosedH * k);
-        return new Rectangle(screen.Left + (screen.Width - w) / 2, screen.Top + TopGap(k), w, h);
+        return IslandBox(w, h, k);
     }
 
     // A janela da frente ocupa o lugar da ilha fechada? Ex.: navegador maximizado. Devolve a janela (ou zero).
@@ -727,6 +794,41 @@ sealed class IslandForm : Form
     float _lastVol = -1;
 
     /// <summary>Ligou/desligou os indicadores nas configurações.</summary>
+    // ---------- esconder quando não estiver em uso (opção) ----------
+
+    // Monitor escolhido nas configurações, se não for o principal (e ainda estiver conectado)
+    static Screen? ChosenScreen()
+    {
+        var m = AppSettings.Current.IslandMonitor;
+        if (m == "other") return Screen.AllScreens.FirstOrDefault(s => !s.Primary);
+        if (string.IsNullOrEmpty(m) || m == "primary") return null;
+        return Screen.AllScreens.FirstOrDefault(s => s.DeviceName == m && !s.Primary);
+    }
+
+    bool CanAutoHide => AppSettings.Current.IslandAutoHide && _mode is Mode.Closed or Mode.Idle && !_hover && !_notice && !_hiddenByAuto;
+
+    // Começa (ou recomeça) a contar o tempo parada; qualquer outra coisa cancela
+    void ArmAutoHide()
+    {
+        _autoHide.Stop();
+        if (!CanAutoHide) return;
+        _autoHide.Interval = Math.Clamp(AppSettings.Current.IslandAutoHideSec, 5, 300) * 1000;
+        _autoHide.Start();
+    }
+
+    /// <summary>Mudaram a opção de esconder ou o monitor da ilha (Configurações → Ilha).</summary>
+    public static void ApplyHideAndScreen()
+    {
+        if (!IsOn) return;
+        var isl = s_island!;
+        if (!AppSettings.Current.IslandAutoHide && isl._hiddenByAuto) { isl._hiddenByAuto = false; isl.UpdateShown(); }
+        isl.ArmAutoHide();
+        if (ChosenScreen() == null && isl._otherScreen != null && isl._fullWnd == IntPtr.Zero) isl._otherScreen = null;   // voltou para o principal
+        isl.PostSettings();      // formato (embaixo é sempre flutuante) e a posição
+        isl.Place(isl._mode);
+        isl.CheckScreen();
+    }
+
     public static void ApplyOsd()
     {
         if (!IsOn) return;
@@ -1137,7 +1239,7 @@ sealed class IslandForm : Form
     void PostSettings()
     {
         var s = AppSettings.Current;
-        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch" });
+        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch", bottom = AtBottom });
     }
 
     // Estado do Pomodoro: a ilha conta o tempo sozinha a partir de "leftMs" (nada vem do C# a cada segundo)
@@ -1196,6 +1298,7 @@ sealed class IslandForm : Form
                     _hover = root.GetProperty("on").GetBoolean();
                     if (_hover && !_notice) { _collapse.Stop(); SetMode(Mode.Open); }   // com aviso na tela, fica a faixa (os botões não saem do lugar)
                     else if (!_notice) { _collapse.Stop(); _collapse.Start(); }
+                    ArmAutoHide();
                     break;
 
                 case "idle":     // a ilha ficou um tempo sem uso: cresce um pouco para baixo e o mascote aparece maior
@@ -1255,6 +1358,7 @@ sealed class IslandForm : Form
             _soundTimer.Dispose();
             _petTimer.Dispose();
             _dwell.Dispose();
+            _autoHide.Dispose();
             StopOsd();
             StopActivities();
             StopAppNotes();

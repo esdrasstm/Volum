@@ -645,3 +645,14 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 
 /* Setas sempre por cima das páginas: a página que desliza (transform) ficava por cima da seta esquerda e engolia o clique */
 .page-arrow { z-index: 3; }
+
+/* ---------- Ilha embaixo (Configurações → Ilha → Posição: Embaixo) ----------
+   Fica acima da barra de tarefas, sempre no formato flutuante, e cresce para CIMA: forma, ilha fechada, ilha aberta
+   e faixa de aviso ficam presas pela borda de baixo (o WebView também, pelo C#). */
+html.at-bottom .shape,
+html.at-bottom .mini,
+html.at-bottom .full,
+html.at-bottom .noticebar { top: auto; bottom: 0; }
+html.at-bottom .island { transform-origin: 50% 100%; }
+html.at-bottom .full { transform-origin: 50% 100%; transform: translateX(-50%) translateY(10px) scale(.9); }
+html.at-bottom .island.open .full { transform: translateX(-50%); }

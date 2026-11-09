@@ -849,6 +849,7 @@
         document.documentElement.lang = V.langTag(lang);
         document.documentElement.classList.toggle('lite', !!m.lite);
         document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
+        document.documentElement.classList.toggle('at-bottom', !!m.bottom);           // embaixo (acima da barra de tarefas): cresce para cima
         pomoOn = m.pomodoro !== false;
         V.applyI18n(lang);
         tickClock();

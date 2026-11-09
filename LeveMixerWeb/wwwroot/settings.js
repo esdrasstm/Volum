@@ -280,18 +280,27 @@
     longMin: [10, 15, 20, 25, 30],
     every: [2, 3, 4, 5, 6],
     standMin: [30, 45, 60, 75, 90, 120],
+    autoHideSec: [5, 10, 15, 30, 60, 120, 300],   // esconder a ilha depois de (segundos)
     pomoSound: ['chime', 'drops', 'bell', 'none'],   // som do fim do Pomodoro (nomes no PomodoroSound do C#)
   };
-  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, standUp: true, standMin: 60 };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, standUp: true, standMin: 60, autoHide: false, autoHideSec: 10, monitor: 'primary', monitors: [], posH: 'center', posV: 'top' };
 
   const fmtFocus = (v, unit) => unit === 'sound' ? t('snd_' + v) : unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
-    : unit === 'time' ? V.fmtMin(v) : `${v} min`;
+    : unit === 'time' ? V.fmtMin(v) : unit === 'sec' ? (v < 60 ? `${v} s` : V.fmtMin(v / 60)) : `${v} min`;
 
   function showFocus() {
     $('pomoOn').checked = focus.pomodoro;
     $('standOn').checked = focus.standUp;
     $('osdOn').checked = focus.osd !== false;
     $('otherScreenOn').checked = focus.otherScreen !== false;
+    $('autoHideOn').checked = !!focus.autoHide;
+    $('autoHideOptions').hidden = !focus.autoHide;
+    showMonitors();
+    selectSegment($('posHSeg'), focus.posH || 'center');
+    selectSegment($('posVSeg'), focus.posV || 'top');
+    $('posNote').hidden = focus.posV !== 'bottom';
+    // Embaixo é sempre flutuante: o "Grudada no topo" fica apagado
+    $('islandStyleSeg').classList.toggle('disabled', focus.posV === 'bottom');
     $('pomoOptions').hidden = !focus.pomodoro;
     $('standOptions').hidden = !focus.standUp;
     $('standTest').disabled = !islandOn;
@@ -310,6 +319,39 @@
   $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
   $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
   $('otherScreenOn').addEventListener('change', (e) => { focus.otherScreen = e.target.checked; saveFocus(); });
+  $('autoHideOn').addEventListener('change', (e) => { focus.autoHide = e.target.checked; showFocus(); saveFocus(); });
+  // Monitores: um botão para cada, da esquerda para a direita ("Principal", "Monitor 2", ...); o nome completo na dica
+  let monitorSig = '';
+  function showMonitors() {
+    const list = focus.monitors || [];
+    $('monitorRow').hidden = list.length < 2;
+    if (list.length < 2) return;
+    const sig = list.map((m) => m.id).join('|');
+    if (sig !== monitorSig) {
+      monitorSig = sig;
+      const seg = $('monitorSeg');
+      seg.style.setProperty('--n', list.length);
+      seg.replaceChildren(...list.map((m, i) => {
+        const b = document.createElement('button');
+        b.setAttribute('role', 'radio');
+        b.dataset.value = m.id;
+        b.textContent = m.primary ? t('monitorPrimary') : t('monitorN').replace('{0}', i + 1);
+        b.title = `${b.textContent} · ${m.w}×${m.h}`;
+        b.addEventListener('click', () => { focus.monitor = m.id; selectSegment(seg, m.id); saveFocus(); });
+        return b;
+      }));
+    }
+    // "other" (versão anterior) = o primeiro que não é o principal; monitor desconectado = principal
+    let cur = focus.monitor === 'other' ? (list.find((m) => !m.primary) || {}).id : focus.monitor;
+    if (!list.some((m) => m.id === cur)) cur = 'primary';
+    selectSegment($('monitorSeg'), cur);
+  }
+  [['posHSeg', 'posH'], ['posVSeg', 'posV']].forEach(([id, key]) =>
+    $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      focus[key] = b.dataset.value;
+      showFocus();
+      saveFocus();
+    })));
   document.querySelectorAll('.fstep').forEach((st) => st.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
