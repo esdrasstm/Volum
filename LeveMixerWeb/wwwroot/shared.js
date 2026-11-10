@@ -22,7 +22,7 @@ window.Volum = (() => {
       hotkeyRecordHint: 'Esc cancela · Backspace desliga', hotkeyNeedMod: 'Use Ctrl ou Alt junto',
       hotkeyBusy: 'Em uso por outro app', hotkeyOff: 'Desligado',
       kbLock: 'Travar teclado para limpar',
-      newsEyebrow: 'Versão', newsTitle: 'O que tem de novo', newsOk: 'Entendi!',
+      newsEyebrow: 'Versão', newsTitle: 'O que tem de novo', newsOk: 'Entendi!', newsNext: 'Próximo', newsGo: 'Bora!',
       newsAgain: 'O que tem de novo', waterReminder: 'Lembrete de água', waterHint: 'Avisa de tempos em tempos e conta o que você bebeu',
       waterGoal: 'Meta por dia', waterEvery: 'Lembrar a cada', waterCup: 'Tamanho do copo', water: 'Água hoje',
       waterOf: '{0} de {1}', waterDone: 'Meta batida! {0}', waterMinus: 'Tirar um copo',
@@ -82,7 +82,7 @@ window.Volum = (() => {
       hotkeyRecordHint: 'Esc cancels · Backspace turns off', hotkeyNeedMod: 'Add Ctrl or Alt',
       hotkeyBusy: 'Used by another app', hotkeyOff: 'Off',
       kbLock: 'Lock keyboard to clean',
-      newsEyebrow: 'Version', newsTitle: 'What’s new', newsOk: 'Got it!',
+      newsEyebrow: 'Version', newsTitle: 'What’s new', newsOk: 'Got it!', newsNext: 'Next', newsGo: 'Let’s go!',
       newsAgain: 'What’s new', waterReminder: 'Water reminder', waterHint: 'Reminds you now and then and counts what you drink',
       waterGoal: 'Daily goal', waterEvery: 'Remind every', waterCup: 'Glass size', water: 'Water today',
       waterOf: '{0} of {1}', waterDone: 'Goal reached! {0}', waterMinus: 'Remove a glass',
@@ -142,7 +142,7 @@ window.Volum = (() => {
       hotkeyRecordHint: 'Esc cancela · Retroceso desactiva', hotkeyNeedMod: 'Usa Ctrl o Alt',
       hotkeyBusy: 'En uso por otra app', hotkeyOff: 'Desactivado',
       kbLock: 'Bloquear teclado para limpiar',
-      newsEyebrow: 'Versión', newsTitle: 'Novedades', newsOk: '¡Entendido!',
+      newsEyebrow: 'Versión', newsTitle: 'Novedades', newsOk: '¡Entendido!', newsNext: 'Siguiente', newsGo: '¡Vamos!',
       newsAgain: 'Novedades', waterReminder: 'Recordatorio de agua', waterHint: 'Te avisa cada tanto y cuenta lo que bebes',
       waterGoal: 'Meta diaria', waterEvery: 'Recordar cada', waterCup: 'Tamaño del vaso', water: 'Agua hoy',
       waterOf: '{0} de {1}', waterDone: '¡Meta cumplida! {0}', waterMinus: 'Quitar un vaso',
@@ -207,29 +207,32 @@ window.Volum = (() => {
      Aparecem no popup do mixer (uma vez, depois de atualizar) e na página "Sobre" das configurações.
      Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS. */
   const NEWS = {
-    version: '0.6.0',
+    version: '0.7.0',
     items: [
-      { icon: 'monitor',
-        pt: ['A ilha onde você quiser', 'Escolha o monitor e a posição da ilha: esquerda, centro ou direita, em cima ou embaixo, logo acima da barra de tarefas (Configurações → Ilha).'],
-        en: ['The island wherever you want', 'Pick the monitor and the island position: left, center or right, at the top or at the bottom, right above the taskbar (Settings → Island).'],
-        es: ['La isla donde quieras', 'Elige el monitor y la posición de la isla: izquierda, centro o derecha, arriba o abajo, justo encima de la barra de tareas (Configuración → Isla).'] },
-      { icon: 'eyeOff',
-        pt: ['Esconder quando não estiver em uso', 'Para telas OLED: a ilha some depois de um tempo e volta quando você passa o mouse no lugar dela. Vem desligado (Configurações → Ilha).'],
-        en: ['Hide when not in use', 'For OLED screens: the island hides after a while and comes back when you move the mouse to its spot. Off by default (Settings → Island).'],
-        es: ['Ocultar cuando no se use', 'Para pantallas OLED: la isla se oculta después de un rato y vuelve cuando pasas el mouse por su lugar. Viene desactivado (Configuración → Isla).'] },
-      { icon: 'island',
-        pt: ['Livre em cima das abas', 'Em cima das abas do navegador a ilha some de vez; para abrir, deixe o mouse parado no topo da tela.'],
-        en: ['Out of the way of your tabs', 'Over browser tabs the island hides completely; to open it, rest the mouse at the top of the screen.'],
-        es: ['Fuera de tus pestañas', 'Sobre las pestañas del navegador la isla se oculta del todo; para abrirla, deja el mouse quieto arriba de la pantalla.'] },
-      // Só na versão da Store
-      { icon: 'store', storeOnly: true,
-        pt: ['Atualizações mais rápidas', 'A partir de agora, o Volum se atualiza sozinho pela Microsoft Store, sem você precisar fechar o app.'],
-        en: ['Faster updates', 'From now on, Volum updates itself through the Microsoft Store, without you having to close the app.'],
-        es: ['Actualizaciones más rápidas', 'A partir de ahora, Volum se actualiza solo desde Microsoft Store, sin que tengas que cerrar la app.'] },
-      { icon: 'fix',
-        pt: ['Correções', 'A hora não pisca mais ao abrir e fechar a ilha.'],
-        en: ['Fixes', 'The clock no longer flickers when the island opens and closes.'],
-        es: ['Correcciones', 'La hora ya no parpadea al abrir y cerrar la isla.'] },
+      { icon: 'island', art: 'island',
+        pt: ['Ilha de cara nova', 'Maior e mais respirada, com música, foco, água, clima e agenda no mesmo padrão. Clique na capa para abrir o player.'],
+        en: ['A brand new island', 'Bigger and roomier, with music, focus, water, weather and calendar in the same style. Click the cover to open the player.'],
+        es: ['Una isla renovada', 'Más grande y espaciosa, con música, enfoque, agua, clima y agenda en el mismo estilo. Haz clic en la portada para abrir el reproductor.'] },
+      { icon: 'timer', art: 'pomo',
+        pt: ['Pomodoro do lado', 'Com o foco rodando, uma bolha mostra o tempo ao lado da ilha e entra nela quando você abre.'],
+        en: ['Pomodoro on the side', 'While you focus, a bubble shows the time next to the island and slides into it when you open it.'],
+        es: ['Pomodoro al lado', 'Mientras te concentras, una burbuja muestra el tiempo junto a la isla y entra en ella cuando la abres.'] },
+      { icon: 'sparkle', art: 'themes',
+        pt: ['Temas de inverno', 'Natal, Noite de neve, Bengala e Trenó, em pixel art e grátis. Escolha em Configurações → Temas.'],
+        en: ['Winter themes', 'Christmas, Snowy night, Candy cane and Sleigh ride, in pixel art and free. Pick one in Settings → Themes.'],
+        es: ['Temas de invierno', 'Navidad, Noche de nieve, Bastón de caramelo y Trineo, en pixel art y gratis. Elige en Configuración → Temas.'] },
+      { icon: 'island', art: 'glass',
+        pt: ['Tema Vidro', 'Vidro de verdade atrás do mixer e, na ilha, uma barra de abas que estica de uma página para a outra.'],
+        en: ['Glass theme', 'Real glass behind the mixer and, on the island, a tab bar that stretches from one page to the next.'],
+        es: ['Tema Cristal', 'Cristal de verdad detrás del mezclador y, en la isla, una barra de pestañas que se estira de una página a otra.'] },
+      { icon: 'bolt', art: 'battery',
+        pt: ['Bateria e mudo', 'No notebook, a bateria fica ao lado da capa e muda de cor com a carga. O alto-falante do player silencia o som.'],
+        en: ['Battery and mute', 'On laptops, the battery sits next to the cover and changes color with the charge. The player speaker mutes the sound.'],
+        es: ['Batería y silencio', 'En portátiles, la batería queda junto a la portada y cambia de color con la carga. El altavoz del reproductor silencia el sonido.'] },
+      { icon: 'fix', art: 'fix',
+        pt: ['Correções', 'A ilha sai da frente de qualquer app no topo (Figma, Photoshop...), acompanha o tamanho do texto do Windows e o clima acha a sua cidade.'],
+        en: ['Fixes', 'The island gets out of the way of any app at the top (Figma, Photoshop...), follows the Windows text size and the weather finds your city.'],
+        es: ['Correcciones', 'La isla se aparta de cualquier app arriba (Figma, Photoshop...), sigue el tamaño del texto de Windows y el clima encuentra tu ciudad.'] },
     ],
   };
   // Ícones de traço em caixa de 24 (os mesmos do mixer e das configurações; classe .ico no style.css)
@@ -279,6 +282,41 @@ window.Volum = (() => {
         li.lastElementChild.append(btn);
       }
       return li;
+    });
+  }
+
+  // Ilustrações animadas das novidades (miniaturas em HTML/CSS; estilos no bloco "Novidades" do style.css)
+  const WAVE6 = '<i></i><i></i><i></i><i></i><i></i><i></i>';
+  const NEWS_ARTS = {
+    island: '<div class="na-island"><i class="na-cover"></i><b>14:30</b><span class="na-wave">' + WAVE6 + '</span></div>',
+    pomo: '<div class="na-pomo"><div class="na-island na-small"><i class="na-cover"></i><b>14:30</b></div>' +
+      '<div class="na-bubble"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" class="na-ring-bg"/><circle cx="18" cy="18" r="13" class="na-ring"/></svg>' +
+      '<svg class="na-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#efe2e2"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/></svg></div></div>',
+    themes: '<div class="na-themes"><i class="na-t na-xmas"></i><i class="na-t na-snow"></i><i class="na-t na-candy"></i><i class="na-t na-glass"></i></div>',
+    glass: '<div class="na-tabs"><span class="na-pill"></span><i></i><i></i><i></i><i></i></div>',
+    battery: '<div class="na-island na-bat"><i class="na-cover"></i><svg class="na-ring-bat" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="na-bat-bg"/>' +
+      '<circle cx="12" cy="12" r="10" class="na-bat-fg"/><path d="M13.2 5.2 7.6 13.1h3.9l-1 5.7 5.7-8h-4z" fill="#3f3f3f"/></svg><b>14:30</b><span class="na-mute">' +
+      '<svg viewBox="0 0 24 24"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></div>',
+    fix: '<div class="na-fix"><span class="na-fix-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS.fix + '</svg></span><i></i><i></i><i></i></div>',
+  };
+  // Novidades em "slides" para o pop-up do mixer: ilustração + título + texto (+ botão, se tiver)
+  function newsSlides(lang, store = false) {
+    return NEWS.items.filter((item) => !(item.githubOnly && store) && !(item.storeOnly && !store)).map((item) => {
+      const [head, text, linkLabel] = item[lang] || item.pt;
+      const s = document.createElement('section');
+      s.className = 'news-slide';
+      s.innerHTML = '<div class="news-art">' + (NEWS_ARTS[item.art] || '<span class="na-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS[item.icon] + '</svg></span>') +
+        '</div><b class="news-head"></b><p class="news-text"></p>';
+      s.querySelector('.news-head').textContent = head;
+      s.querySelector('.news-text').textContent = text;
+      if (item.link) {
+        const btn = document.createElement('button');
+        btn.className = 'news-link';
+        btn.dataset.site = item.link;
+        btn.textContent = linkLabel;
+        s.append(btn);
+      }
+      return s;
     });
   }
 
@@ -359,6 +397,6 @@ window.Volum = (() => {
     '</g></svg>';
 
 
-  return { I18N, t, langTag, applyI18n, NEWS, newsItems, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX,
+  return { I18N, t, langTag, applyI18n, NEWS, newsItems, newsSlides, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX,
     MASCOT_PARTS: { pal: M_PAL, face: M_FACE, eyes: M_EYES } };   // o site monta o mascote interativo com estas peças
 })();

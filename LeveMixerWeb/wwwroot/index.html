@@ -111,10 +111,16 @@
     <div id="news" class="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
       <div class="news-box">
         <!-- Mascote em pixel art (o mesmo da ilha; o app.js põe o desenho aqui) -->
+        <!-- Confete de pixel caindo na entrada (o app.js põe os pedacinhos) -->
+        <div class="news-confetti" id="newsConfetti" aria-hidden="true"></div>
         <span class="news-mascot" id="newsMascot" aria-hidden="true"></span>
         <h2 id="newsTitle" class="news-title"><small></small><span></span></h2>
-        <ul id="newsList" class="news-list"></ul>
-        <button id="newsOk" class="news-ok" data-i18n="newsOk">Entendi!</button>
+        <!-- Uma novidade por vez (ilustração animada, título e texto); o app.js monta a partir do NEWS -->
+        <div class="news-stage" id="newsStage"></div>
+        <div class="news-foot">
+          <div class="news-dots" id="newsDots"></div>
+          <button id="newsOk" class="news-ok" data-i18n="newsNext">Próximo</button>
+        </div>
       </div>
     </div>
 

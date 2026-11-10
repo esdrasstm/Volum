@@ -1246,3 +1246,136 @@ svg[data-anim] { transform-origin: 50% 50%; overflow: visible; }
 @media (prefers-reduced-motion: reduce) {
   svg[data-anim], svg[data-anim] * { animation: none !important; }
 }
+
+/* =========================================================
+   Novidades em "stories" (0.7.0): uma novidade por vez com ilustração animada, pontinhos e "Próximo"/"Bora!".
+   Confete de pixel e o mascote pulando na entrada. Tudo parado no modo leve (regra geral do .lite).
+   ========================================================= */
+.news-box { overflow: hidden; padding: 18px 18px 16px; text-align: center; }
+.news-box::after {   /* brilho suave atrás do mascote */
+  content: ""; position: absolute; left: 50%; top: -60px; width: 260px; height: 180px; margin-left: -130px; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .1), transparent); }
+.news-mascot .mascot.px { width: 64px; height: 44px; margin: 0 auto 8px; animation: news-hop .9s var(--spring, ease) .15s both; }
+@keyframes news-hop { 0% { opacity: 0; transform: translateY(14px) scale(.6); } 55% { opacity: 1; transform: translateY(-6px) scale(1.06); } 100% { transform: none; } }
+.news-title { margin: 0 0 12px; animation: news-rise .5s ease .25s both; }
+@keyframes news-rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* Confete de pixel: cai uma vez, girando de leve */
+.news-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 3; }
+.news-confetti i { position: absolute; top: -10px; width: 6px; height: 6px; image-rendering: pixelated; opacity: 0;
+  animation: news-fall 2s cubic-bezier(.25, .6, .4, 1) both; }
+@keyframes news-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x, 0), 300px) rotate(var(--r, 180deg)); }
+}
+
+/* Palco: os slides ficam empilhados (altura da maior) e só o atual aparece */
+.news-stage { display: grid; text-align: left; }
+.news-slide { grid-area: 1 / 1; visibility: hidden; opacity: 0; }
+.news-slide.on { visibility: visible; opacity: 1; }
+.news-slide.from-right { animation: news-in-r .45s cubic-bezier(.2, .8, .2, 1) both; }
+.news-slide.from-left { animation: news-in-l .45s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes news-in-r { from { opacity: 0; transform: translateX(26px); filter: blur(4px); } }
+@keyframes news-in-l { from { opacity: 0; transform: translateX(-26px); filter: blur(4px); } }
+.news-head { display: block; font-size: 15px; font-weight: 700; letter-spacing: -.2px; color: var(--text); }
+.news-text { margin: 5px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-dim); }
+.news-slide .news-link { margin-top: 10px; }
+
+/* Rodapé: pontinhos (o atual vira um tracinho) e o botão */
+.news-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+.news-dots { display: flex; gap: 5px; }
+.news-dot { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--ink-faint); cursor: pointer; transition: width .3s cubic-bezier(.2, .8, .2, 1), background .25s ease; }
+.news-dot.seen { background: var(--ink-dim); }
+.news-dot.on { width: 20px; background: var(--ink); }
+.news-ok, .news-ok:hover { width: auto; min-width: 104px; padding: 9px 18px; transition: transform .15s ease, box-shadow .3s ease; }
+.news-ok.go { box-shadow: 0 0 0 4px rgba(255, 255, 255, .1), 0 6px 18px rgba(255, 255, 255, .15); }
+
+/* ---------- Ilustrações ---------- */
+.news-art { position: relative; display: grid; place-items: center; height: 116px; margin-bottom: 14px; overflow: hidden; border-radius: 12px;
+  background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .08), transparent 60%), #0d0d0d; box-shadow: inset 0 0 0 1px var(--border); }
+.news-slide.on .news-art > * { animation: news-pop .6s cubic-bezier(.2, .9, .3, 1.2) .05s both; }
+@keyframes news-pop { from { opacity: 0; transform: translateY(10px) scale(.92); } }
+.na-icon { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 16px; background: var(--ink-hover); color: var(--ink); }
+.na-icon svg { width: 26px; height: 26px; }
+
+/* Ilha em miniatura: capa, hora e onda */
+.na-island { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 14px; border-radius: 14px; background: #000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 10px 24px rgba(0, 0, 0, .5); color: #fff; font-size: 14px; font-weight: 700; }
+.na-island b { flex: 1; text-align: center; min-width: 60px; }
+.na-cover { width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(135deg, #ff9a62, #c36bff 60%, #5b5bff); }
+.na-wave { display: flex; align-items: center; gap: 2px; height: 16px; }
+.na-wave i { width: 3px; height: 100%; border-radius: 2px; background: #fff; animation: na-wave 1s ease-in-out infinite; }
+.na-wave i:nth-child(1) { height: 30%; animation-delay: -.2s; } .na-wave i:nth-child(2) { height: 65%; animation-delay: -.5s; }
+.na-wave i:nth-child(3) { animation-delay: -.8s; } .na-wave i:nth-child(4) { height: 50%; animation-delay: -.3s; }
+.na-wave i:nth-child(5) { height: 80%; animation-delay: -.6s; } .na-wave i:nth-child(6) { height: 35%; animation-delay: -.1s; }
+@keyframes na-wave { 50% { transform: scaleY(.45); } }
+
+/* Pomodoro: a bolha sai de trás da ilha e o anel vai enchendo */
+.na-pomo { display: flex; align-items: center; gap: 7px; }
+.na-small { width: 150px; }
+.na-bubble { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: #000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .12); animation: na-bubble 4s cubic-bezier(.2, .9, .3, 1.2) infinite; }
+.na-bubble svg { position: absolute; width: 30px; height: 30px; }
+.na-bubble .na-clock { position: static; width: 15px; height: 15px; }
+.na-ring-bg { fill: none; stroke: rgba(135, 135, 135, .5); stroke-width: 3; }
+.na-ring { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 81.7; transform: rotate(-90deg); transform-origin: center;
+  animation: na-ring 4s linear infinite; }
+@keyframes na-bubble { 0%, 8% { opacity: 0; transform: translateX(-30px) scale(.4); } 22%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateX(-30px) scale(.4); } }
+@keyframes na-ring { 0%, 20% { stroke-dashoffset: 81.7; } 85%, 100% { stroke-dashoffset: 0; } }
+
+/* Temas: quatro cartinhas em leque, flutuando */
+.na-themes { position: relative; width: 220px; height: 84px; }
+.na-t { position: absolute; top: 6px; width: 58px; height: 72px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .1);
+  animation: na-float 3.2s ease-in-out infinite; }
+.na-xmas { left: 4px; transform: rotate(-9deg); background: radial-gradient(circle at 20% 18%, #e8384f 0 3px, transparent 4px), radial-gradient(circle at 50% 22%, #ffc94d 0 3px, transparent 4px),
+  radial-gradient(circle at 80% 18%, #8fb8ff 0 3px, transparent 4px), linear-gradient(180deg, #2e7d46 0 9px, #102016 9px, #0a120d); }
+.na-snow { left: 56px; transform: rotate(-3deg); animation-delay: -.8s;
+  background: radial-gradient(circle at 78% 20%, #f6f1d4 0 5px, transparent 6px), radial-gradient(circle at 25% 40%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 55% 62%, #fff 0 1px, transparent 2px), linear-gradient(180deg, #13214a, #070b18 75%, #eef4ff 75%); }
+.na-candy { left: 108px; transform: rotate(3deg); animation-delay: -1.6s; background: #170a11; border: 3px solid transparent;
+  background-image: linear-gradient(#170a11, #170a11), repeating-linear-gradient(135deg, #e0283f 0 5px, #fff 5px 10px);
+  background-origin: border-box; background-clip: padding-box, border-box; }
+.na-glass { left: 160px; transform: rotate(9deg); animation-delay: -2.4s;
+  background: radial-gradient(circle at 30% 25%, rgba(122, 92, 255, .9), transparent 55%), radial-gradient(circle at 75% 80%, rgba(198, 242, 78, .7), transparent 55%), #15151c; }
+@keyframes na-float { 50% { translate: 0 -5px; } }
+
+/* Vidro: barra de abas com a pílula verde-limão que estica de uma aba para a outra */
+.na-tabs { position: relative; display: flex; gap: 8px; padding: 6px; border-radius: 24px; background: rgba(255, 255, 255, .05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.na-tabs i { position: relative; z-index: 1; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.na-pill { position: absolute; z-index: 2; top: 6px; left: 6px; width: 34px; height: 34px; border-radius: 17px;
+  background: linear-gradient(135deg, #f0ffae, #c6f24e 55%, #9fd82e); box-shadow: 0 0 18px rgba(198, 242, 78, .45); animation: na-pill 4s cubic-bezier(.3, .9, .3, 1) infinite; }
+@keyframes na-pill {
+  0%, 12% { left: 6px; width: 34px; }
+  24% { left: 6px; width: 76px; }
+  34%, 46% { left: 48px; width: 34px; }
+  58% { left: 48px; width: 118px; }
+  68%, 82% { left: 132px; width: 34px; }
+  92% { left: 6px; width: 160px; }
+  100% { left: 6px; width: 34px; }
+}
+
+/* Bateria e mudo: o anel desce mudando de cor (verde → amarelo → vermelho) */
+.na-bat { gap: 8px; }
+.na-ring-bat { width: 22px; height: 22px; }
+.na-bat-bg { fill: none; stroke: rgba(135, 135, 135, .4); stroke-width: 1.8; }
+.na-bat-fg { fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 62.8; transform: rotate(-90deg); transform-origin: center;
+  animation: na-bat 5s linear infinite; }
+@keyframes na-bat { 0% { stroke-dashoffset: 0; stroke: hsl(110, 88%, 52%); } 50% { stroke: hsl(45, 88%, 56%); } 90%, 100% { stroke-dashoffset: 50; stroke: hsl(0, 88%, 56%); } }
+.na-mute { display: grid; place-items: center; width: 24px; color: #9a9a9a; }
+.na-mute svg { width: 20px; height: 20px; }
+
+/* Correções: chave inglesa com brilhinhos em volta */
+.na-fix { position: relative; display: grid; place-items: center; width: 120px; height: 90px; }
+.na-fix-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px; background: #fff; color: #090909;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, .08); animation: na-wrench 2.4s ease-in-out infinite; }
+.na-fix-icon svg { width: 28px; height: 28px; }
+.na-fix i { position: absolute; width: 6px; height: 6px; background: #fff; animation: na-twinkle 2s ease-in-out infinite; }
+.na-fix i:nth-of-type(1) { left: 14px; top: 18px; } .na-fix i:nth-of-type(2) { right: 12px; top: 30px; animation-delay: -.7s; }
+.na-fix i:nth-of-type(3) { left: 30px; bottom: 10px; animation-delay: -1.3s; width: 4px; height: 4px; }
+@keyframes na-wrench { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(-14deg); } 88% { transform: rotate(10deg); } }
+@keyframes na-twinkle { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1); } }
+
+/* Tema claro: o palco da ilustração continua escuro (as miniaturas são da ilha, que é sempre preta) */
+:root[data-scheme="light"] .news-art { background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .08), transparent 60%), #111; }

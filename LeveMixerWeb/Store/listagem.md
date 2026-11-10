@@ -32,7 +32,9 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Escolha o monitor e a posição da ilha (esquerda, centro ou direita; em cima ou embaixo, acima da barra de tarefas). Nova opção para esconder a ilha quando não estiver em uso (telas OLED). Em cima das abas do navegador a ilha some de vez. O Volum agora se atualiza sozinho pela Store. Correção: a hora não pisca mais ao abrir e fechar a ilha.
+Ilha de cara nova: maior, com música, foco, água, clima e agenda no mesmo visual; clique na capa para abrir o player. O Pomodoro vira uma bolha ao lado da ilha. Temas de inverno grátis em pixel art (Natal, Noite de neve, Bengala e Trenó) e o novo tema Vidro, com vidro de verdade atrás do mixer. No notebook, a bateria muda de cor com a carga. Correções: a ilha sai da frente de qualquer app no topo, acompanha o tamanho do texto do Windows e o clima acha a sua cidade.
+
+<!-- 0.6.0: Escolha o monitor e a posição da ilha (esquerda, centro ou direita; em cima ou embaixo, acima da barra de tarefas). Nova opção para esconder a ilha quando não estiver em uso (telas OLED). Em cima das abas do navegador a ilha some de vez. O Volum agora se atualiza sozinho pela Store. Correção: a hora não pisca mais ao abrir e fechar a ilha. -->
 
 ### Recursos do produto (um por linha)
 Volume de cada aplicativo, com mudo e nível de som
@@ -86,7 +88,9 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Pick the monitor and the island position (left, center or right; top or bottom, above the taskbar). New option to hide the island when not in use (OLED screens). Over browser tabs the island hides completely. Volum now updates itself through the Store. Fix: the clock no longer flickers when the island opens and closes.
+A brand new island: bigger, with music, focus, water, weather and calendar in the same style; click the cover to open the player. Pomodoro becomes a bubble next to the island. Free winter themes in pixel art (Christmas, Snowy night, Candy cane and Sleigh ride) and the new Glass theme, with real glass behind the mixer. On laptops, the battery changes color with the charge. Fixes: the island gets out of the way of any app at the top, follows the Windows text size and the weather finds your city.
+
+<!-- 0.6.0: Pick the monitor and the island position (left, center or right; top or bottom, above the taskbar). New option to hide the island when not in use (OLED screens). Over browser tabs the island hides completely. Volum now updates itself through the Store. Fix: the clock no longer flickers when the island opens and closes. -->
 
 ### Product features (one per line)
 Per-app volume with mute and sound level
@@ -140,7 +144,9 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Elige el monitor y la posición de la isla (izquierda, centro o derecha; arriba o abajo, encima de la barra de tareas). Nueva opción para ocultar la isla cuando no se use (pantallas OLED). Sobre las pestañas del navegador la isla se oculta del todo. Volum ahora se actualiza solo desde la Store. Corrección: la hora ya no parpadea al abrir y cerrar la isla.
+Una isla renovada: más grande, con música, enfoque, agua, clima y agenda en el mismo estilo; haz clic en la portada para abrir el reproductor. El Pomodoro se convierte en una burbuja junto a la isla. Temas de invierno gratis en pixel art (Navidad, Noche de nieve, Bastón de caramelo y Trineo) y el nuevo tema Cristal, con cristal de verdad detrás del mezclador. En portátiles, la batería cambia de color con la carga. Correcciones: la isla se aparta de cualquier app arriba, sigue el tamaño del texto de Windows y el clima encuentra tu ciudad.
+
+<!-- 0.6.0: Elige el monitor y la posición de la isla (izquierda, centro o derecha; arriba o abajo, encima de la barra de tareas). Nueva opción para ocultar la isla cuando no se use (pantallas OLED). Sobre las pestañas del navegador la isla se oculta del todo. Volum ahora se actualiza solo desde la Store. Corrección: la hora ya no parpadea al abrir y cerrar la isla. -->
 
 ### Características del producto (una por línea)
 Volumen de cada aplicación, con silencio y nivel de sonido
@@ -183,6 +189,7 @@ Volum is a system tray volume mixer built with .NET and WebView2. It needs runFu
 - Volume and media keys (VK 0xAD-0xB3 only) are intercepted with a low-level keyboard hook so the change is shown on the app's island instead of the Windows flyout; every other key is passed through immediately and nothing is stored or sent. It can be turned off in Settings > Island > Island indicators.
 - Optional app notifications on the island use the userNotificationListener capability; Windows asks the user for permission first. Notifications are only displayed locally, never stored or sent.
 - Network connections in the Store version are optional: if the user pastes an iCal (.ics) calendar address in Settings > Calendar, the app downloads that calendar every 15 minutes; if the user types a city in Settings > Weather, it looks the city up and downloads the forecast from Open-Meteo (open-meteo.com) every 30 minutes. Updates come from the Store (the app only checks for them with StoreContext and shows a notice).
+- Clicking the album cover on the island brings the app that is playing to the front (its own window, or IApplicationActivationManager for Store apps). The Glass theme turns on the Windows acrylic backdrop behind the mixer window.
 - To test: click the Volum icon in the system tray (near the clock). Optional features are in Settings (gear icon): island at the top of the screen, Pomodoro, water reminder.
 
 ### Capturas de tela

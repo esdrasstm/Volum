@@ -405,25 +405,72 @@
   let fromStore = false;
   let appVersion = '';                              // versão instalada (vem no "settings"): é a que o popup mostra
 
+  // Novidades em "stories": uma por vez (ilustração animada + título + texto), pontinhos de progresso e
+  // "Próximo" (no fim, "Bora!" fecha). Setas do teclado também andam; Esc fecha. Confete de pixel na entrada.
+  let newsIdx = 0, newsCount = 0;
   function renderNews() {
     if (!newsEl) return;
     const title = $('newsTitle');
     title.firstElementChild.textContent = `${t('newsEyebrow')} ${appVersion || V.NEWS.version}`;
     title.lastElementChild.textContent = t('newsTitle');
-    $('newsList').replaceChildren(...V.newsItems(lang, fromStore));
+    const slides = V.newsSlides(lang, fromStore);
+    newsCount = slides.length;
+    $('newsStage').replaceChildren(...slides);
+    $('newsDots').replaceChildren(...slides.map((_, i) => {
+      const d = document.createElement('button');
+      d.className = 'news-dot';
+      d.setAttribute('aria-label', String(i + 1));
+      d.addEventListener('click', () => showSlide(i));
+      return d;
+    }));
+    showSlide(Math.min(newsIdx, newsCount - 1), true);
     fitNews();
   }
 
-  // O mixer cresce o bastante para o popup caber inteiro (com poucos apps, o "Entendi!" ficava fora da janela)
+  function showSlide(i, instant) {
+    const dir = i >= newsIdx ? 1 : -1;
+    newsIdx = Math.max(0, Math.min(newsCount - 1, i));
+    [...$('newsStage').children].forEach((sl, k) => {
+      const on = k === newsIdx;
+      sl.classList.toggle('on', on);
+      sl.classList.remove('from-left', 'from-right');
+      if (on && !instant) { void sl.offsetWidth; sl.classList.add(dir > 0 ? 'from-right' : 'from-left'); }
+    });
+    [...$('newsDots').children].forEach((d, k) => { d.classList.toggle('on', k === newsIdx); d.classList.toggle('seen', k < newsIdx); });
+    const last = newsIdx === newsCount - 1;
+    $('newsOk').textContent = t(last ? 'newsGo' : 'newsNext');
+    $('newsOk').classList.toggle('go', last);
+  }
+
+  // Confete de pixel: pedacinhos brancos e algumas cores do Volum (azul da água, dourado), caindo uma vez
+  function confetti() {
+    const box = $('newsConfetti');
+    if (!box) return;
+    const colors = ['#ffffff', '#ffffff', '#ffffff', '#0084ff', '#ffc94d', '#c6f24e', '#ff6fa3'];
+    box.replaceChildren(...Array.from({ length: 26 }, (_, i) => {
+      const c = document.createElement('i');
+      c.style.left = (4 + Math.random() * 92) + '%';
+      c.style.background = colors[i % colors.length];
+      c.style.animationDelay = (Math.random() * .6).toFixed(2) + 's';
+      c.style.animationDuration = (1.6 + Math.random() * 1.2).toFixed(2) + 's';
+      c.style.setProperty('--x', ((Math.random() - .5) * 60).toFixed(0) + 'px');
+      c.style.setProperty('--r', ((Math.random() - .5) * 540).toFixed(0) + 'deg');
+      if (i % 3 === 0) { c.style.width = '4px'; c.style.height = '4px'; }
+      return c;
+    }));
+  }
+
+  // O mixer cresce o bastante para o popup caber inteiro (com poucos apps, o botão ficava fora da janela)
   function fitNews() {
     if (newsOpen) card.style.setProperty('--news-h', (newsEl.firstElementChild.offsetHeight + 28) + 'px');
   }
 
   function setNewsOpen(on) {
     if (!newsEl) return;                            // sem o popup no HTML (ex.: demo antiga): nada a fazer
+    const was = newsOpen;
     newsOpen = on;
     newsEl.hidden = !on;
-    if (on) renderNews();
+    if (on) { if (!was) newsIdx = 0; renderNews(); if (!was) confetti(); }
     card.classList.toggle('has-news', on);
   }
 
@@ -431,9 +478,10 @@
     setNewsOpen(false);
     post({ type: 'newsSeen' });                     // o C# guarda que esta versão já foi vista
   }
-  $('newsOk')?.addEventListener('click', dismissNews);
+  // "Próximo" anda; no último, "Bora!" fecha
+  $('newsOk')?.addEventListener('click', () => { if (newsIdx < newsCount - 1) showSlide(newsIdx + 1); else dismissNews(); });
   // Botão dentro de uma novidade (ex.: "Ver na Microsoft Store"): o C# abre o endereço
-  $('newsList')?.addEventListener('click', (e) => {
+  $('newsStage')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-site]');
     if (b) post({ type: 'openSite', section: b.dataset.site });
   });
@@ -481,6 +529,7 @@
   $('kbLockBtn')?.addEventListener('click', () => post({ type: 'lockKeyboard' }));   // o C# fecha o mixer e trava o teclado
 
   document.addEventListener('keydown', (e) => {
+    if (newsOpen && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { showSlide(newsIdx + (e.key === 'ArrowRight' ? 1 : -1)); return; }
     if (e.key !== 'Escape') return;
     if (newsOpen) dismissNews();                    // com as novidades abertas, Esc fecha só o popup
     else post({ type: 'hide' });                    // Esc fecha o mixer (prático no meio de um jogo)
