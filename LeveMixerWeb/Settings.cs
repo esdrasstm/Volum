@@ -19,7 +19,7 @@ sealed class AppSettings
     // Modo leve: sem vidro (acrílico), sem animações e medidores mais lentos
     public bool LightMode { get; set; }
 
-    // Tema visual da ilha e do mixer (Configurações → Temas): "default" ou "christmas" (Natal, grátis). Separado do claro/escuro.
+    // Tema visual da ilha e do mixer (Configurações → Temas): "default", "christmas" (Natal), "snowy" (Noite de neve) "candy" (Bengala) ou "sleigh" (Trenó); os de inverno são grátis. Separado do claro/escuro.
     public string Skin { get; set; } = "default";
 
     // Idioma da interface: "pt" (padrão), "en" ou "es"

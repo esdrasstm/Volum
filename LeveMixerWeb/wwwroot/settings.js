@@ -265,6 +265,9 @@
   const SKINS = [
     { id: 'default', name: 'skinDefault' },
     { id: 'christmas', name: 'skinChristmas', tag: 'skinFree' },
+    { id: 'snowy', name: 'skinSnowy', tag: 'skinFree' },
+    { id: 'candy', name: 'skinCandy', tag: 'skinFree' },
+    { id: 'sleigh', name: 'skinSleigh', tag: 'skinFree' },
   ];
   let skin = 'default';
   function showSkins() {
@@ -276,7 +279,7 @@
         b.dataset.skin = k.id;
         b.setAttribute('role', 'radio');
         // A prévia usa o próprio tema (data-skin no cartão): mini cartão do mixer com o mascote e um slider
-        b.innerHTML = '<span class="skin-prev" data-skin-prev="' + k.id + '"><span class="sp-mascot"></span><span class="sp-bar"><i></i></span><span class="sp-bar short"><i></i></span></span>' +
+        b.innerHTML = '<span class="skin-prev" data-skin="' + k.id + '"><div class="deco" aria-hidden="true"><i class="d-snow1"></i><i class="d-snow2"></i><i class="d-cap"></i><i class="d-base"></i><i class="d-l d-l0"></i><i class="d-l d-l1"></i><i class="d-l d-l2"></i><i class="d-l d-l3"></i><i class="d-pile"></i><i class="d-sleigh"></i></div><span class="sp-mascot"></span><span class="sp-bar"><i></i></span><span class="sp-bar short"><i></i></span></span>' +
           '<span class="skin-name"></span>' + (k.tag ? '<span class="skin-tag"></span>' : '');
         b.querySelector('.sp-mascot').innerHTML = V.MASCOT_PX;
         b.querySelector('.skin-name').textContent = t(k.name);
