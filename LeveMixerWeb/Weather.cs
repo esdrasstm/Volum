@@ -80,7 +80,7 @@ static class Weather
             string lang = Strings.Normalize(s.Language);
             // "Ubá MG", "Ubá, MG" ou "Ubá, Minas Gerais": procura só o nome e usa o resto (estado/país) para escolher
             var (query, hint) = SplitPlace(city);
-            string url = "https://geocoding-api.open-meteo.com/v1/search?count=10&format=json&language=" + lang +
+            string url = "https://geocoding-api.open-meteo.com/v1/search?count=100&format=json&language=" + lang +
                          "&name=" + Uri.EscapeDataString(query);
             using var doc = JsonDocument.Parse(await Http.GetStringAsync(url));
             if (!doc.RootElement.TryGetProperty("results", out var res) || res.GetArrayLength() == 0)
@@ -88,7 +88,13 @@ static class Weather
                 LastError = "notFound";
                 return null;
             }
-            var r = BestMatch(res, query, hint);
+            var r = BestMatch(res, query, hint, out bool hintOk);
+            // Digitou o estado/país e nenhum resultado é de lá: melhor dizer que não achou do que escolher a cidade errada
+            if (hint.Length > 0 && !hintOk)
+            {
+                LastError = "notFound";
+                return null;
+            }
             string name = r.GetProperty("name").GetString() ?? city;
             string region = r.TryGetProperty("admin1", out var a) ? a.GetString() ?? "" : "";
             s.WeatherCity = city;
@@ -132,9 +138,14 @@ static class Weather
         return (text, "");
     }
 
+    // Sem acento, minúsculo e sem hífen/apóstrofo (o IBGE escreve "Ji-Paraná" e "Olhos-d'Água"; o Open-Meteo, "Ji Paraná" e "Olhos d'Água")
+    static readonly System.Text.RegularExpressions.Regex Punct = new(@"[\-\u2010-\u2015'\u2018\u2019\u00B4\u0060]+");
+    static readonly System.Text.RegularExpressions.Regex Spaces = new(@"\s+");
+
     static string Plain(string? s)
     {
         if (string.IsNullOrEmpty(s)) return "";
+        s = Spaces.Replace(Punct.Replace(s, " "), " ");
         var d = s.Normalize(System.Text.NormalizationForm.FormD);
         var sb = new System.Text.StringBuilder(d.Length);
         foreach (var c in d)
@@ -143,8 +154,11 @@ static class Weather
     }
 
     /// <summary>Pontua cada resultado: nome exato vale mais; estado/país igual ao digitado também; empate = a primeira (maior).</summary>
-    static JsonElement BestMatch(JsonElement results, string query, string hint)
+    static JsonElement BestMatch(JsonElement results, string query, string hint, out bool hintOk)
     {
+        hintOk = false;
+        string myCountry = "";
+        try { myCountry = Plain(RegionInfo.CurrentRegion.TwoLetterISORegionName); } catch { }
         string q = Plain(query), h = Plain(BrazilStates.TryGetValue(hint, out var st) ? st : hint);
         JsonElement best = results[0];
         int bestScore = int.MinValue, i = 0;
@@ -155,9 +169,11 @@ static class Weather
             string country = Plain(r.TryGetProperty("country", out var c) ? c.GetString() : "");
             string code = Plain(r.TryGetProperty("country_code", out var cc) ? cc.GetString() : "");
             int score = -i;                                    // ordem do Open-Meteo como desempate
-            if (name == q) score += 100;
-            if (h.Length > 0 && (admin == h || country == h || code == h || admin.StartsWith(h) || country.StartsWith(h))) score += 50;
-            if (score > bestScore) { bestScore = score; best = r; }
+            if (name == q) score += 10_000;            // pesos bem maiores que a posição (até 100 resultados)
+            if (h.Length > 0 && (admin == h || country == h || code == h || admin.StartsWith(h) || country.StartsWith(h))) score += 1_000;
+            if (code == myCountry) score += 500;           // mesmo país do Windows da pessoa ("Santa Cruz" no Brasil = a brasileira)
+            bool inHint = h.Length > 0 && (admin == h || country == h || code == h || admin.StartsWith(h) || country.StartsWith(h));
+            if (score > bestScore) { bestScore = score; best = r; hintOk = inHint; }
             i++;
         }
         return best;

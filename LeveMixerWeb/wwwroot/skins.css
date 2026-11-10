@@ -1,0 +1,114 @@
+/* =========================================================
+   Volum — temas (Configurações → Temas). O tema escolhido vira data-skin no <html> do mixer, da ilha e das
+   configurações. Cada tema fica num bloco [data-skin="nome"]. "default" = o visual de sempre (nenhuma regra aqui).
+   Os enfeites são pixel art (pixels de 2 px, como o mascote), só CSS e imagens SVG pequenas, e ficam parados no
+   modo leve (.lite) e com "reduzir movimento". O mascote ganha acessórios pelas camadas do MASCOT_PX (shared.js).
+   ========================================================= */
+
+/* Acessórios do mascote: escondidos fora do tema certo */
+.mascot.px .px-hat { display: none; }
+
+/* =========================================================
+   Natal (grátis)
+   ========================================================= */
+:root[data-skin="christmas"] {
+  --xmas-red: #d7263d;
+  --xmas-green: #2fbf71;
+  --xmas-gold: #ffc94d;
+  /* Fio de luzinhas em pixel art: lâmpadas 2×2 "pixels" (4×4 px) penduradas num fio, 3 cores que se repetem */
+  --xmas-lights: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='10' shape-rendering='crispEdges'><rect y='0' width='48' height='2' fill='%23384a3c'/><rect x='7' y='2' width='2' height='2' fill='%23384a3c'/><rect x='5' y='4' width='6' height='6' fill='%23d7263d'/><rect x='5' y='4' width='2' height='2' fill='%23ff8a95'/><rect x='23' y='2' width='2' height='2' fill='%23384a3c'/><rect x='21' y='4' width='6' height='6' fill='%232fbf71'/><rect x='21' y='4' width='2' height='2' fill='%2398f2be'/><rect x='39' y='2' width='2' height='2' fill='%23384a3c'/><rect x='37' y='4' width='6' height='6' fill='%23ffc94d'/><rect x='37' y='4' width='2' height='2' fill='%23fff0b8'/></svg>");
+  /* As mesmas luzes com as cores trocadas: alternar entre as duas faz "piscar" em quadros */
+  --xmas-lights-b: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='10' shape-rendering='crispEdges'><rect y='0' width='48' height='2' fill='%23384a3c'/><rect x='7' y='2' width='2' height='2' fill='%23384a3c'/><rect x='5' y='4' width='6' height='6' fill='%237a1522'/><rect x='23' y='2' width='2' height='2' fill='%23384a3c'/><rect x='21' y='4' width='6' height='6' fill='%23146b3e'/><rect x='39' y='2' width='2' height='2' fill='%23384a3c'/><rect x='37' y='4' width='6' height='6' fill='%23ffe08a'/><rect x='37' y='4' width='2' height='2' fill='%23fff8dc'/></svg>");
+  /* Neve em pixel art: pontinhos 2×2 e cruzinhas, espalhados num quadro de 120×120 que se repete */
+  --xmas-snow: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' shape-rendering='crispEdges' fill='white'><rect x='10' y='8' width='2' height='2' opacity='.8'/><rect x='54' y='22' width='2' height='2' opacity='.55'/><g opacity='.7'><rect x='92' y='12' width='2' height='6'/><rect x='90' y='14' width='6' height='2'/></g><rect x='30' y='46' width='2' height='2' opacity='.6'/><g opacity='.55'><rect x='70' y='58' width='2' height='6'/><rect x='68' y='60' width='6' height='2'/></g><rect x='108' y='70' width='2' height='2' opacity='.7'/><rect x='16' y='86' width='2' height='2' opacity='.5'/><g opacity='.65'><rect x='44' y='96' width='2' height='6'/><rect x='42' y='98' width='6' height='2'/></g><rect x='84' y='104' width='2' height='2' opacity='.6'/></svg>");
+}
+
+/* Mascote de gorro (cabeçalho do mixer, popup de novidades, ilha ociosa) */
+:root[data-skin="christmas"] .mascot.px .px-hat { display: inline; }
+
+/* ---------- Mixer ---------- */
+/* Luzinhas penduradas no alto do cartão (no cabeçalho) */
+:root[data-skin="christmas"] .header { position: relative; }
+:root[data-skin="christmas"] .header::after {
+  content: "";
+  position: absolute;
+  left: 14px; right: 14px; top: 0;
+  height: 10px;
+  background: var(--xmas-lights) 0 0 / 48px 10px repeat-x;
+  image-rendering: pixelated;
+  pointer-events: none;
+  animation: xmas-glow 2.8s ease-in-out infinite alternate;
+}
+/* Neve caindo atrás do conteúdo (camada própria: a animação de abrir do cartão continua a dele) */
+:root[data-skin="christmas"] .card { isolation: isolate; }
+:root[data-skin="christmas"] .card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--xmas-snow) 0 0 / 120px 120px;
+  opacity: .35;
+  pointer-events: none;
+  animation: xmas-snow 14s linear infinite;
+}
+/* Preenchimento dos sliders: vermelho para dourado (a água continua azul) */
+:root[data-skin="christmas"] .slider-fill,
+:root[data-skin="christmas"].glass .slider-fill { background: linear-gradient(90deg, #7a1522, var(--xmas-red) 55%, var(--xmas-gold)); }
+
+/* ---------- Ilha ---------- */
+/* Luzinhas penduradas no alto da forma, como um cordão preso na borda da tela (embaixo da tela: na borda de baixo, viradas) */
+:root[data-skin="christmas"] .shape::after {
+  display: block;
+  content: "";
+  position: absolute;
+  left: 20px; right: 20px; top: 0; bottom: auto;
+  width: auto; height: 10px;
+  background: var(--xmas-lights) 0 0 / 48px 10px repeat-x;
+  image-rendering: pixelated;
+  pointer-events: none;
+  opacity: .9;
+  z-index: 1;
+  animation: xmas-glow 2.8s ease-in-out infinite alternate;
+}
+:root[data-skin="christmas"].at-bottom .shape::after { top: auto; bottom: 0; transform: scaleY(-1); }
+:root[data-skin="christmas"].floating:not(.at-bottom) .shape::after { top: 2px; }
+:root[data-skin="christmas"] .island.tucked .shape::after { display: none; }
+/* A forma vira uma "camada" própria: luzes e neve ficam por cima do desenho preto, mas atrás do conteúdo da ilha */
+:root[data-skin="christmas"] .shape { z-index: 0; }
+/* Neve só com a ilha aberta, dentro da forma */
+:root[data-skin="christmas"] .shape::before {
+  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: auto; height: auto;
+  border-radius: 0 0 var(--r) var(--r);
+  background: var(--xmas-snow) 0 0 / 120px 120px;
+  pointer-events: none;
+  opacity: .35;
+  z-index: 1;   /* por cima do desenho preto da forma (o conteúdo da ilha vem depois e fica por cima) */
+  animation: xmas-snow-layer 14s linear infinite;
+}
+:root[data-skin="christmas"] .island.open .shape::before { display: block; }
+:root[data-skin="christmas"].floating .shape::before { border-radius: var(--r); }
+
+/* Luzinhas: acendem e apagam devagar, com um brilhinho em volta */
+@keyframes xmas-glow {
+  from { filter: brightness(.55) saturate(.8); }
+  to   { filter: brightness(1.2) saturate(1.15) drop-shadow(0 0 2px rgba(255, 210, 120, .55)); }
+}
+@keyframes xmas-snow { from { background-position: 0 0; } to { background-position: 0 120px; } }
+@keyframes xmas-snow-layer { from { background-position: 0 0; } to { background-position: 0 120px; } }
+
+/* Modo leve e "reduzir movimento": enfeites parados */
+:root.lite[data-skin="christmas"] .header::after,
+:root.lite[data-skin="christmas"] .card::after,
+:root.lite[data-skin="christmas"] .shape::before,
+:root.lite[data-skin="christmas"] .shape::after { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  :root[data-skin="christmas"] .header::after,
+  :root[data-skin="christmas"] .card::after,
+  :root[data-skin="christmas"] .shape::before,
+  :root[data-skin="christmas"] .shape::after { animation: none !important; }
+}

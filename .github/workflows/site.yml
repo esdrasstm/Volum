@@ -56,6 +56,7 @@ jobs:
           isl = pathlib.Path("LeveMixerWeb/wwwroot/island.html").read_text(encoding="utf-8")
           isl = (isl.replace('href="island.css"', 'href="app/island.css"')
                     .replace('href="mascot.css"', 'href="app/mascot.css"')
+                    .replace('href="skins.css"', 'href="app/skins.css"')
                     .replace('<script src="shared.js"></script>', '<script src="island-bridge.js"></script>\n  <script src="app/shared.js"></script>')
                     .replace('<script src="island.js"></script>', '<script src="app/island.js"></script>')
                     .replace('</head>', '  <style>html, body { background: transparent !important; }</style>\n</head>'))

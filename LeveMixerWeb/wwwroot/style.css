@@ -1237,6 +1237,12 @@ svg[data-anim] { transform-origin: 50% 50%; overflow: visible; }
 :is(.nav-item:hover, .nav-item[aria-current="page"]) svg[data-anim="info"] .a-idot { animation: ico-idot .6s var(--ico-spring); }
 @keyframes ico-idot { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-2.6px); } }
 
+/* Temas: a paleta balança e as gotas de tinta piscam */
+:is(.nav-item:hover, .nav-item[aria-current="page"]) svg[data-anim="palette"] { animation: ico-palette .7s var(--ico-spring); }
+:is(.nav-item:hover, .nav-item[aria-current="page"]) svg[data-anim="palette"] .a-dots { animation: ico-paint .7s steps(4, end); }
+@keyframes ico-palette { 0% { transform: rotate(0); } 35% { transform: rotate(-14deg); } 70% { transform: rotate(6deg); } 100% { transform: rotate(0); } }
+@keyframes ico-paint { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+
 @media (prefers-reduced-motion: reduce) {
   svg[data-anim], svg[data-anim] * { animation: none !important; }
 }

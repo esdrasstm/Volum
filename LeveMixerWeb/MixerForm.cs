@@ -536,6 +536,7 @@ sealed class MixerForm : Form
             autostart = AutoStart.IsEnabled,
             glass = false,   // visual do Figma: cartão sólido, sem os estilos de vidro
             lite = _settings.LightMode,
+            skin = _settings.Skin,
             language = Strings.Normalize(_settings.Language),
             systemDark = WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },

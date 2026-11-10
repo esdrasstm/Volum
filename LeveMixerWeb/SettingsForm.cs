@@ -161,6 +161,7 @@ sealed class SettingsForm : Form
             language = Strings.Normalize(_settings.Language),
             autostart = AutoStart.IsEnabled,
             lite = _settings.LightMode,
+            skin = _settings.Skin,
             systemDark = MixerForm.WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             water = new { enabled = w.Enabled, goalMl = w.GoalMl, intervalMin = w.IntervalMin, cupMl = w.CupMl, todayMl = w.TodayMl, sound = w.Sound },
@@ -243,6 +244,15 @@ sealed class SettingsForm : Form
                     _settings.Language = Strings.Normalize(root.GetProperty("lang").GetString());
                     _settings.Save();
                     Text = $"Volum — {Strings.Get(_settings.Language, "settings")}";
+                    break;
+
+                case "setSkin":   // Temas: a ilha muda na hora; o mixer na próxima vez que abrir
+                    if (root.TryGetProperty("skin", out var sk) && sk.GetString() is "default" or "christmas")
+                    {
+                        _settings.Skin = sk.GetString()!;
+                        _settings.Save();
+                        IslandForm.ApplyStyle();
+                    }
                     break;
 
                 case "setLightMode":

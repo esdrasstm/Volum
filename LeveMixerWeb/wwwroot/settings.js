@@ -259,6 +259,38 @@
   });
   $('wxCity').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('wxSave').click(); });
 
+  /* ---------------- Temas ----------------
+     Cartões com prévia (mini mixer + mascote). Para um tema novo: o nome aqui, as regras no skins.css e o nome aceito no
+     "setSkin" do SettingsForm.cs. tag: etiqueta do cartão (ex.: grátis). */
+  const SKINS = [
+    { id: 'default', name: 'skinDefault' },
+    { id: 'christmas', name: 'skinChristmas', tag: 'skinFree' },
+  ];
+  let skin = 'default';
+  function showSkins() {
+    const list = $('skinList');
+    if (!list.children.length) {
+      list.replaceChildren(...SKINS.map((k) => {
+        const b = document.createElement('button');
+        b.className = 'skin-card';
+        b.dataset.skin = k.id;
+        b.setAttribute('role', 'radio');
+        // A prévia usa o próprio tema (data-skin no cartão): mini cartão do mixer com o mascote e um slider
+        b.innerHTML = '<span class="skin-prev" data-skin-prev="' + k.id + '"><span class="sp-mascot"></span><span class="sp-bar"><i></i></span><span class="sp-bar short"><i></i></span></span>' +
+          '<span class="skin-name"></span>' + (k.tag ? '<span class="skin-tag"></span>' : '');
+        b.querySelector('.sp-mascot').innerHTML = V.MASCOT_PX;
+        b.querySelector('.skin-name').textContent = t(k.name);
+        if (k.tag) b.querySelector('.skin-tag').textContent = t(k.tag);
+        b.addEventListener('click', () => { skin = k.id; showSkins(); post({ type: 'setSkin', skin: k.id }); });
+        return b;
+      }));
+    }
+    [...list.children].forEach((b) => {
+      b.setAttribute('aria-checked', String(b.dataset.skin === skin));
+      b.querySelector('.skin-name').textContent = t(SKINS.find((k) => k.id === b.dataset.skin).name);
+    });
+  }
+
   /* Clima: o que aparece na ilha fechada e a unidade */
   const wxOpts = { show: 'both', unit: 'auto' };
   [['wxShowSeg', 'show'], ['wxUnitSeg', 'unit']].forEach(([id, key]) =>
@@ -391,6 +423,8 @@
     if (typeof s.systemDark === 'boolean') systemDark = s.systemDark;
     version = s.version || '';
     fromStore = !!s.store;
+    skin = s.skin || 'default';
+    showSkins();
     // No Brasil, o Pix é o botão principal; de fora, só o Ko-fi
     $('pixBtn').hidden = !s.brazil;
     $('pixQr').hidden = !s.brazil;

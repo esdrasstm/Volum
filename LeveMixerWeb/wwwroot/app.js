@@ -323,6 +323,7 @@
     setTheme(s.theme);
     glassSupported = !!s.glass;
     setLite(!!s.lite);
+    document.documentElement.dataset.skin = s.skin || 'default';   // tema (Configurações → Temas)
     if (s.water) water = s.water;                   // lembrete de água: o contador de hoje
     showWater();
     setMicListOpen(false);                          // sempre abre com a lista de microfones fechada

@@ -36,6 +36,7 @@ window.Volum = (() => {
       supportQrHint: 'Abra o app do seu banco, vá em Pix → Pagar com QR Code e aponte a câmera. Você escolhe o valor.',
       github: 'Código no GitHub',
       pageIsland: 'Ilha', islandToggle: 'Mostrar a ilha no topo da tela',
+      pageThemes: 'Temas', themesHint: 'Mudam o visual da ilha e do mixer. Mais temas em breve.', skinDefault: 'Padrão', skinChristmas: 'Natal', skinFree: 'Grátis',
       pageSupport: 'Apoiar', pageFocus: 'Foco', needsIsland: 'Isto aparece na ilha: ligue a ilha em Configurações → Ilha.', calField: 'Endereço da agenda (iCal)', wxField: 'Sua cidade',
       islandHint: 'Passe o mouse para ver a música tocando e a água; os avisos do Volum aparecem nela',
       islandStyle: 'Formato', islandNotch: 'Grudada no topo', islandFloat: 'Flutuante',
@@ -95,6 +96,7 @@ window.Volum = (() => {
       supportQrHint: 'Open your bank app, go to Pix → Pay with QR Code and point the camera. You choose the amount.',
       github: 'Code on GitHub',
       pageIsland: 'Island', islandToggle: 'Show the island at the top of the screen',
+      pageThemes: 'Themes', themesHint: 'They change how the island and the mixer look. More themes coming soon.', skinDefault: 'Default', skinChristmas: 'Christmas', skinFree: 'Free',
       pageSupport: 'Support', pageFocus: 'Focus', needsIsland: 'This shows up on the island: turn the island on in Settings → Island.', calField: 'Calendar address (iCal)', wxField: 'Your city',
       islandHint: 'Hover it to see what is playing and your water; Volum alerts show up there',
       islandStyle: 'Shape', islandNotch: 'Attached to the top', islandFloat: 'Floating',
@@ -154,6 +156,7 @@ window.Volum = (() => {
       supportQrHint: 'Abre la app de tu banco, ve a Pix → Pagar con QR Code y apunta la cámara. Tú eliges el monto.',
       github: 'Código en GitHub',
       pageIsland: 'Isla', islandToggle: 'Mostrar la isla arriba de la pantalla',
+      pageThemes: 'Temas', themesHint: 'Cambian el aspecto de la isla y del mezclador. Más temas pronto.', skinDefault: 'Predeterminado', skinChristmas: 'Navidad', skinFree: 'Gratis',
       pageSupport: 'Apoyar', pageFocus: 'Enfoque', needsIsland: 'Esto aparece en la isla: activa la isla en Configuración → Isla.', calField: 'Dirección de la agenda (iCal)', wxField: 'Tu ciudad',
       islandHint: 'Pasa el mouse para ver lo que suena y el agua; los avisos de Volum aparecen ahí',
       islandStyle: 'Forma', islandNotch: 'Pegada arriba', islandFloat: 'Flotante',
@@ -337,9 +340,21 @@ window.Volum = (() => {
     left:  ['..aa......aa....', '..bb......bb....', '..cc......cc....', '..dd......dd....'],
     right: ['....aa......aa..', '....bb......bb..', '....cc......cc..', '....dd......dd..'],
   };
+  // Gorro de Papai Noel (tema de Natal): fica escondido e só aparece com o tema (skins.css); ponta caída para a direita com pompom
+  const HAT_PAL = { R: '#d7263d', r: '#a1162b', F: '#f2f2f2', f: '#cfd4da' };
+  const M_HAT = [
+    '...........FF...',
+    '.........rRFFf..',
+    '......RRRRRr....',
+    '....RRRRRRRRr...',
+    '..RRRRRRRRRRRr..',
+    '.FFFFFFFFFFFFFF.',
+    '.ffffffffffffff.',
+  ];
   const MASCOT_PX =
     '<svg class="mascot px" viewBox="0 -1 16 11" aria-hidden="true">' +
     '<g class="px-body">' + pixels(M_FACE, M_PAL) +
+    '<g class="px-hat">' + pixels(M_HAT, HAT_PAL, 0, -6) + '</g>' +
     Object.entries(M_EYES).map(([k, rows]) => `<g class="pe pe-${k}">${pixels(rows, M_PAL, 0, 2)}</g>`).join('') +
     '</g></svg>';
 

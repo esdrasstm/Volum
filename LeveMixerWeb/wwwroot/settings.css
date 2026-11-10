@@ -179,6 +179,28 @@ body.settings-page { font-size: 12.5px; background: var(--bg); }
 .pix-qr img { flex: none; width: 132px; height: 132px; padding: 6px; border-radius: 10px; background: #fff; image-rendering: pixelated; }
 .pix-qr small { color: var(--ink-dim); font-size: 11.5px; line-height: 1.5; }
 
+/* Temas: cartões com prévia */
+.skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.skin-card { position: relative; display: grid; gap: 8px; padding: 10px 10px 12px; text-align: left; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--surface, rgba(255,255,255,.03)); color: var(--text); cursor: pointer; font: inherit; transition: border-color .2s ease, transform .2s ease; }
+.skin-card:hover { border-color: rgba(255, 255, 255, .25); }
+.skin-card[aria-checked="true"] { border-color: var(--ink, #fff); box-shadow: 0 0 0 1px var(--ink, #fff); }
+.skin-name { font-size: 13px; font-weight: 600; }
+.skin-tag { position: absolute; top: 16px; right: 16px; padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 600; color: #090909; background: #fff; }
+.skin-prev { position: relative; display: grid; gap: 8px; align-content: center; height: 96px; padding: 18px 16px 12px; border-radius: 10px; background: #090909; overflow: hidden; }
+.sp-mascot { width: 32px; height: 22px; }
+.sp-mascot .mascot { width: 32px; height: 22px; }
+.sp-bar { height: 4px; border-radius: 4px; background: #1d1d1d; }
+.sp-bar i { display: block; width: 70%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #262626, #fff); }
+.sp-bar.short i { width: 40%; }
+/* Prévia do Natal: as mesmas peças do tema (gorro, luzinhas, neve, slider vermelho) */
+.skin-prev[data-skin-prev="christmas"] .mascot.px .px-hat { display: inline; }
+.skin-prev[data-skin-prev="christmas"] .sp-bar i { background: linear-gradient(90deg, #7a1522, #d7263d 55%, #ffc94d); }
+.skin-prev[data-skin-prev="christmas"]::after { content: ""; position: absolute; left: 8px; right: 8px; top: 0; height: 10px; image-rendering: pixelated;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='10' shape-rendering='crispEdges'><rect y='2' width='48' height='2' fill='%23202a22'/><rect x='6' y='4' width='2' height='2' fill='%23202a22'/><rect x='4' y='6' width='6' height='4' fill='%23d7263d'/><rect x='22' y='4' width='2' height='2' fill='%23202a22'/><rect x='20' y='6' width='6' height='4' fill='%232fbf71'/><rect x='38' y='4' width='2' height='2' fill='%23202a22'/><rect x='36' y='6' width='6' height='4' fill='%23ffc94d'/></svg>") 0 0 / 48px 10px repeat-x; }
+.skin-prev[data-skin-prev="christmas"]::before { content: ""; position: absolute; inset: 0; opacity: .5;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' shape-rendering='crispEdges' fill='white'><rect x='8' y='14' width='2' height='2'/><rect x='40' y='8' width='2' height='6'/><rect x='38' y='10' width='6' height='2'/><rect x='26' y='40' width='2' height='2'/><rect x='50' y='44' width='2' height='2'/></svg>") 0 0 / 60px 60px; }
+
 /* Posição e monitor da ilha */
 .segmented.seg-gap { margin-top: 6px; }
 .segmented.dyn { grid-template-columns: repeat(var(--n, 2), 1fr); }
@@ -188,3 +210,4 @@ body.settings-page { font-size: 12.5px; background: var(--bg); }
 /* Botão de teste dentro das opções (ex.: "Testar aviso de levantar" junto do lembrete) */
 .btn-row.inline { margin: 10px 0 2px; }
 #pixHint[hidden] { display: none; }
+.skins { margin-top: 14px; }
