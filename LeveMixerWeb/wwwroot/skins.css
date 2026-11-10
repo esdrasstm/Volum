@@ -1,5 +1,5 @@
 /* =========================================================
-   Volum — temas (Configurações → Temas). GERADO por um script (.claude/gen-skins.js): não editar à mão.
+   Volum — temas (Configurações → Temas). GERADO por um script local (as imagens são pixel art em SVG): não editar à mão.
    O tema escolhido vira data-skin no <html> do mixer e da ilha (e em cada prévia das configurações).
    "default" = o visual de sempre. Os enfeites ficam no .deco (no index.html dentro do .card, no island.html dentro
    da .shape); cada tema liga só as peças que usa. Tudo anima por transform/opacity (fluido e barato), fica parado
