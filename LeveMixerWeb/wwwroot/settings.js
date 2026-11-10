@@ -268,6 +268,7 @@
     { id: 'snowy', name: 'skinSnowy', tag: 'skinFree' },
     { id: 'candy', name: 'skinCandy', tag: 'skinFree' },
     { id: 'sleigh', name: 'skinSleigh', tag: 'skinFree' },
+    { id: 'glass', name: 'skinGlass', tag: 'skinFree' },
   ];
   let skin = 'default';
   function showSkins() {

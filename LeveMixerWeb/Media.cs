@@ -171,6 +171,13 @@ sealed class MediaService : IDisposable
         return name.Length > 0 ? char.ToUpper(name[0]) + name[1..] : name;
     }
 
+    /// <summary>Traz para a frente o app que está tocando (clique na capa da música na ilha).</summary>
+    public void ShowSource()
+    {
+        var id = _session?.SourceAppUserModelId;
+        if (!string.IsNullOrEmpty(id)) AppFront.Show(id);
+    }
+
     public void PlayPause() => _ = _session?.TryTogglePlayPauseAsync();
     public void Next() => _ = _session?.TrySkipNextAsync();
     public void Previous() => _ = _session?.TrySkipPreviousAsync();
@@ -201,4 +208,57 @@ sealed class MediaService : IDisposable
         _session = null;
         _manager = null;
     }
+}
+
+/// <summary>
+/// Traz um app para a frente pelo identificador que o Windows dá ao player de mídia:
+/// app de desktop ("Spotify.exe", "chrome.exe", "msedge"...) = a janela principal do processo com esse nome;
+/// app da Store ("Família!App") = o Windows ativa a janela que já existe (IApplicationActivationManager).
+/// </summary>
+static class AppFront
+{
+    public static void Show(string id)
+    {
+        try
+        {
+            if (id.Contains('!')) { Activate(id); return; }
+            string name = id.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Path.GetFileNameWithoutExtension(id) : id;
+            name = name[(name.LastIndexOfAny(new[] { '\\', '/' }) + 1)..];
+            // O Firefox se apresenta com um código (16 letras/números) no lugar do nome
+            if (name.Length == 16 && System.Text.RegularExpressions.Regex.IsMatch(name, "^[0-9A-Fa-f]+$")) name = "firefox";
+            foreach (var p in System.Diagnostics.Process.GetProcessesByName(name))
+            {
+                var h = p.MainWindowHandle;
+                if (h != IntPtr.Zero && p.MainWindowTitle.Length > 0) { Front(h); return; }
+            }
+        }
+        catch { /* o app fechou ou não deixa: nada acontece */ }
+    }
+
+    static void Front(IntPtr h)
+    {
+        if (IsIconic(h)) ShowWindow(h, 9);   // SW_RESTORE: estava minimizado
+        SetForegroundWindow(h);
+    }
+
+    static void Activate(string aumid)
+    {
+        var mgr = (IApplicationActivationManager)new ApplicationActivationManager();
+        mgr.ActivateApplication(aumid, null, 0, out _);
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
+
+    [System.Runtime.InteropServices.ComImport, System.Runtime.InteropServices.Guid("2e941141-7f97-4756-ba1d-9decde894a3d"),
+     System.Runtime.InteropServices.InterfaceType(System.Runtime.InteropServices.ComInterfaceType.InterfaceIsIUnknown)]
+    interface IApplicationActivationManager
+    {
+        int ActivateApplication([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string appUserModelId,
+                                [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string? arguments,
+                                int options, out uint processId);
+    }
+    [System.Runtime.InteropServices.ComImport, System.Runtime.InteropServices.Guid("45BA127D-10A8-46EA-8AB7-56EA9078943C")]
+    class ApplicationActivationManager { }
 }

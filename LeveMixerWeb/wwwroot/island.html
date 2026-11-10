@@ -16,6 +16,10 @@
   <!-- Degradê dos olhos do mascote (usado por todas as cópias dele na página) -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <defs>
+      <!-- Tema Bengala: listras vermelhas e brancas na diagonal, usadas no contorno da ilha -->
+      <pattern id="candyStripe" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+        <rect width="5" height="10" fill="#e0283f"/><rect x="5" width="5" height="10" fill="#ffffff"/>
+      </pattern>
       <linearGradient id="mEyeL" x1="78.08" y1="253.03" x2="133.67" y2="156.74" gradientUnits="userSpaceOnUse">
         <stop offset="0" stop-color="#f7f7f7"/><stop offset="1" stop-color="#002e5f"/>
       </linearGradient>
@@ -48,8 +52,14 @@
         <span class="privacy" id="miniPrivacy" hidden><i class="cam"></i><i class="mic"></i></span>
         <!-- Clima: ícone (sol, nuvem, chuva...) e a temperatura, com a cidade salva nas configurações -->
         <span class="mini-wx" id="miniWx" hidden><span class="mini-wx-icon" id="miniWxIcon"></span><b id="miniWxTemp"></b></span>
-        <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="wave" id="miniWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
       </span>
+    </div>
+
+    <!-- Pomodoro rodando: bolha ao lado da ilha fechada; ao abrir a ilha, ela entra nela (vira o chip embaixo, à direita) -->
+    <div class="pomo-bubble" id="pomoBubble" aria-hidden="true">
+      <svg class="bubble-ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" class="ring-bg"/><circle cx="18" cy="18" r="14" class="ring-fg" id="bubbleRingFg"/></svg>
+      <svg class="bubble-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#efe2e2"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
 
     <!-- Aviso do Volum: faixa fina, da altura da ilha (ex.: lembrete de água) -->
@@ -78,7 +88,6 @@
           <b id="volPct"></b>
         </span>
         <span class="privacy" id="privacy" hidden><i class="cam"></i><i class="mic"></i></span>
-        <span class="wave" id="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       </div>
 
       <div class="pages">
@@ -98,6 +107,8 @@
               <b id="title" data-i18n="islandNothing">Nada tocando agora</b>
               <span id="subtitle"></span>
             </div>
+            <!-- Onda do som (só com som saindo de verdade) -->
+            <span class="wave" id="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
           </div>
           <div class="progress" id="progress">
             <span id="elapsed">0:00</span>
@@ -105,21 +116,25 @@
             <span id="remaining">-0:00</span>
           </div>
           <div class="controls">
-            <button class="side" id="waterQuick" title="Água" aria-label="Água">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5c3.4 4.1 5.8 7.3 5.8 10.3a5.8 5.8 0 0 1-11.6 0c0-3 2.4-6.2 5.8-10.3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 11v5M9.5 13.5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <!-- Esquerda: mudo do som geral (o alto-falante cortado quando está mudo) -->
+            <button class="side" id="muteBtn" title="Silenciar" data-i18n-title="islandMute">
+              <svg class="i-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 8.8a4.6 4.6 0 0 1 0 6.4M19.2 6.2a8.4 8.4 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <svg class="i-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
             <button id="prev" title="Anterior" data-i18n-title="islandPrev">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 6v12L3 12zM21 6v12l-8.5-6z" fill="currentColor"/></svg>
+              <svg class="i-skip" viewBox="0 0 32 18" aria-hidden="true"><path d="M15 2.2v13.6c0 1-1.1 1.6-1.9 1L3.6 10.2a1.5 1.5 0 0 1 0-2.4l9.5-6.6c.8-.6 1.9 0 1.9 1zM30 2.2v13.6c0 1-1.1 1.6-1.9 1l-9.5-6.6a1.5 1.5 0 0 1 0-2.4l9.5-6.6c.8-.6 1.9 0 1.9 1z" fill="currentColor"/></svg>
             </button>
             <button id="play" class="play" title="Tocar / pausar" data-i18n-title="islandPlay">
-              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15L19.5 12z" fill="currentColor"/></svg>
-              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1.2" fill="currentColor"/></svg>
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4c0 1.1 1.2 1.8 2.2 1.2l13.4-8.2a1.4 1.4 0 0 0 0-2.4L8.2 2.6C7.2 2 6 2.7 6 3.8z" fill="currentColor"/></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="5" height="18" rx="1.6" fill="currentColor"/><rect x="14" y="3" width="5" height="18" rx="1.6" fill="currentColor"/></svg>
             </button>
             <button id="next" title="Próxima" data-i18n-title="islandNext">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 6v12L21 12zM3 6v12l8.5-6z" fill="currentColor"/></svg>
+              <svg class="i-skip" viewBox="0 0 32 18" aria-hidden="true"><path d="M2 2.2v13.6c0 1 1.1 1.6 1.9 1l9.5-6.6a1.5 1.5 0 0 0 0-2.4L3.9 1.2C3.1.6 2 1.2 2 2.2zM17 2.2v13.6c0 1 1.1 1.6 1.9 1l9.5-6.6a1.5 1.5 0 0 0 0-2.4l-9.5-6.6c-.8-.6-1.9 0-1.9 1z" fill="currentColor"/></svg>
             </button>
-            <button class="side" id="openMixer" title="Volum" aria-label="Volum">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <!-- Direita: o tempo de agora (abre a página do clima); sem cidade salva, +1 copo de água -->
+            <button class="side gone" id="wxQuick" title="Clima" data-i18n-title="islandWeather"></button>
+            <button class="side" id="waterQuick" title="Água" aria-label="Água">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6c3.8 4.5 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.6 8.2 7.1 12 2.6z" fill="currentColor"/><path d="M12 10.8v6M9 13.8h6" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
           </div>
         </section>
@@ -127,25 +142,32 @@
         <!-- Página: Pomodoro (só com ele ligado nas configurações) -->
         <section class="page" data-page="focus" hidden>
           <div class="focus">
-            <svg class="focus-ring" viewBox="0 0 48 48" aria-hidden="true">
-              <circle cx="24" cy="24" r="20" class="ring-bg"/>
-              <circle cx="24" cy="24" r="20" class="ring-fg" id="focusRingFg"/>
-            </svg>
-            <div class="focus-text">
-              <span id="focusPhase"></span>
-              <b id="focusTime">25:00</b>
-              <span id="focusCycle"></span>
+            <!-- Em cima, como no player: anel com o relógio (no lugar da capa), fase e ciclo, e o tempo grande à direita -->
+            <div class="focus-head">
+              <div class="focus-art">
+                <svg class="focus-ring" viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="24" cy="24" r="20" class="ring-bg"/>
+                  <circle cx="24" cy="24" r="20" class="ring-fg" id="focusRingFg"/>
+                </svg>
+                <svg class="focus-clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#efe2e2"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="focus-text">
+                <b id="focusPhase"></b>
+                <span id="focusCycle"></span>
+              </div>
+              <b class="focus-time" id="focusTime">25:00</b>
             </div>
+            <!-- Embaixo, como os controles do player: parar, começar/pausar, pular -->
             <div class="focus-buttons">
               <button id="focusStop" class="soft" title="Parar" data-i18n-title="focusStop">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/></svg>
               </button>
               <button id="focusMain" class="main" title="Começar" data-i18n-title="focusStart">
-                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13L18.5 12z" fill="currentColor"/></svg>
-                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor"/><rect x="13.4" y="5.5" width="3.6" height="13" rx="1.2" fill="currentColor"/></svg>
+                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4c0 1.1 1.2 1.8 2.2 1.2l13.4-8.2a1.4 1.4 0 0 0 0-2.4L8.2 2.6C7.2 2 6 2.7 6 3.8z" fill="currentColor"/></svg>
+                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="5" height="18" rx="1.6" fill="currentColor"/><rect x="14" y="3" width="5" height="18" rx="1.6" fill="currentColor"/></svg>
               </button>
               <button id="focusSkip" class="soft" title="Pular" data-i18n-title="focusSkip">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l8.5-6zM16.5 6h2v12h-2z" fill="currentColor"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.3v15.4c0 1 1.1 1.6 1.9 1l11-7.7a1.2 1.2 0 0 0 0-2L4.9 3.3C4.1 2.7 3 3.3 3 4.3z" fill="currentColor"/><rect x="17.5" y="3" width="3.5" height="18" rx="1.4" fill="currentColor"/></svg>
               </button>
             </div>
           </div>
@@ -154,13 +176,13 @@
         <!-- Página: água (só com o lembrete ligado) -->
         <section class="page" data-page="water" hidden>
           <div class="water">
-            <svg class="drop" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c3.6 4.4 6.2 7.8 6.2 11a6.2 6.2 0 0 1-12.4 0c0-3.2 2.6-6.6 6.2-11z"/></svg>
+            <svg class="bottle" viewBox="0 0 14 28" aria-hidden="true"><path d="M4.6 0h4.8c.6 0 1 .4 1 1v2.3H3.6V1c0-.6.4-1 1-1z"/><path d="M3.5 4h7v1.2c0 .7.4 1.2 1 1.7 1 .9 1.5 1.8 1.5 3.1V25a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3V10c0-1.3.5-2.2 1.5-3.1.6-.5 1-1 1-1.7z"/><path class="bottle-drop" d="M7 12.6c1.8 2.2 2.9 3.8 2.9 5.3a2.9 2.9 0 0 1-5.8 0c0-1.5 1.1-3.1 2.9-5.3z"/></svg>
             <div class="water-text">
               <b data-i18n="water">Água hoje</b>
               <span id="waterAmount"></span>
-              <div class="water-bar"><span id="waterFill"></span></div>
             </div>
           </div>
+          <div class="water-bar"><span id="waterFill"></span></div>
           <div class="water-buttons">
             <button class="water-minus" id="waterMinus" aria-label="−">−</button>
             <button class="water-add" id="waterPlus"></button>
@@ -170,7 +192,10 @@
         <!-- Página: agenda (só com o endereço iCal salvo nas configurações); o JS monta a lista -->
         <section class="page" data-page="agenda" hidden>
           <div class="agenda">
-            <b class="agenda-head" data-i18n="islandAgenda">Agenda</b>
+            <div class="agenda-head">
+              <svg class="agenda-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2.5a1 1 0 0 1 1 1V5h8V3.5a1 1 0 1 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.5a1 1 0 0 1 1-1z" fill="currentColor"/><path d="M3 9.5h18" stroke="#000" stroke-width="1.6"/><path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2" stroke="#000" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <b data-i18n="islandAgenda">Agenda</b>
+            </div>
             <ul class="agenda-list" id="agendaList"></ul>
           </div>
         </section>
@@ -178,14 +203,15 @@
         <!-- Página: clima (só com a cidade salva nas configurações); o JS preenche -->
         <section class="page" data-page="weather" hidden>
           <div class="wx">
+            <!-- Em cima, como no player: ícone grande (no lugar da capa), cidade e condição, temperatura grande à direita -->
             <div class="wx-top">
+              <span class="wx-icon" id="wxIcon"></span>
               <div class="wx-main">
-                <span class="wx-place" id="wxPlace"></span>
-                <span class="wx-temp" id="wxTemp">—</span>
+                <b class="wx-place" id="wxPlace"></b>
+                <span class="wx-cond" id="wxCond"></span>
               </div>
               <div class="wx-side">
-                <span class="wx-icon" id="wxIcon"></span>
-                <span class="wx-cond" id="wxCond"></span>
+                <span class="wx-temp" id="wxTemp">—</span>
                 <span class="wx-range" id="wxRange"></span>
               </div>
             </div>
@@ -199,6 +225,13 @@
       </div>
 
       <div class="dots" id="dots"></div>
+      <!-- Tema Vidro: barra de abas no lugar das bolinhas (o JS monta os botões e anima a pílula) -->
+      <nav class="tabbar" id="tabbar" hidden><span class="tab-pill" id="tabPill"></span><span class="tab-drop" id="tabDrop"></span></nav>
+      <!-- Pomodoro rodando: a bolha de fora "entra" aqui quando a ilha abre (anel + tempo que falta) -->
+      <div class="pomo-chip" id="pomoChip" aria-hidden="true">
+        <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" class="ring-bg"/><circle cx="10" cy="10" r="8" class="ring-fg" id="chipRingFg"/></svg>
+        <b id="pomoChipTime"></b>
+      </div>
 
     </div>
   </div>

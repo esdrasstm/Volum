@@ -247,7 +247,7 @@ sealed class SettingsForm : Form
                     break;
 
                 case "setSkin":   // Temas: a ilha muda na hora; o mixer na próxima vez que abrir
-                    if (root.TryGetProperty("skin", out var sk) && sk.GetString() is "default" or "christmas" or "snowy" or "candy" or "sleigh")
+                    if (root.TryGetProperty("skin", out var sk) && sk.GetString() is "default" or "christmas" or "snowy" or "candy" or "sleigh" or "glass")
                     {
                         _settings.Skin = sk.GetString()!;
                         _settings.Save();

@@ -549,7 +549,7 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .island.tinted .cover { box-shadow: 0 6px 22px -6px var(--tint); }
 
 /* Onda ao vivo: o JS mexe cada barrinha pelo nível do som (sem a animação de sempre) */
-.wave.live i { animation: none !important; transition: transform .11s linear, background .6s ease; transform-origin: center; }
+.wave.live i { animation: none !important; transition: none; transform-origin: center; will-change: transform; }   /* o JS anda quadro a quadro (suave) */
 
 /* Faixa de atividade (carregador, fone, microfone/câmera em uso): como o indicador, um pouco mais larga (ActW no C#) */
 .island.alerting.act { --w: 320px; --h: 40px; --r: 12px; }
@@ -656,3 +656,252 @@ html.at-bottom .noticebar { top: auto; bottom: 0; }
 html.at-bottom .island { transform-origin: 50% 100%; }
 html.at-bottom .full { transform-origin: 50% 100%; transform: translateX(-50%) translateY(10px) scale(.9); }
 html.at-bottom .island.open .full { transform: translateX(-50%); }
+
+/* =========================================================
+   Visual novo da ilha (Figma do Esdras, 10/11/2026)
+   Maior que antes, para os elementos respirarem. Os tamanhos batem com o IslandForm.cs (ClosedW 270, ClosedH 50,
+   IdleH 58, OpenW 400, NoticeW 400, NoticeH 50, ActW 330, BubbleW 50, BubbleGap 8). Ícones cheios (estilo
+   SF Symbols), textos de apoio em #9A9A9A, trilhos #3F3F3F a 70% com o preenchimento branco a 80%.
+   ========================================================= */
+:root { --subtext: #9a9a9a; --rail: rgba(63, 63, 63, .7); --rail-fill: rgba(255, 255, 255, .8); }
+.island { --w: 270px; --h: 50px; --r: 16px; --tint: var(--rail-fill); }
+.island.idle { --h: 58px; --r: 18px; }
+.island.open { --w: 400px; --r: 22px; }
+.island.alerting, .island.alerting.osd { --h: 50px; --r: 16px; }
+.island.alerting.osd, .island.alerting.greeting { --w: 270px; }
+.island.alerting.greeting, .island.alerting.walking { --h: 58px; --r: 18px; }
+.island.alerting.act { --w: 330px; --h: 50px; --r: 16px; }
+
+/* ---------- Fechada: capa (ou carga) | hora | clima e onda ---------- */
+.mini { width: 270px; height: 50px; padding: 0 16px; }
+.island.idle .mini { height: 58px; }
+.mini-cover { width: 26px; height: 26px; border-radius: 6px; }
+.mini-ring { display: none !important; }
+.battery, .battery svg { width: 24px; height: 24px; }
+.clock { font-size: 16px; font-weight: 700; letter-spacing: 0; }
+.mini-right { gap: 8px; }
+.mini-wx { gap: 5px; font-size: 13px; }
+.mini-wx b { font-weight: 600; }
+.mini-wx-icon .wx-svg { width: 22px; height: 22px; }
+/* Com a onda na tela (música tocando), o clima fica só no ícone, como no Figma: a hora continua no meio */
+.mini-right:has(.wave:not([hidden])) .mini-wx b { display: none; }
+
+/* Onda: 6 barrinhas cheias e arredondadas (waveform do Figma) */
+.wave { height: 20px; gap: 2.4px; }
+.wave i { width: 3px; border-radius: 3px; }
+.wave i:nth-child(1) { height: 24%; } .wave i:nth-child(2) { height: 62%; } .wave i:nth-child(3) { height: 100%; }
+.wave i:nth-child(4) { height: 50%; } .wave i:nth-child(5) { height: 79%; } .wave i:nth-child(6) { height: 30%; }
+.wave.playing i:nth-child(6) { animation-delay: -.6s; }
+
+/* ---------- Aberta ---------- */
+.full { width: 400px; padding: 16px 16px 12px; }
+/* Sem a linha de data em cima (a hora já está na ilha fechada): a faixa fica por cima, só para o volume da rodinha
+   e os pontinhos de microfone/câmera */
+.status { position: absolute; top: 4px; left: 0; right: 0; height: 22px; padding: 0; z-index: 4; pointer-events: none; }
+.status .battery, .status .when { display: none; }
+.status .when-vol { padding: 4px 12px; border-radius: 12px; background: #000; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
+.status .privacy { position: absolute; top: 4px; right: 16px; }
+.pages { margin-top: 0; }
+.pages > .page { align-self: center; }   /* páginas mais baixas que o player ficam no meio, não grudadas em cima */
+.page { padding: 0 22px; }
+.page-arrow { top: 50%; margin-top: -11px; }   /* setas no meio da altura das páginas */
+
+/* Player: capa 53, nome 16 semibold, artista 14 cinza, onda à direita */
+.track { gap: 12px; }
+.cover { width: 53px; height: 53px; border-radius: 8px; }
+.meta b { font-size: 16px; font-weight: 600; line-height: 18px; letter-spacing: -.4px; }
+.meta span { margin-top: 2px; font-size: 14px; line-height: 18px; color: var(--subtext); }
+.track .wave { flex: none; height: 24px; margin-left: 6px; }
+.progress { gap: 9px; margin-top: 12px; font-size: 12px; color: var(--subtext); letter-spacing: -.4px; }
+.progress .bar { height: 6.5px; border-radius: 8px; background: var(--rail); }
+.progress .bar span { border-radius: 8px; }
+.progress .bar.seekable { --track: 6.5px; background: linear-gradient(var(--rail), var(--rail)) center / 100% var(--track) no-repeat; }
+.progress .bar.seekable:hover, .progress .bar.seekable.seeking { --track: 8px; }
+.controls { margin-top: 8px; }
+.controls button { width: 44px; height: 44px; border-radius: 12px; }
+.controls button .i-skip { width: 30px; height: 17px; }
+.controls .play svg { width: 26px; height: 26px; }
+.controls .side { color: var(--text); }
+.controls .side svg { width: 26px; height: 26px; }
+.controls .side.gone { display: none; }
+.controls .side[hidden] { display: grid; visibility: hidden; }   /* espaço vazio: os botões do meio não saem do centro */
+
+/* Água: garrafinha, "Água hoje", quanto já bebeu, barra inteira e os botões − / + embaixo à direita */
+.water { gap: 14px; padding-top: 0; }
+.bottle { flex: none; width: 22px; height: 44px; margin: 0 4px; fill: #fff; }
+.bottle .bottle-drop { fill: #000; }
+.water-text { gap: 2px; }
+.water-text b { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
+.water-text span { font-size: 14px; color: var(--subtext); }
+.water-bar { height: 6.5px; margin-top: 12px; border-radius: 8px; background: var(--rail); }
+.water-bar span { border-radius: 8px; background: var(--rail-fill); }
+.water-buttons { gap: 7px; margin-top: 10px; }
+.water-buttons button { height: 28px; border-radius: 7px; font-size: 15px; font-weight: 600; letter-spacing: -.25px; }
+.water-minus { width: 28px; padding: 0; background: #2c2c2c; color: #40e816; }
+.water-add { padding: 0 10px; background: #00b3ff; color: #fff; }
+
+/* Pomodoro e anéis: trilho cinza do Figma */
+.ring-bg { stroke: rgba(135, 135, 135, .55); }
+.focus-text span { color: var(--subtext); }
+.focus-text b { font-size: 24px; }
+
+/* Clima: ícone grande cheio */
+.wx-icon .wx-svg.wx-fill { width: 24px; height: 24px; }
+
+/* Bolinhas das páginas: uma faixa um pouco mais alta (o chip do Pomodoro mora nela) */
+.dots { height: 22px; margin-top: 10px; align-items: center; }
+.island.pomo-on .dots:empty { display: flex; }
+
+/* ---------- Pomodoro: bolha ao lado da ilha fechada ----------
+   Aparece à direita (8 px de vão). Quando a ilha abre, ela desliza para dentro, encolhe e some no lugar do chip
+   (anel + tempo, embaixo à direita), que aparece logo depois. Fechando, ela sai de novo para o lado. */
+.pomo-bubble {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin-left: 143px;   /* metade da ilha fechada (135) + vão (8) */
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #000;
+  opacity: 0;
+  transform: translateX(-24px) scale(.5);
+  pointer-events: none;
+  transition: transform .45s var(--soft-spring), opacity .2s ease, border-radius .3s ease;
+}
+html:not(.floating) .pomo-bubble { border-radius: 0 0 16px 16px; }
+.floating .pomo-bubble { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.bubble-ring { position: absolute; width: 34px; height: 34px; }
+.bubble-ring circle { stroke-width: 3; }
+.bubble-clock { width: 17px; height: 17px; }
+.pomo-bubble.break .ring-fg, .pomo-chip.break .ring-fg { stroke: var(--battery); }
+/* Ilha fechada ou ociosa com o Pomodoro rodando: a bolha sai de trás da ilha com uma molinha */
+.island.pomo-on.closed .pomo-bubble, .island.pomo-on.idle .pomo-bubble {
+  opacity: 1;
+  transform: none;
+  transition: transform .6s var(--bounce) .12s, opacity .25s ease .12s, border-radius .3s ease;
+}
+/* Abrindo: entra na ilha e vira o chip (embaixo à direita) */
+.island.pomo-on.open .pomo-bubble {
+  opacity: 0;
+  border-radius: 50%;
+  transform: translate(-40px, calc(var(--open-h, 160px) - 48px)) scale(.42);
+  transition: transform .5s var(--soft-spring), opacity .16s ease .3s, border-radius .3s ease;
+}
+html.at-bottom .pomo-bubble { top: auto; bottom: 0; }
+html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -2px) scale(.42); }
+
+.pomo-chip {
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease;
+}
+.pomo-chip svg { width: 20px; height: 20px; }
+.pomo-chip circle { stroke-width: 2.4; }
+.island.pomo-on.open .pomo-chip { opacity: 1; transition: opacity .3s ease .38s; }
+
+/* ---------- Avisos: faixa de 50 px ---------- */
+.noticebar { width: 400px; height: 50px; padding: 0 10px 0 18px; gap: 10px; }
+.noticebar .notice-icon { width: 24px; height: 24px; }
+.noticebar .notice-icon svg { width: 22px; height: 22px; }
+.noticebar .notice-text b { font-size: 13.5px; }
+.noticebar .notice-text span { font-size: 13px; }
+.noticebar .notice-action { padding: 6px 12px; border-radius: 9px; font-size: 13px; }
+.noticebar .notice-close { width: 24px; height: 24px; }
+.noticebar[data-kind="greet"], .noticebar[data-kind="walk"] { height: 58px; }
+.noticebar[data-kind="greet"] { width: 270px; }
+.noticebar[data-kind="walk"] .walk-scene { top: 2px; }
+.noticebar[data-kind="osd"] { width: 270px; }
+.noticebar[data-kind="act"] { width: 330px; }
+
+/* Notificação de outro app: ícone redondo, nome do app pequeno em cinza e, embaixo, quem mandou e a mensagem */
+.noticebar[data-kind="app"] { padding-left: 10px; }
+.noticebar[data-kind="app"] .notice-icon { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #1c1c1e; }
+.noticebar[data-kind="app"] .notice-icon img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.noticebar[data-kind="app"] .notice-text { display: grid; gap: 4px; align-items: start; }
+.noticebar[data-kind="app"] .notice-text b { font-size: 10.5px; font-weight: 400; line-height: 1; color: #a4a4a9; }
+.noticebar[data-kind="app"] .notice-text span { font-size: 13px; line-height: 1.1; color: var(--text); white-space: nowrap; }
+
+/* ---------- Ajustes do Esdras (10/11/2026) ---------- */
+/* Fechada, à esquerda: capa e, ao lado, a bateria (só notebook): raio no meio e a borda verde que diminui */
+.mini-left { gap: 8px; }
+/* Água: o "−" branco e em negrito */
+.water-minus { color: #fff; font-weight: 700; }
+
+/* Todas as páginas no padrão do player (Figma): em cima um "cabeçalho" com a arte de 53 px à esquerda, título 16
+   semibold e texto de apoio 14 cinza; embaixo o conteúdo ou os botões */
+
+/* Foco: anel com o relógio no lugar da capa, fase e ciclo, tempo grande à direita; botões como os do player */
+.focus { display: grid; gap: 8px; padding-top: 0; }
+.focus-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.focus-art { position: relative; flex: none; display: grid; place-items: center; width: 53px; height: 53px; }
+.focus-art .focus-ring { position: absolute; inset: 0; width: 53px; height: 53px; }
+.focus-art .focus-ring circle { stroke-width: 3.2; }
+.focus-clock { width: 24px; height: 24px; }
+.focus-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.focus-text b { font-size: 16px; font-weight: 600; line-height: 18px; letter-spacing: -.4px; }
+.focus-text span { font-size: 14px; line-height: 18px; color: var(--subtext); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.focus-time { flex: none; font-size: 26px; font-weight: 600; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+.focus-buttons { justify-content: center; gap: 36px; }
+.focus-buttons button, .focus-buttons .main { width: 44px; height: 44px; border-radius: 12px; background: transparent; color: var(--text); }
+.focus-buttons button:hover, .focus-buttons .soft:hover { background: var(--soft); }
+.focus-buttons .soft { background: transparent; }
+.focus-buttons .soft svg { width: 22px; height: 22px; }
+.focus-buttons .main svg { width: 26px; height: 26px; }
+
+/* Agenda: ícone e título como cabeçalho, a lista embaixo (hora cinza, título semibold) */
+.agenda { gap: 10px; }
+.agenda-head { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; letter-spacing: -.4px; color: var(--text); }
+.agenda-icon { width: 24px; height: 24px; color: #fff; }
+.agenda-list { gap: 8px; }
+.agenda-when { width: 78px; font-size: 12px; color: var(--subtext); }
+.agenda-title { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
+.agenda-empty { font-size: 14px; }
+
+/* Clima: ícone grande cheio à esquerda, cidade (título) e condição (cinza), temperatura grande e máx./mín. à direita;
+   embaixo as próximas horas com os ícones cheios */
+.wx { display: grid; gap: 12px; padding-top: 0; }
+.wx-top { display: flex; align-items: center; gap: 12px; }
+.wx-icon { flex: none; display: grid; place-items: center; width: 53px; height: 53px; }
+.wx-icon .wx-svg, .wx-icon .wx-svg.wx-fill { width: 44px; height: 44px; }
+.wx-main { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.wx-place { font-size: 16px; font-weight: 600; line-height: 18px; letter-spacing: -.4px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-cond { font-size: 14px; font-weight: 400; line-height: 18px; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wx-side { display: grid; justify-items: end; gap: 2px; grid-template-columns: none; }
+.wx-side .wx-range { grid-column: auto; }
+.wx-temp { font-size: 26px; font-weight: 600; line-height: 1; letter-spacing: -.6px; }
+.wx-range { font-size: 12px; color: var(--subtext); white-space: nowrap; }
+.wx-hours { padding: 0; border-top: 0; }
+.wx-hours li { gap: 4px; }
+.wx-hour { font-size: 12px; color: var(--subtext); }
+.wx-hicon .wx-svg, .wx-hicon .wx-svg.wx-fill { width: 22px; height: 22px; }
+.wx-htemp { font-size: 14px; font-weight: 600; letter-spacing: -.2px; }
+
+/* Alto-falante do player: com som / mudo (fica um pouco apagado quando está mudo) */
+#muteBtn .i-muted, #muteBtn.muted .i-sound { display: none; }
+#muteBtn.muted .i-muted { display: block; }
+#muteBtn.muted { color: var(--subtext); }
+/* Onda: sempre branca (a cor da capa continua só na barra do tempo e na sombra da capa) */
+.wave i, .island.tinted .wave i { background: #fff; }
+
+/* Sem o brilho colorido atrás da capa (pedido do Esdras); a capa é clicável (abre o app que está tocando) */
+.island.tinted .cover, .cover { box-shadow: none; }
+.cover { cursor: pointer; transition: transform .2s var(--soft-spring); }
+.cover:hover { transform: scale(1.04); }
+.cover:active { transform: scale(.96); }
+
+/* Barra de abas: só no tema Vidro (skins.css); fora dele, as bolinhas de sempre */
+.tabbar { display: none; }
+.tabbar[hidden] { display: none !important; }

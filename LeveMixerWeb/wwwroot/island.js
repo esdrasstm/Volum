@@ -41,16 +41,17 @@
   }
 
   /* ---------------- Bateria ---------------- */
+  // Bateria (só notebook): o raio no meio e a borda verde, que diminui conforme descarrega (vermelha com 20% ou menos)
   function batterySvg() {
-    const low = battery.percent <= 20 && !battery.charging;
-    const color = low ? 'var(--battery-low)' : 'var(--battery)';
-    const c = 2 * Math.PI * 8;
-    const bolt = battery.charging
-      ? '<path d="M10.8 5.5 7.6 10.6h2.6l-1 3.9 3.2-5.1h-2.6z" fill="' + color + '"/>'
-      : '<text x="10" y="13" text-anchor="middle" font-size="7" font-weight="700" fill="' + color + '">' + battery.percent + '</text>';
-    return '<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>' +
-      '<circle cx="10" cy="10" r="8" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" ' +
-      'stroke-dasharray="' + (c * battery.percent / 100) + ' ' + c + '" transform="rotate(-90 10 10)"/>' + bolt + '</svg>';
+    // Cor pela carga, passando aos poucos: verde (100%) → amarelo-laranja (~50%) → vermelho (20% ou menos)
+    const hue = Math.round(Math.max(0, Math.min(1, (battery.percent - 20) / 80)) * 110);
+    const c = 'hsl(' + hue + ', 88%, ' + (hue > 60 ? 52 : 56) + '%)';
+    const cr = 2 * Math.PI * 10;
+    const bolt = battery.charging ? c : '#3f3f3f';   // raio colorido só carregando; fora da tomada, cinza (não parece que está carregando)
+    return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(135,135,135,.4)" stroke-width="1.8"/>' +
+      '<circle cx="12" cy="12" r="10" fill="none" stroke="' + c + '" stroke-width="1.8" stroke-linecap="round" ' +
+      'stroke-dasharray="' + (cr * battery.percent / 100).toFixed(2) + ' ' + cr.toFixed(2) + '" transform="rotate(-90 12 12)"/>' +
+      '<path d="M13.2 5.2 7.6 13.1h3.9l-1 5.7 5.7-8h-4z" fill="' + bolt + '" stroke="' + bolt + '" stroke-width=".6" stroke-linejoin="round"/></svg>';
   }
 
   function showBattery() {
@@ -62,13 +63,13 @@
 
   // Fechada, à esquerda: o anel do Pomodoro (rodando), a capa (com música), o mascote (ilha ociosa) ou a bateria
   function showMini() {
-    const ring = pomoActive();
+    const ring = false;   // Pomodoro: bolha ao lado da ilha (pomoBubble), não mais o anel à esquerda
     const pet = !ring && idle;   // ociosa: só o mascote (a capa seria de uma música parada)
     const cover = !pet && !!(media && media.cover);   // com o Pomodoro rodando, aparecem os dois (anel e capa)
     $('miniRing').toggleAttribute('hidden', !ring);   // é um <svg>: a propriedade .hidden não vale nele
     $('miniCover').hidden = !cover;
     $('miniMascot').hidden = !pet;
-    $('miniBattery').hidden = ring || cover || pet || !battery.present;
+    $('miniBattery').hidden = pet || !battery.present;
   }
 
   /* ---------------- Mascote ----------------
@@ -206,23 +207,37 @@
   }
 
   /* ---------------- Onda ao vivo ----------------
-     Com som saindo, o C# manda o nível (~10 por segundo). Cada barrinha estica conforme o nível, com um peso
-     próprio que muda um pouco a cada vez (parece a música). Se o nível parar de chegar, volta a animação de sempre. */
-  const WAVE_SHAPE = [0.55, 0.85, 1, 0.75, 0.5];
-  let liveTimer = 0;
+     Com som saindo, o C# manda o nível (~10 por segundo). Cada barrinha tem um alvo (nível × peso próprio, com um
+     pouco de acaso) e anda até ele quadro a quadro, sempre suave: sobe rápido e desce devagar (como um medidor de
+     verdade). Se o nível parar de chegar, as barras descem devagar até o repouso, sem pular para outra animação.
+     O requestAnimationFrame só roda enquanto alguma barra está se mexendo. */
+  const WAVE_SHAPE = [0.45, 0.8, 1, 0.7, 0.9, 0.5];
+  const WAVE_REST = 0.3;                      // altura das barras parada (fração da altura cheia)
+  const waveCur = WAVE_SHAPE.map(() => WAVE_REST), waveTgt = WAVE_SHAPE.map(() => WAVE_REST);
+  let liveTimer = 0, waveRaf = 0, waveT = 0;
   function onLevel(v) {
     const lvl = Math.min(1, Math.sqrt(v) * 1.15);   // raiz: sons baixos ainda mexem a onda
-    for (const w of [$('wave'), $('miniWave')]) {
-      w.classList.add('live');
-      [...w.children].forEach((bar, i) => {
-        const s = 0.28 + lvl * WAVE_SHAPE[i] * (0.7 + Math.random() * 0.5);
-        bar.style.transform = `scaleY(${Math.min(1, s).toFixed(2)})`;
-      });
-    }
+    WAVE_SHAPE.forEach((w, i) => { waveTgt[i] = Math.min(1, WAVE_REST + lvl * w * (0.65 + Math.random() * 0.45)); });
+    for (const w of [$('wave'), $('miniWave')]) w.classList.add('live');
     clearTimeout(liveTimer);
-    liveTimer = setTimeout(() => {
-      for (const w of [$('wave'), $('miniWave')]) { w.classList.remove('live'); [...w.children].forEach((b) => { b.style.transform = ''; }); }
-    }, 700);
+    liveTimer = setTimeout(() => waveTgt.fill(WAVE_REST), 450);   // o nível parou de chegar: volta ao repouso, devagar
+    if (!waveRaf) { waveT = performance.now(); waveRaf = requestAnimationFrame(waveStep); }
+  }
+  function waveStep(now) {
+    const dt = Math.min(0.05, (now - waveT) / 1000);
+    waveT = now;
+    let moving = false;
+    for (let i = 0; i < waveCur.length; i++) {
+      const d = waveTgt[i] - waveCur[i];
+      const k = 1 - Math.exp(-(d > 0 ? 22 : 9) * dt);   // sobe rápido, desce devagar (independe da taxa de quadros)
+      waveCur[i] += d * k;
+      if (Math.abs(d) > 0.004) moving = true;
+    }
+    for (const w of [$('wave'), $('miniWave')]) {
+      if (w.hidden) continue;
+      [...w.children].forEach((bar, i) => { bar.style.transform = 'scaleY(' + waveCur[i].toFixed(3) + ')'; });
+    }
+    waveRaf = moving ? requestAnimationFrame(waveStep) : 0;
   }
 
   /* ---------------- Cor da música (tirada da capa) ----------------
@@ -318,6 +333,29 @@
     const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g === 'cloudy' ? 'cloud' : g;
     return '<svg class="wx-svg" viewBox="0 0 24 24" aria-hidden="true">' + WX_PATHS[k] + '</svg>';
   };
+  // Ícones cheios (estilo SF Symbols, como no Figma): ilha fechada, botão do player e ícone grande da página do clima.
+  // As próximas horas continuam com os de traço (pequenos).
+  const CLOUD = (y) => '<path transform="translate(0 ' + y + ')" d="M7 17.5h10.6a4.4 4.4 0 0 0 .6-8.76A6.4 6.4 0 0 0 5.8 10a3.8 3.8 0 0 0 1.2 7.5z" fill="currentColor"/>';
+  const DROPS = (r) => '<path d="M8.6 18.6l-1 2.6M12.6 18.6l-1 2.6M16.6 18.6l-1 2.6" fill="none" stroke="currentColor" stroke-width="' + r + '" stroke-linecap="round"/>';
+  const WX_FILL = {
+    sun: '<circle cx="12" cy="12" r="4.6" fill="currentColor"/><path d="M12 2.2v2.2M12 19.6v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.2 12h2.2M19.6 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    moon: '<path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z" fill="currentColor"/>',
+    sunCloud: '<circle cx="8.5" cy="8.5" r="3.4" fill="currentColor"/><path d="M8.5 1.8v1.4M2.6 8.5h1.4M3.8 3.8l1 1M13.2 3.8l-1 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+      '<path d="M9.4 21h8.4a3.6 3.6 0 0 0 .5-7.17A5.2 5.2 0 0 0 8.4 14.6 3.2 3.2 0 0 0 9.4 21z" fill="currentColor" stroke="#000" stroke-width="1.4"/>',
+    moonCloud: '<path d="M12.6 3.6a5.6 5.6 0 0 1-7.4 7.4A5.6 5.6 0 1 0 12.6 3.6z" fill="currentColor"/>' +
+      '<path d="M9.4 21h8.4a3.6 3.6 0 0 0 .5-7.17A5.2 5.2 0 0 0 8.4 14.6 3.2 3.2 0 0 0 9.4 21z" fill="currentColor" stroke="#000" stroke-width="1.4"/>',
+    cloud: CLOUD(1.5),
+    fog: CLOUD(-2.5) + '<path d="M5 18.5h14M7.5 21.5h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    drizzle: CLOUD(-2.5) + '<path d="M9 19.4v.1M13 19.4v.1M11 21.8v.1M15 21.8v.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+    rain: CLOUD(-2.5) + DROPS(2),
+    snow: CLOUD(-2.5) + '<path d="M8.5 19.2v.1M12 19.2v.1M15.5 19.2v.1M10.2 22v.1M13.8 22v.1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>',
+    storm: CLOUD(-2.5) + '<path d="M12.8 15.6 9.6 20.2h2.8l-1.2 3.4 3.6-4.8h-2.8z" fill="currentColor"/>',
+  };
+  const wxIconFill = (c, day) => {
+    const g = wxGroup(c);
+    const k = g === 'clear' ? (day ? 'sun' : 'moon') : g === 'mostly' || g === 'partly' ? (day ? 'sunCloud' : 'moonCloud') : g === 'cloudy' ? 'cloud' : g;
+    return '<svg class="wx-svg wx-fill" viewBox="0 0 24 24" aria-hidden="true">' + WX_FILL[k] + '</svg>';
+  };
   // A previsão vem em °C; com a unidade "f" (região que usa Fahrenheit ou escolhida nas configurações) converte aqui
   let wxUnit = 'c', wxShow = 'both';
   const deg = (v) => Math.round(wxUnit === 'f' ? v * 9 / 5 + 32 : v) + '°';
@@ -328,7 +366,7 @@
     const on = weatherOn && !!w && wxShow !== 'off';
     el.hidden = !on;
     if (!on) return;
-    $('miniWxIcon').innerHTML = wxIcon(w.code, w.day);
+    $('miniWxIcon').innerHTML = wxIconFill(w.code, w.day);
     $('miniWxTemp').textContent = wxShow === 'both' ? deg(w.temp) + (wxUnit === 'f' ? 'F' : 'C') : '';
     el.title = w.place + ' · ' + t('wx_' + wxGroup(w.code)) + ' · ' + deg(w.temp) + (wxUnit === 'f' ? 'F' : 'C');
     el.classList.toggle('icon-only', wxShow !== 'both');
@@ -338,9 +376,11 @@
     if (!w) return;
     $('wxPlace').textContent = w.place;
     $('wxTemp').textContent = deg(w.temp);
-    $('wxIcon').innerHTML = wxIcon(w.code, w.day);
+    $('wxIcon').innerHTML = wxIconFill(w.code, w.day);
+    $('wxQuick').innerHTML = wxIconFill(w.code, w.day);
     $('wxCond').textContent = t('wx_' + wxGroup(w.code));
-    $('wxRange').textContent = t('wxMax') + ' ' + deg(w.max) + '  ' + t('wxMin') + ' ' + deg(w.min);
+    $('wxRange').textContent = deg(w.max) + ' / ' + deg(w.min);   // máxima / mínima (curto: a condição do tempo cabe inteira)
+    $('wxRange').title = t('wxMax') + ' ' + deg(w.max) + ' · ' + t('wxMin') + ' ' + deg(w.min);
     const hours = (w.hours || []).map((h) => {
       const li = document.createElement('li');
       const hr = document.createElement('span');
@@ -348,7 +388,7 @@
       hr.textContent = lang === 'en' ? ((+h.hour % 12) || 12) + (+h.hour < 12 ? ' AM' : ' PM') : h.hour + 'h';
       const ic = document.createElement('span');
       ic.className = 'wx-hicon';
-      ic.innerHTML = wxIcon(h.code, h.day);
+      ic.innerHTML = wxIconFill(h.code, h.day);
       const tp = document.createElement('span');
       tp.className = 'wx-htemp';
       tp.textContent = deg(h.temp);
@@ -460,9 +500,17 @@
   }
 
   $('play').addEventListener('click', () => post({ type: 'playPause' }));
+  // Capa da música: traz para a frente o app que está tocando (Spotify, navegador...)
+  document.querySelector('.cover').addEventListener('click', () => { if (media) post({ type: 'showSource' }); });
   $('next').addEventListener('click', () => post({ type: 'next' }));
   $('prev').addEventListener('click', () => post({ type: 'prev' }));
-  $('openMixer').addEventListener('click', () => post({ type: 'openMixer' }));
+  // Alto-falante do player: silencia / devolve o som geral (abrir o mixer continua no "apertar e segurar" a ilha)
+  $('muteBtn').addEventListener('click', () => post({ type: 'toggleMute' }));
+  function showMute(muted) {
+    const b = $('muteBtn');
+    b.classList.toggle('muted', !!muted);
+    b.title = t(muted ? 'islandUnmute' : 'islandMute');
+  }
 
   /* ---------------- Água ---------------- */
   function showWater() {
@@ -475,8 +523,15 @@
     $('waterMinus').disabled = water.todayMl <= 0;
     $('waterQuick').hidden = !water.enabled;
     $('waterQuick').title = '+ ' + V.fmtMl(water.cupMl, lang);
+    showQuick();
     showPages();
   }
+  // Direita do player: com cidade salva, o ícone do tempo (abre a página do clima); sem, o +1 copo (ou um espaço vazio)
+  function showQuick() {
+    $('wxQuick').classList.toggle('gone', !weatherOn);
+    $('waterQuick').classList.toggle('gone', weatherOn);
+  }
+  $('wxQuick').addEventListener('click', () => goToPage('weather'));
 
   const addWater = (ml) => {
     water.todayMl = Math.max(0, water.todayMl + ml);
@@ -515,6 +570,7 @@
 
   function showFocusTime() {
     $('focusTime').textContent = fmtClock(pomoLeft());
+    $('pomoChipTime').textContent = fmtClock(pomoLeft());
   }
 
   let focusTimer = 0;
@@ -528,6 +584,12 @@
     for (const el of [$('miniRing'), document.querySelector('.focus-ring')]) el.classList.toggle('break', brk);
     setRing($('miniRingFg'), 7.5);
     setRing($('focusRingFg'), 20);
+    setRing($('bubbleRingFg'), 14);
+    setRing($('chipRingFg'), 8);
+    for (const el of [$('pomoBubble'), $('pomoChip')]) el.classList.toggle('break', brk);
+    // Bolha ao lado da ilha fechada: o C# alarga a janela para a direita enquanto ela está na tela
+    const on = pomoActive();
+    if (on !== island.classList.contains('pomo-on')) { island.classList.toggle('pomo-on', on); post({ type: 'bubble', on }); }
     const phaseText = { idle: t('focusReady'), focus: t('focus'), short: t('focusShort'), long: t('focusLong') }[pomo.phase];
     $('focusPhase').textContent = pomo.paused ? `${phaseText} · ${t('focusPaused')}` : phaseText;
     $('focusCycle').textContent = pomo.phase === 'idle'
@@ -586,7 +648,78 @@
       dot.addEventListener('click', () => { const step = i - page; if (!step) return; page = i; showPages(); slideIn(step); });
       return dot;
     }) : []));
+    showTabs(list);
     reportHeight();
+  }
+
+  /* ---------------- Abas (tema Vidro) ----------------
+     No tema Vidro, as bolinhas viram uma barra de abas: ícones em círculos de vidro e a aba ativa numa pílula
+     verde-limão. Ao trocar, a pílula ESTICA até a aba nova com mola: a ponta da frente vai primeiro (mais rígida) e a
+     de trás vem depois (mais solta), como uma gota; na ponta de trás fica uma gotinha que some. O nome da aba entra
+     com fade quando a pílula chega. Os espaços das abas são fixos (nada pula de lugar). rAF só enquanto mexe. */
+  const TAB_ICONS = {
+    media: '<svg viewBox="0 0 24 24"><path d="M9 17.5V6.2c0-.5.3-.9.8-1l8.4-2c.6-.1 1.2.3 1.2 1V15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="2.8" fill="currentColor"/><circle cx="16.9" cy="15.5" r="2.8" fill="currentColor"/></svg>',
+    focus: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="currentColor"/><path d="M12 9v4.2l2.6 1.6" fill="none" stroke="var(--tab-cut, #000)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 2.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    water: '<svg viewBox="0 0 24 24"><path d="M12 2.6c3.8 4.5 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.6 8.2 7.1 12 2.6z" fill="currentColor"/></svg>',
+    agenda: '<svg viewBox="0 0 24 24"><path d="M7 2.5a1 1 0 0 1 1 1V5h8V3.5a1 1 0 1 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.5a1 1 0 0 1 1-1z" fill="currentColor"/><path d="M3 9.5h18" stroke="var(--tab-cut, #000)" stroke-width="1.6"/></svg>',
+    weather: '<svg viewBox="0 0 24 24"><path d="M7 19h10.6a4.4 4.4 0 0 0 .6-8.76A6.4 6.4 0 0 0 5.8 11.5 3.8 3.8 0 0 0 7 19z" fill="currentColor"/></svg>',
+  };
+  const TAB_LABELS = { media: 'tabMedia', focus: 'tabFocus', water: 'tabWater', agenda: 'tabAgenda', weather: 'tabWeather' };
+  let tabKey = '', tabPos = null, tabGoal = null, tabVel = { l: 0, r: 0 }, tabRaf = 0, tabT = 0, tabLead = 1;
+  function showTabs(list) {
+    const bar = $('tabbar');
+    const key = lang + '|' + list.map((p) => p.dataset.page).join(',');
+    if (key !== tabKey) {
+      tabKey = key;
+      bar.querySelectorAll('.tab').forEach((b) => b.remove());
+      list.forEach((p, i) => {
+        const b = document.createElement('button');
+        b.className = 'tab';
+        b.innerHTML = '<span class="tab-ico">' + TAB_ICONS[p.dataset.page] + '</span><span class="tab-label"></span>';
+        b.querySelector('.tab-label').textContent = t(TAB_LABELS[p.dataset.page]);
+        b.addEventListener('click', () => { const step = i - page; if (!step) return; page = i; showPages(); slideIn(step); });
+        bar.appendChild(b);
+      });
+    }
+    [...bar.querySelectorAll('.tab')].forEach((b, i) => b.classList.toggle('on', i === page));
+    bar.hidden = list.length < 2;
+    requestAnimationFrame(moveTabPill);
+  }
+  function moveTabPill() {
+    const bar = $('tabbar'), on = bar.querySelector('.tab.on');
+    if (!on || bar.hidden || !bar.offsetWidth) { tabPos = null; return; }   // fora do tema Vidro: nada a fazer
+    // Posição de layout (sem a escala da animação de abrir nem zoom): a aba fica dentro da barra (position: relative)
+    const goal = { l: on.offsetLeft, r: on.offsetLeft + on.offsetWidth };
+    const still = document.documentElement.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!tabPos || still) { tabPos = { ...goal }; tabGoal = goal; tabVel = { l: 0, r: 0 }; drawTabPill(); return; }
+    if (tabGoal && Math.abs(goal.l - tabGoal.l) < 0.5 && Math.abs(goal.r - tabGoal.r) < 0.5) return;
+    tabLead = goal.l > tabPos.l ? 1 : -1;   // indo para a direita: a ponta da direita vai na frente
+    tabGoal = goal;
+    const drop = $('tabDrop');               // gotinha que fica na ponta de trás
+    drop.style.left = (tabLead > 0 ? tabPos.l + 12 : tabPos.r - 12) + 'px';
+    drop.classList.remove('go'); void drop.offsetWidth; drop.classList.add('go');
+    if (!tabRaf) { tabT = performance.now(); tabRaf = requestAnimationFrame(tabStep); }
+  }
+  function tabStep(now) {
+    const dt = Math.min(0.032, (now - tabT) / 1000);
+    tabT = now;
+    let moving = false;
+    for (const k of ['l', 'r']) {
+      const front = (k === 'r') === (tabLead > 0);
+      const K = front ? 560 : 190, D = front ? 38 : 24;   // frente rígida, trás solta: a pílula estica e depois junta
+      const a = -K * (tabPos[k] - tabGoal[k]) - D * tabVel[k];
+      tabVel[k] += a * dt;
+      tabPos[k] += tabVel[k] * dt;
+      if (Math.abs(tabVel[k]) > 0.4 || Math.abs(tabPos[k] - tabGoal[k]) > 0.4) moving = true;
+    }
+    if (!moving) { tabPos = { ...tabGoal }; tabVel = { l: 0, r: 0 }; }
+    drawTabPill();
+    tabRaf = moving ? requestAnimationFrame(tabStep) : 0;
+  }
+  function drawTabPill() {
+    const p = $('tabPill');
+    p.style.transform = 'translateX(' + tabPos.l.toFixed(2) + 'px)';
+    p.style.width = Math.max(24, tabPos.r - tabPos.l).toFixed(2) + 'px';
   }
 
   // A página nova entra deslizando do lado de onde veio (anima só a que aparece)
@@ -632,7 +765,7 @@
   let drag = null;
   const rubber = (dx) => Math.sign(dx) * Math.min(60, Math.abs(dx) * 0.4);   // a página vem junto, mas "pesada"
   $('full').addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || mode !== 'open' || e.target.closest('button, .dots, .bar.seekable')) return;
+    if (e.button !== 0 || mode !== 'open' || e.target.closest('button, .dots, .bar.seekable, .cover')) return;
     const cur = pages()[page];
     drag = { x: e.clientX, dx: 0, moved: false, cur };
     drag.hold = setTimeout(() => {   // segurou sem arrastar: abre o mixer
@@ -850,7 +983,8 @@
         document.documentElement.classList.toggle('lite', !!m.lite);
         document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
         document.documentElement.classList.toggle('at-bottom', !!m.bottom);
-        document.documentElement.dataset.skin = m.skin || 'default';                   // tema (Configurações → Temas)           // embaixo (acima da barra de tarefas): cresce para cima
+        document.documentElement.dataset.skin = m.skin || 'default';
+        tabPos = null; tabKey = ''; setTimeout(showPages, 0);                   // tema (Configurações → Temas)           // embaixo (acima da barra de tarefas): cresce para cima
         pomoOn = m.pomodoro !== false;
         V.applyI18n(lang);
         tickClock();
@@ -867,12 +1001,13 @@
         if (changed && mode === 'open') { const t = document.querySelector('.track'); t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap'); }
         break;
       }
-      case 'volume':  showVolume(m); break;
+      case 'volume':  showVolume(m); showMute(m.muted); break;
+      case 'mute':    showMute(m.muted); break;
       case 'level':   onLevel(m.v); break;
       case 'privacy': showPrivacy(m); break;
       case 'agenda':  agendaOn = !!m.on; agenda = m.events || []; showAgenda(); showPages(); break;
       case 'weather':
-        weatherOn = !!m.on; weather = m.weather;
+        weatherOn = !!m.on; weather = m.weather; showQuick();
         wxUnit = m.unit === 'f' ? 'f' : 'c'; wxShow = m.show || 'both';
         showWeather(); showMiniWeather(); showPages();
         break;

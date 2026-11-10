@@ -129,7 +129,8 @@ sealed class MixerForm : Form
 
     // Acrílico nativo só existe a partir do Windows 11 22H2 (build 22621); antes disso, visual sólido.
     static readonly bool GlassSupported = Environment.OSVersion.Version.Build >= 22621;
-    bool UseGlass => false;   // sem acrílico desde o visual do Figma (cartão sólido #111111)
+    // Sem acrílico desde o visual do Figma (cartão sólido); volta só no tema Vidro (Windows 11 22H2+, fora do modo leve)
+    bool UseGlass => GlassSupported && _settings.Skin == "glass" && !_settings.LightMode;
 
     const int MeterMs = 60, MeterLiteMs = 150;   // medidores: normal / modo leve
 
@@ -157,8 +158,10 @@ sealed class MixerForm : Form
 
             if (GlassSupported)
             {
-                int none = 1;                                                 // DWMSBT_NONE: sem acrílico
-                DwmSetWindowAttribute(Handle, 38, ref none, sizeof(int));     // DWMWA_SYSTEMBACKDROP_TYPE
+                int backdrop = UseGlass ? 3 : 1;                              // 3 = acrílico (tema Vidro); 1 = nenhum
+                DwmSetWindowAttribute(Handle, 38, ref backdrop, sizeof(int)); // DWMWA_SYSTEMBACKDROP_TYPE
+                int corner = UseGlass ? 2 : 1;                                // vidro: o Windows arredonda (o acrílico é da janela inteira)
+                DwmSetWindowAttribute(Handle, 33, ref corner, sizeof(int));   // DWMWA_WINDOW_CORNER_PREFERENCE
             }
         }
         catch { }
@@ -534,7 +537,8 @@ sealed class MixerForm : Form
             type = "settings",
             theme = _settings.Theme.ToString().ToLowerInvariant(),
             autostart = AutoStart.IsEnabled,
-            glass = false,   // visual do Figma: cartão sólido, sem os estilos de vidro
+            glass = false,   // visual do Figma: cartão sólido, sem os estilos de vidro antigos
+            acrylic = UseGlass,   // tema Vidro com o acrílico do Windows atrás (sem ele, o CSS usa um vidro mais opaco)
             lite = _settings.LightMode,
             skin = _settings.Skin,
             language = Strings.Normalize(_settings.Language),

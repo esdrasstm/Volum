@@ -29,8 +29,10 @@ sealed class IslandForm : Form
     // Tamanhos em "pixels CSS". A janela tem a pílula + as "orelhas" (curvas que ligam a pílula à borda da tela).
     // Precisam bater com o island.css (--closed-w, --tuck-w, --open-w, --ear...).
     const int Ear = 10;
-    const int ClosedW = 250, ClosedH = 40, IdleH = 54, TuckW = 130, TuckH = 6, OpenW = 440, NoticeW = 400, NoticeH = 40;   // fechada e avisos: 40 de altura, cantos 12 (como o Alcove)
-    const int ActW = 320;              // largura da faixa de uma atividade (carregador, fone, microfone/câmera em uso)
+    // Visual do Figma (10/11/2026): maior que antes, para os elementos respirarem. Precisa bater com o island.css.
+    const int ClosedW = 270, ClosedH = 50, IdleH = 58, TuckW = 130, TuckH = 6, OpenW = 400, NoticeW = 400, NoticeH = 50;
+    const int ActW = 330;              // largura da faixa de uma atividade (carregador, fone, microfone/câmera em uso)
+    const int BubbleW = 50, BubbleGap = 8;   // bolha do Pomodoro ao lado da ilha fechada (o JS avisa quando ela aparece)
     const int FloatGap = 8;            // ilha flutuante: distância da borda de cima da tela
     const int AnimMs = 900;            // garantia: se o "animDone" do JS não vier, a janela fica do tamanho exato depois disso
     const int MoveSlack = 10;          // folga embaixo da janela enquanto a forma anima (a mola passa um pouquinho)
@@ -59,6 +61,7 @@ sealed class IslandForm : Form
     int _dwellMs;
     string _noticeKind = "";   // "greet" (bom dia) e "walk" (levantar, com a cena animada) usam a ilha mais alta
     int _openH = 160, _watchTicks;
+    bool _bubble;   // bolha do Pomodoro na tela: a janela alarga para a direita até ela
     IntPtr _winEventHook;
     WinEventProc? _winEventProc;   // guardado: o Windows chama este delegate enquanto o gancho existir
     Action? _noticeAction;
@@ -215,7 +218,14 @@ sealed class IslandForm : Form
         int w = (int)Math.Round((s.Width + 2 * Ear) * k);
         int h = (int)Math.Round((s.Height + slack) * k);
         var box = IslandBox(w, h, k);
-        SetBounds(box.X, box.Y, w, h);
+        // Bolha do Pomodoro: fica à direita da ilha fechada; a janela cresce só para a direita (a ilha não sai do lugar)
+        if (_bubble)
+        {
+            float right = ClosedW / 2f + BubbleGap + BubbleW, half = s.Width / 2f + Ear;
+            if (right > half) box.Width += (int)Math.Ceiling((right - half) * k);
+            box.Height = Math.Max(box.Height, (int)Math.Round((ClosedH + slack) * k));
+        }
+        SetBounds(box.X, box.Y, box.Width, box.Height);
         // WebView do tamanho da maior ilha possível, sempre no mesmo lugar da tela: só a posição dele dentro da janela muda.
         // Embaixo, ele fica preso pela borda de baixo (a ilha cresce para cima).
         int webW = (int)Math.Round((OpenW + 2 * Ear) * k), webH = (int)Math.Round((400 + MoveSlack) * k);
@@ -457,14 +467,18 @@ sealed class IslandForm : Form
         return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom).IntersectsWith(ClosedRect()) ? fg : IntPtr.Zero;
     }
 
-    // Encostar não basta: só recolhe se a ilha estiver em cima de abas, menus ou botões do app (Obstruction.cs).
-    // A conferência roda em segundo plano e só quando algo muda na janela (outra janela, título ou tamanho
-    // diferente: abriu/trocou de aba, mexeu em menus) ou a cada 10 s, para não pesar.
+    // Janela encostando no lugar da ilha = a ilha recolhe (some), como em cima das abas do navegador.
+    // Antes só recolhia quando a acessibilidade do Windows achava abas/menus/botões ali (Obstruction.cs), mas apps que
+    // desenham a própria interface (Figma, Photoshop, Electron) não mostram nada para ela; agora vale para qualquer app
+    // que chegue no topo (todos têm barra de título, menus ou abas lá em cima). Tela cheia continua sendo outra regra.
+    void CheckObstruction(IntPtr fg) => SetTuck(true);
+
+    // (conferência antiga pela acessibilidade, guardada caso precise voltar)
     bool _obstructionBusy;
     string _lastKey = "";
     DateTime _lastCheck;
 
-    void CheckObstruction(IntPtr fg)
+    void CheckObstructionUia(IntPtr fg)
     {
         GetWindowRect(fg, out var r);
         var title = new System.Text.StringBuilder(256);
@@ -642,7 +656,7 @@ sealed class IslandForm : Form
     {
         if (IsDisposed || _hiddenByFullscreen) return;
         if (_notice && _noticeKind is not ("osd" or "act" or "app")) return;   // aviso do Volum na tela: não atropela
-        ShowNotice("app", n.Title, n.Body.Length > 0 ? n.Body : n.App, null, null, 6000, kind: "app", img: n.Icon);
+        ShowNotice("app", n.App, n.Body.Length > 0 ? (n.Title.Length > 0 ? n.Title + ": " + n.Body : n.Body) : n.Title, null, null, 6000, kind: "app", img: n.Icon);
     }
 
     /// <summary>Ligou/desligou as notificações dos apps nas configurações. Devolve se o Windows deu a permissão.</summary>
@@ -1123,11 +1137,39 @@ sealed class IslandForm : Form
     {
         if (Math.Abs(v - _lastVol) < 0.004f && muted == _lastMute) return;   // nada mudou de verdade
         _lastVol = v; _lastMute = muted;
+        Post(new { type = "mute", muted });
         if (_hover && _mode == Mode.Open) { Post(new { type = "volume", v, muted }); return; }   // ilha aberta: mostra dentro dela
         var lang = AppSettings.Current.Language;
         bool silent = muted || v < 0.005f;
         ShowOsd(silent ? "volmute" : "vol", Strings.Get(lang, muted ? "osdMuted" : "osdVolume"),
             muted ? "" : $"{Math.Round(v * 100)}%", muted ? 0 : v);
+    }
+
+    // Botão de alto-falante do player: liga/desliga o mudo do som geral (saída padrão do Windows)
+    void ToggleMute()
+    {
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            var ep = dev.AudioEndpointVolume;
+            ep.Mute = !ep.Mute;
+            _lastVol = ep.MasterVolumeLevelScalar; _lastMute = ep.Mute;
+            Post(new { type = "mute", muted = ep.Mute });
+        }
+        catch { }
+    }
+
+    // Estado do mudo para o botão do player (ao abrir a interface)
+    void PostMute()
+    {
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            Post(new { type = "mute", muted = dev.AudioEndpointVolume.Mute });
+        }
+        catch { }
     }
 
     // Rodinha do mouse na ilha. Mostra o nível dentro da ilha aberta (mesmo com os indicadores desligados).
@@ -1283,8 +1325,16 @@ sealed class IslandForm : Form
                     break;
                 }
 
+                case "bubble":   // a bolha do Pomodoro apareceu/sumiu ao lado da ilha fechada
+                {
+                    bool on = root.GetProperty("on").GetBoolean();
+                    if (on != _bubble) { _bubble = on; PlaceSize(_shown, 0); }
+                    break;
+                }
+
                 case "ready":
                     _ready = true;
+                    PostMute();
                     PostSettings();
                     PostPomodoro();
                     PostMode();
@@ -1318,11 +1368,16 @@ sealed class IslandForm : Form
                 case "playPause": _media?.PlayPause(); break;
                 case "next": _media?.Next(); break;
                 case "seek": _media?.Seek(root.GetProperty("s").GetDouble()); break;   // arrastou a barra do tempo
+                case "showSource": _media?.ShowSource(); break;   // clicou na capa: traz para a frente o app que está tocando
                 case "prev": _media?.Previous(); break;
                 case "openMixer": OpenMixer?.Invoke(); break;
                 case "animDone":   // a forma parou: janela no tamanho exato (sem a folga), se não mudou de estado nesse meio-tempo
                     if (root.TryGetProperty("seq", out var sq) && sq.GetInt32() == _modeSeq) Place(_mode);
                     break;
+                case "toggleMute":   // alto-falante do player: silencia / devolve o som
+                    ToggleMute();
+                    break;
+
                 case "volStep":   // rodinha do mouse em cima da ilha: volume geral de 2 em 2%
                     StepVolume(root.GetProperty("d").GetInt32());
                     break;

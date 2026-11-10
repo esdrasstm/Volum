@@ -60,6 +60,7 @@
   }
 
   // ---------- Estado ----------
+  let demoMuted = false;
   let mode = 'closed', seq = 0, hover = false, notice = null, noticeTimer = 0, volume = 0.6;
   const water = { enabled: true, goalMl: 2000, cupMl: 250, todayMl: 1250 };
   let pomo = { phase: 'idle', paused: false, leftMs: 0, totalMs: 1500000, done: 1, every: 4, focusMin: 25 };
@@ -179,6 +180,8 @@
       case 'prev': changeSong(-1); break;
       case 'volStep': volume = Math.min(1, Math.max(0, volume + m.d * 0.02)); send({ type: 'volume', v: volume, muted: false }); break;
       case 'openMixer': toPage({ type: 'openMixer' }); break;
+      case 'showSource': break;   // no app, traz o player para a frente
+      case 'toggleMute': demoMuted = !demoMuted; send({ type: 'mute', muted: demoMuted }); break;
       case 'waterAdd': water.todayMl = Math.max(0, water.todayMl + m.ml); send({ type: 'water', water }); break;
       case 'noticeAction': { const was = notice; endNotice(); if (was && was.icon === 'drop') onUi({ type: 'waterAdd', ml: 250 }); break; }
       case 'noticeClose': endNotice(); break;
