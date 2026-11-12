@@ -207,3 +207,13 @@ body.settings-page { font-size: 12.5px; background: var(--bg); }
 .btn-row.inline { margin: 10px 0 2px; }
 #pixHint[hidden] { display: none; }
 .skins { margin-top: 14px; }
+/* Convite para a pesquisa de temas (topo da página Temas) */
+.survey-card { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px 16px; border-radius: 14px;
+  background: linear-gradient(120deg, rgba(255, 111, 168, .14), rgba(255, 190, 11, .1)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.survey-card > div { display: grid; gap: 3px; flex: 1; }
+.survey-card b { font-size: 13px; }
+.survey-card span { font-size: 11.5px; color: var(--ink-soft, rgba(255, 255, 255, .7)); }
+.survey-card .btn { flex: none; }
+/* Seções da página Temas (Clássicos, Verão Vice, Inverno): título na linha toda */
+.skin-group { grid-column: 1 / -1; margin: 10px 2px -2px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-dim, rgba(255, 255, 255, .5)); }
+.skin-group:first-child { margin-top: 0; }

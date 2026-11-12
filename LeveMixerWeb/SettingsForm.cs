@@ -186,6 +186,7 @@ sealed class SettingsForm : Form
                 pomoSound = _settings.PomodoroSound,
                 osd = _settings.IslandOsd,
                 otherScreen = _settings.IslandOtherScreen,
+                tuck = _settings.IslandTuck,
                 autoHide = _settings.IslandAutoHide,
                 autoHideSec = _settings.IslandAutoHideSec,
                 monitor = _settings.IslandMonitor ?? "primary",
@@ -240,14 +241,15 @@ sealed class SettingsForm : Form
                     }
                     break;
 
-                case "setLanguage":   // o menu da bandeja e o mixer leem na próxima vez que abrirem
+                case "setLanguage":   // a ilha muda na hora; o menu da bandeja e o mixer leem na próxima vez que abrirem
                     _settings.Language = Strings.Normalize(root.GetProperty("lang").GetString());
                     _settings.Save();
                     Text = $"Volum — {Strings.Get(_settings.Language, "settings")}";
+                    IslandForm.ApplyStyle();
                     break;
 
                 case "setSkin":   // Temas: a ilha muda na hora; o mixer na próxima vez que abrir
-                    if (root.TryGetProperty("skin", out var sk) && sk.GetString() is "default" or "christmas" or "snowy" or "candy" or "sleigh" or "glass")
+                    if (root.TryGetProperty("skin", out var sk) && sk.GetString() is "default" or "christmas" or "snowy" or "candy" or "sleigh" or "glass" or "miami" or "sunset")
                     {
                         _settings.Skin = sk.GetString()!;
                         _settings.Save();
@@ -345,6 +347,7 @@ sealed class SettingsForm : Form
                     _settings.StandUpEnabled = root.GetProperty("standUp").GetBoolean();
                     if (root.TryGetProperty("osd", out var osd)) _settings.IslandOsd = osd.GetBoolean();
                     if (root.TryGetProperty("otherScreen", out var os)) _settings.IslandOtherScreen = os.GetBoolean();
+                    if (root.TryGetProperty("tuck", out var tk)) _settings.IslandTuck = tk.GetBoolean();
                     if (root.TryGetProperty("autoHide", out var ah)) _settings.IslandAutoHide = ah.GetBoolean();
                     _settings.IslandAutoHideSec = Get("autoHideSec", 10, 5, 300);
                     if (root.TryGetProperty("monitor", out var mo) && mo.GetString() is { Length: > 0 } mon) _settings.IslandMonitor = mon;

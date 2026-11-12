@@ -4,6 +4,9 @@
    começa feliz (^ ^) com um pulinho, depois olhos normais, pisca em etapas, olha para os lados... (ciclo de 9 s)
    ========================================================= */
 .px { shape-rendering: crispEdges; image-rendering: pixelated; overflow: visible; }
+/* Acessórios dos temas (gorro, óculos): escondidos por padrão; o skins.css mostra no tema certo.
+   Aqui também porque páginas sem o skins.css (site) usam o mascote. */
+.mascot.px .px-hat, .mascot.px .px-shades { display: none; }
 
 /* Mascote: começa feliz (^ ^) com um pulinho, depois olhos normais, pisca, olha para os lados... (ciclo de 9 s) */
 .mascot.px .pe { opacity: 0; animation-duration: 9s; animation-iteration-count: infinite; animation-timing-function: step-end; }

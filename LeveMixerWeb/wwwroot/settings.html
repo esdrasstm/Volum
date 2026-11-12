@@ -124,6 +124,11 @@
     <section class="page" id="page-themes" hidden>
       <h1 data-i18n="pageThemes">Temas</h1>
       <p class="page-note" data-i18n="themesHint">Mudam o visual da ilha e do mixer. Mais temas em breve.</p>
+      <!-- Pesquisa sobre os temas: abre a página no site (o C# leva a versão, o tema e o idioma) -->
+      <div class="survey-card">
+        <div><b data-i18n="surveyTitle">O que você está achando dos temas?</b><span data-i18n="surveyText">Conta do que gostou, o que mudaria e o que quer ver. Leva 2 minutos.</span></div>
+        <button class="btn" id="surveyBtn" data-i18n="surveyBtn">Dar minha opinião</button>
+      </div>
       <div class="skins" id="skinList" role="radiogroup" aria-label="Temas" data-i18n-aria="pageThemes"></div>
     </section>
 
@@ -174,6 +179,16 @@
           </span>
           <label class="switch">
             <input id="osdOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="islandTuck">Sair da frente dos apps</span>
+            <small data-i18n="islandTuckHint">Quando uma janela chega no topo da tela (navegador, Figma...), a ilha some para não cobrir abas e menus. Desligado, ela fica sempre à vista</small>
+          </span>
+          <label class="switch">
+            <input id="tuckOn" type="checkbox" checked>
             <span></span>
           </label>
         </div>

@@ -471,7 +471,8 @@ sealed class IslandForm : Form
     // Antes só recolhia quando a acessibilidade do Windows achava abas/menus/botões ali (Obstruction.cs), mas apps que
     // desenham a própria interface (Figma, Photoshop, Electron) não mostram nada para ela; agora vale para qualquer app
     // que chegue no topo (todos têm barra de título, menus ou abas lá em cima). Tela cheia continua sendo outra regra.
-    void CheckObstruction(IntPtr fg) => SetTuck(true);
+    // Opção "Sair da frente dos apps" (Configurações → Ilha): desligada, a ilha fica à vista mesmo com a janela ali.
+    void CheckObstruction(IntPtr fg) => SetTuck(AppSettings.Current.IslandTuck);
 
     // (conferência antiga pela acessibilidade, guardada caso precise voltar)
     bool _obstructionBusy;

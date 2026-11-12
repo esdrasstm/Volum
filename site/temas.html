@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volum — o que você está achando dos temas?</title>
+  <meta name="description" content="Pesquisa rápida sobre os temas do Volum: conte do que gostou, o que mudaria e quais temas quer ver.">
+  <meta name="theme-color" content="#090909">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15.5' fill='%23090909' stroke='%23ffffff' stroke-opacity='.27'/><g stroke='%23fff' stroke-width='2.5' stroke-linecap='round'><line x1='9' y1='7' x2='9' y2='25'/><line x1='16' y1='7' x2='16' y2='25'/><line x1='23' y1='7' x2='23' y2='25'/></g><g fill='%23fff'><circle cx='9' cy='20' r='3.5'/><circle cx='16' cy='11' r='3.5'/><circle cx='23' cy='17' r='3.5'/></g></svg>">
+  <link rel="stylesheet" href="../LeveMixerWeb/wwwroot/mascot.css">
+  <!-- O mesmo visual da landing page -->
+  <link rel="stylesheet" href="site.css">
+  <style>
+    /* Só o que esta página tem de diferente: opções em várias linhas, notas com carinhas e a tela de obrigado */
+    .survey-head { padding: 140px 0 28px; max-width: 780px; margin: 0 auto; }
+    .survey-head h2 { margin-bottom: 14px; }
+    .survey-head .section-lead { margin-bottom: 0; }
+    .survey { padding-top: 0; }
+    .q { display: grid; gap: 10px; }
+    .q-title { font-size: 15px; font-weight: 600; }
+    .q-title small { display: block; margin-top: 2px; font-weight: 400; font-size: 13px; color: var(--muted); }
+    .kind.opts { justify-self: stretch; flex-wrap: wrap; }
+    .kind.opts label { display: block; }
+    .kind.rate span { font-size: 20px; line-height: 1; padding: 8px 14px; }
+    .kind.rate input:checked + span { transform: scale(1.06); }
+    .q + .q { padding-top: 18px; border-top: 1px solid var(--border); }
+    /* Barra de progresso (da primeira versão): acima do formulário, gruda logo abaixo do menu ao rolar e enche com as respostas */
+    .answer-bar { position: sticky; top: 92px; z-index: 40; display: flex; align-items: center; gap: 12px; max-width: 780px; margin: 0 auto 14px;
+      padding: 10px 14px; border-radius: 14px; background: rgba(9, 9, 9, .72); backdrop-filter: blur(10px); border: 1px solid var(--border); }
+    .answer-track { flex: 1; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+    .answer-track i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #ff6fa8, #ffbe0b);
+      box-shadow: 0 0 12px rgba(255, 111, 168, .45); transition: width .45s cubic-bezier(.32, .72, 0, 1); }
+    .answer-count { font-size: 12.5px; font-weight: 600; color: var(--subtext); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    body.done .answer-bar { display: none; }
+    .thanks { display: none; }
+    body.done .survey-head, body.done .survey { display: none; }
+    body.done .thanks { display: block; margin-top: 140px; }
+    .thanks .mascot-big { display: grid; place-items: center; margin-bottom: 8px; }
+    .thanks .mascot-big .mascot { width: 96px; height: 66px; }
+    .support-block .cta { justify-content: center; }
+    /* Sem o holofote do mouse nos cartões desta página (na landing ele segue o cursor; aqui ficava parado no meio) */
+    .final::after { display: none; }
+    .pay-note { margin: 14px 0 0; font-size: 12.5px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <div class="backdrop" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="grain"></div>
+  </div>
+
+  <!-- Topo (igual ao da landing page, com o caminho de volta) -->
+  <header class="nav wrap">
+    <div class="nav-inner glass">
+      <a class="brand" href="./">
+        <span class="brand-mascot" id="navMascot" aria-hidden="true"></span>
+        Volum
+      </a>
+      <nav class="nav-links" aria-label="Seções">
+        <a href="./" data-t="back">Voltar ao site</a>
+      </nav>
+      <a class="btn btn-primary btn-small" data-goatcounter-click="baixar-pesquisa" href="https://apps.microsoft.com/detail/9PKPDGQ211L4" target="_blank" rel="noopener" data-t="get">Baixar</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="survey-head">
+      <div class="eyebrow" data-t="eyebrow">Pesquisa · 2 minutos</div>
+      <h2 data-t="h1">O que você está achando dos temas?</h2>
+      <p class="section-lead" data-t="lead">Conta do que gostou, o que mudaria e o que quer ver. Sua opinião decide o que muda e quais temas vêm por aí.</p>
+    </div>
+
+    <div class="answer-bar" aria-hidden="true"><span class="answer-track"><i id="bar"></i></span><span class="answer-count" id="count">0 de 6</span></div>
+    <section class="survey">
+      <form id="f" class="feedback glass" novalidate>
+        <div class="q">
+          <div class="q-title" data-t="q1">Qual tema você usa agora?</div>
+          <div class="kind opts" id="using" role="radiogroup"></div>
+        </div>
+        <div class="q">
+          <div class="q-title" data-t="q2">De 1 a 5, o que achou dos temas?</div>
+          <div class="kind opts rate" id="rate" role="radiogroup"></div>
+        </div>
+        <div class="q">
+          <div class="q-title" data-t="q3">Qual é o seu favorito?</div>
+          <div class="kind opts" id="fav" role="radiogroup"></div>
+        </div>
+        <div class="q">
+          <div class="q-title"><span data-t="q4">Quais temas você quer ver?</span><small data-t="q4s">Marque quantos quiser.</small></div>
+          <div class="kind opts" id="want"></div>
+          <label class="field"><input type="text" id="wantOther" maxlength="120" data-tp="other" placeholder="Outra ideia? Escreva aqui"></label>
+        </div>
+        <div class="q">
+          <div class="q-title" data-t="q5">Você pagaria por um pacote de temas especiais?</div>
+          <div class="kind opts" id="pay" role="radiogroup"></div>
+        </div>
+        <div class="q">
+          <label class="field"><span data-t="q6">Quer dizer mais alguma coisa? <small>(opcional)</small></span>
+            <textarea id="more" rows="4" maxlength="1500"></textarea></label>
+        </div>
+        <div class="form-foot">
+          <p class="form-note" data-t="note">Não precisa de cadastro.</p>
+          <button class="btn btn-primary" type="submit" data-t="send">Enviar respostas</button>
+        </div>
+        <p class="form-status" id="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- Depois de enviar -->
+    <div class="final glass thanks">
+      <div class="mascot-big" id="thanksMascot" aria-hidden="true"></div>
+      <h2 data-t="thx">Valeu demais!</h2>
+      <p class="section-lead" data-t="thx2">Sua resposta chegou. Fica de olho nas próximas versões do Volum.</p>
+    </div>
+
+    <!-- Apoio (sempre no fim): Pix no Brasil, Ko-fi para todo mundo -->
+    <div class="final glass support-block">
+      <h2 data-t="supH">Curte o Volum? ♥</h2>
+      <p class="section-lead" data-t="supP">Ele é feito por uma pessoa só, é grátis e não tem anúncios. Se quiser dar uma força para os próximos temas saírem mais rápido, qualquer valor ajuda.</p>
+      <div class="cta">
+        <button class="btn btn-primary" type="button" id="pixBtn">Pix</button>
+        <a class="btn btn-ghost" href="https://ko-fi.com/volum" target="_blank" rel="noopener" data-goatcounter-click="apoiar-kofi-temas">PayPal</a>
+      </div>
+      <!-- O botão PayPal abre o Ko-fi, que recebe por PayPal e cartão: o aviso deixa isso claro -->
+      <p class="pay-note" data-t="payNote">PayPal ou cartão, pelo Ko-fi (plataforma segura de doações).</p>
+    </div>
+  </main>
+
+  <!-- Pix: a mesma janela da landing page -->
+  <dialog class="support" id="supportDialog" aria-labelledby="supportTitle">
+    <button class="support-close" id="supportClose" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h3 id="supportTitle">Apoiar o Volum ♥</h3>
+    <p>O Volum é grátis e vai continuar grátis. Se ele te ajuda, qualquer valor faz diferença. Obrigado!</p>
+    <div class="pix-qr">
+      <img src="pix-qr.svg" width="180" height="180" alt="QR Code do Pix para apoiar o Volum">
+      <span>Abra o app do seu banco, vá em <b>Pix → Pagar com QR Code</b> e aponte a câmera. Você escolhe o valor.</span>
+    </div>
+    <div class="pix-or"><span>ou use o Pix Copia e Cola</span></div>
+    <div class="pix-box"><code id="pixCode"></code></div>
+    <button class="btn btn-primary" id="pixCopy" type="button">Copiar código Pix</button>
+  </dialog>
+
+  <footer>
+    <div class="wrap">
+      <span>© <span id="year">2026</span> Volum · <span data-t="made">Feito por Esdras</span></span>
+      <span><a href="./">Volum</a> · <a href="https://github.com/esdrasstm/Volum">GitHub</a> · <a href="privacidade.html" data-t="priv">Privacidade</a></span>
+    </div>
+  </footer>
+
+<script src="../LeveMixerWeb/wwwroot/shared.js"></script>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const raw = (q.get('lang') || (navigator.languages && navigator.languages[0]) || 'pt').toLowerCase();
+  const L = raw.startsWith('pt') ? 'pt' : raw.startsWith('es') ? 'es' : 'en';
+  const T = {
+    en: { back: 'Back to the site', get: 'Download', eyebrow: 'Survey · 2 minutes', h1: 'What do you think of the themes?',
+      lead: 'Tell us what you liked, what you would change and what you want to see. Your opinion decides what changes and which themes come next.',
+      q1: 'Which theme are you using now?', q2: 'From 1 to 5, what do you think of the themes?', q3: 'Which one is your favorite?', q4: 'Which themes would you like to see?', q4s: 'Pick as many as you like.',
+      q5: 'Would you pay for a pack of special themes?', q6: 'Anything else? <small>(optional)</small>', note: 'No sign-up needed.', send: 'Send answers',
+      thx: 'Thanks a lot!', thx2: 'Your answer got through. Keep an eye on the next Volum versions.', supH: 'Enjoying Volum? ♥',
+      supP: 'It\'s made by one person, free and ad-free. If you\'d like to help the next themes come out faster, any amount helps.', made: 'Made by Esdras', priv: 'Privacy', payNote: 'PayPal or card, through Ko-fi (a secure donation platform).',
+      other: 'Another idea? Write it here', need: 'Answer at least the rating before sending.', sending: 'Sending...', fail: 'Couldn\'t send right now. Check your connection and try again.' },
+    es: { back: 'Volver al sitio', get: 'Descargar', eyebrow: 'Encuesta · 2 minutos', h1: '¿Qué te parecen los temas?',
+      lead: 'Cuéntanos qué te gustó, qué cambiarías y qué quieres ver. Tu opinión decide qué cambia y qué temas vienen.',
+      q1: '¿Qué tema usas ahora?', q2: 'Del 1 al 5, ¿qué te parecen los temas?', q3: '¿Cuál es tu favorito?', q4: '¿Qué temas te gustaría ver?', q4s: 'Marca los que quieras.',
+      q5: '¿Pagarías por un paquete de temas especiales?', q6: '¿Algo más? <small>(opcional)</small>', note: 'No necesitas registrarte.', send: 'Enviar respuestas',
+      thx: '¡Muchas gracias!', thx2: 'Tu respuesta llegó. Atento a las próximas versiones de Volum.', supH: '¿Te gusta Volum? ♥',
+      supP: 'Lo hace una sola persona, es gratis y sin anuncios. Si quieres ayudar a que los próximos temas salgan antes, cualquier monto ayuda.', made: 'Hecho por Esdras', priv: 'Privacidad', payNote: 'PayPal o tarjeta, a través de Ko-fi (plataforma segura de donaciones).',
+      other: '¿Otra idea? Escríbela aquí', need: 'Responde al menos la nota antes de enviar.', sending: 'Enviando...', fail: 'No se pudo enviar ahora. Revisa tu conexión e inténtalo de nuevo.' },
+    pt: { need: 'Responda pelo menos a nota antes de enviar.', sending: 'Enviando...', fail: 'Não deu para enviar agora. Confira a internet e tente de novo.' },
+  };
+  const tx = (k) => (T[L] && T[L][k]) || T.pt[k];
+  document.documentElement.lang = L === 'pt' ? 'pt-BR' : L;
+  if (L !== 'pt') {
+    document.querySelectorAll('[data-t]').forEach((el) => { const v = T[L][el.dataset.t]; if (v) el.innerHTML = v; });
+    document.querySelectorAll('[data-tp]').forEach((el) => { el.placeholder = T[L][el.dataset.tp]; });
+    document.title = 'Volum — ' + T[L].h1;
+  }
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Opções (o valor enviado fica em português; o texto da tela, no idioma da página)
+  const lbl = (pt, en, es) => ({ pt, en, es }[L]);
+  const THEMES = [['default', lbl('Padrão', 'Default', 'Predeterminado')], ['glass', lbl('Vidro', 'Glass', 'Cristal')], ['miami', 'Miami'], ['sunset', lbl('Pôr do sol', 'Sunset', 'Atardecer')],
+    ['christmas', lbl('Natal', 'Christmas', 'Navidad')], ['snowy', lbl('Noite de neve', 'Snowy night', 'Noche de nieve')], ['candy', lbl('Bengala', 'Candy cane', 'Bastón de caramelo')], ['sleigh', lbl('Trenó', 'Sleigh ride', 'Trineo')]];
+  const WANT = [['Halloween', 'Halloween'], ['Anime / Japão', lbl('Anime / Japão', 'Anime / Japan', 'Anime / Japón')], ['Cyberpunk', 'Cyberpunk'], ['Espaço', lbl('Espaço', 'Space', 'Espacio')],
+    ['Floresta', lbl('Floresta', 'Forest', 'Bosque')], ['Fundo do mar', lbl('Fundo do mar', 'Under the sea', 'Fondo del mar')], ['Café aconchegante', lbl('Café aconchegante', 'Cozy café', 'Café acogedor')],
+    ['Games retrô', lbl('Games retrô', 'Retro games', 'Juegos retro')], ['Minimalista claro', lbl('Minimalista claro', 'Light minimal', 'Minimalista claro')], ['Carnaval', lbl('Carnaval', 'Carnival', 'Carnaval')],
+    ['Chuva / lo-fi', lbl('Chuva / lo-fi', 'Rain / lo-fi', 'Lluvia / lo-fi')], ['Ano-novo', lbl('Ano-novo', 'New Year', 'Año Nuevo')]];
+  const PAY = [['Sim', lbl('Sim, com certeza', 'Yes, for sure', 'Sí, seguro')], ['Talvez', lbl('Talvez, depende do preço', 'Maybe, depends on the price', 'Quizás, depende del precio')], ['Não', lbl('Não, prefiro só os grátis', 'No, I prefer the free ones', 'No, prefiero los gratis')]];
+  const chips = (id, list, type, name) => { document.getElementById(id).innerHTML = list.map(([v, t]) =>
+    `<label><input type="${type}" name="${name}" value="${v}"><span>${t}</span></label>`).join(''); };
+  chips('using', [...THEMES, ['none', lbl('Ainda não testei', 'Haven\'t tried yet', 'Aún no los probé')]], 'radio', 'using');
+  chips('rate', [1, 2, 3, 4, 5].map((n) => [String(n), ['😕', '😐', '🙂', '😄', '🤩'][n - 1]]), 'radio', 'rate');
+  chips('fav', THEMES, 'radio', 'fav');
+  chips('want', WANT, 'checkbox', 'want');
+  chips('pay', PAY, 'radio', 'pay');
+  const skin = q.get('skin');   // o app manda o tema em uso: já vem marcado
+  if (skin) { const r = document.querySelector(`input[name=using][value="${CSS.escape(skin)}"]`); if (r) r.checked = true; }
+
+  // Linha de progresso no topo: quantas perguntas já têm resposta
+  const f = document.getElementById('f');
+  const answered = () => ['using', 'rate', 'fav', 'want', 'pay'].filter((n) => f.querySelector(`input[name=${n}]:checked`)).length + (f.more.value.trim() ? 1 : 0);
+  const OF = { pt: 'de', en: 'of', es: 'de' }[L];
+  const progress = () => { const n = answered(); document.getElementById('bar').style.width = (n / 6 * 100) + '%'; document.getElementById('count').textContent = n + ' ' + OF + ' 6'; };
+  f.addEventListener('input', progress); progress();
+
+  // Mascote (o mesmo do app)
+  if (window.Volum) { document.getElementById('navMascot').innerHTML = Volum.MASCOT_PX; document.getElementById('thanksMascot').innerHTML = Volum.MASCOT_PX; }
+
+  // Menu fica mais sólido ao rolar (como na landing page)
+  const nav = document.querySelector('.nav');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 12);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // Estatística (GoatCounter, só no site publicado)
+  const track = (name) => { const gc = window.goatcounter; if (gc && gc.count) gc.count({ path: name, title: name, event: true }); };
+  if (location.protocol === 'https:') {
+    const s = document.createElement('script'); s.async = true; s.src = 'https://gc.zgo.at/count.js';
+    s.dataset.goatcounter = 'https://esdras.goatcounter.com/count'; document.head.appendChild(s);
+  }
+
+  // Envio: vai para o mesmo Google Form das sugestões, como "Sugestão", com as respostas na mensagem
+  const FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSek83KPAAq7ooMyydv650y5zoLD3KwZCytBWOuFWJAfOs5LSg/formResponse';
+  const status = document.getElementById('status');
+  const show = (text, cls) => { status.textContent = text; status.className = 'form-status ' + cls; };
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const one = (n) => (f.querySelector(`input[name=${n}]:checked`) || {}).value || '-';
+    if (one('rate') === '-') { show(tx('need'), 'err'); return; }
+    const want = [...f.querySelectorAll('input[name=want]:checked')].map((i) => i.value);
+    if (f.wantOther.value.trim()) want.push('Outro: ' + f.wantOther.value.trim());
+    const msg = ['[Pesquisa de temas]', 'Usando: ' + one('using'), 'Nota: ' + one('rate') + '/5', 'Favorito: ' + one('fav'),
+      'Quer ver: ' + (want.join(', ') || '-'), 'Pagaria por pacote: ' + one('pay'), 'Comentário: ' + (f.more.value.trim() || '-'),
+      '— ' + (q.get('v') ? 'Volum ' + q.get('v').replace(/[^\w.\-]/g, '') : 'site') + ' · ' + L].join('\n');
+    const data = new URLSearchParams();
+    data.append('entry.1839313637', 'Sugestão');
+    data.append('entry.1255922516', msg);
+    data.append('entry.1260834162', 'não informado');
+    const btn = f.querySelector('button[type=submit]'); btn.disabled = true; show(tx('sending'), '');
+    try {
+      await fetch(FORM, { method: 'POST', mode: 'no-cors', body: data });
+      track('pesquisa-temas-enviada');
+      document.body.classList.add('done'); scrollTo({ top: 0, behavior: 'smooth' });
+    } catch { show(tx('fail'), 'err'); btn.disabled = false; }
+  });
+
+  // Pix: a mesma janela da landing page
+  const PIX = '00020101021126580014BR.GOV.BCB.PIX013601169a5b-bd84-4373-9526-9108e3a33e055204000053039865802BR5912Esdras Silva6009SAO PAULO62080504daqr6304297F';
+  const dlg = document.getElementById('supportDialog');
+  document.getElementById('pixCode').textContent = PIX;
+  document.getElementById('pixBtn').addEventListener('click', () => { track('apoiar-pix-temas'); dlg.showModal(); });
+  document.getElementById('supportClose').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  const pixCopy = document.getElementById('pixCopy');
+  pixCopy.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(PIX); } catch { /* sem permissão */ }
+    track('pix-copiado');
+    pixCopy.textContent = 'Copiado! Agora cole no app do banco';
+    setTimeout(() => { pixCopy.textContent = 'Copiar código Pix'; }, 3000);
+  });
+})();
+</script>
+</body>
+</html>

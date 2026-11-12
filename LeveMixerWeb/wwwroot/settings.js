@@ -261,20 +261,25 @@
 
   /* ---------------- Temas ----------------
      Cartões com prévia (mini mixer + mascote). Para um tema novo: o nome aqui, as regras no skins.css e o nome aceito no
-     "setSkin" do SettingsForm.cs. tag: etiqueta do cartão (ex.: grátis). */
+     "setSkin" do SettingsForm.cs. tag: etiqueta do cartão (ex.: grátis). group: seção da página (SKIN_GROUPS, nessa ordem). */
+  const SKIN_GROUPS = [['classic', 'skinGroupClassic'], ['summer', 'skinGroupSummer'], ['winter', 'skinGroupWinter']];
   const SKINS = [
-    { id: 'default', name: 'skinDefault' },
-    { id: 'christmas', name: 'skinChristmas', tag: 'skinFree' },
-    { id: 'snowy', name: 'skinSnowy', tag: 'skinFree' },
-    { id: 'candy', name: 'skinCandy', tag: 'skinFree' },
-    { id: 'sleigh', name: 'skinSleigh', tag: 'skinFree' },
-    { id: 'glass', name: 'skinGlass', tag: 'skinFree' },
+    { id: 'default', name: 'skinDefault', group: 'classic' },
+    { id: 'glass', name: 'skinGlass', tag: 'skinFree', group: 'classic' },
+    { id: 'miami', name: 'skinMiami', tag: 'skinFree', group: 'summer' },
+    { id: 'sunset', name: 'skinSunset', tag: 'skinFree', group: 'summer' },
+    { id: 'christmas', name: 'skinChristmas', tag: 'skinFree', group: 'winter' },
+    { id: 'snowy', name: 'skinSnowy', tag: 'skinFree', group: 'winter' },
+    { id: 'candy', name: 'skinCandy', tag: 'skinFree', group: 'winter' },
+    { id: 'sleigh', name: 'skinSleigh', tag: 'skinFree', group: 'winter' },
   ];
   let skin = 'default';
+  $('surveyBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'survey' }));   // pesquisa no site
   function showSkins() {
     const list = $('skinList');
     if (!list.children.length) {
-      list.replaceChildren(...SKINS.map((k) => {
+      // Uma seção por grupo: título (ocupa a linha toda) e os cartões do grupo
+      const cards = SKINS.map((k) => {
         const b = document.createElement('button');
         b.className = 'skin-card';
         b.dataset.skin = k.id;
@@ -287,9 +292,16 @@
         if (k.tag) b.querySelector('.skin-tag').textContent = t(k.tag);
         b.addEventListener('click', () => { skin = k.id; showSkins(); post({ type: 'setSkin', skin: k.id }); });
         return b;
+      });
+      list.replaceChildren(...SKIN_GROUPS.flatMap(([g, title]) => {
+        const h = document.createElement('div');
+        h.className = 'skin-group';
+        h.dataset.title = title;
+        return [h, ...cards.filter((b) => SKINS.find((k) => k.id === b.dataset.skin).group === g)];
       }));
     }
-    [...list.children].forEach((b) => {
+    list.querySelectorAll('.skin-group').forEach((h) => { h.textContent = t(h.dataset.title); });
+    list.querySelectorAll('.skin-card').forEach((b) => {
       b.setAttribute('aria-checked', String(b.dataset.skin === skin));
       b.querySelector('.skin-name').textContent = t(SKINS.find((k) => k.id === b.dataset.skin).name);
     });
@@ -319,7 +331,7 @@
     autoHideSec: [5, 10, 15, 30, 60, 120, 300],   // esconder a ilha depois de (segundos)
     pomoSound: ['chime', 'drops', 'bell', 'none'],   // som do fim do Pomodoro (nomes no PomodoroSound do C#)
   };
-  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, standUp: true, standMin: 60, autoHide: false, autoHideSec: 10, monitor: 'primary', monitors: [], posH: 'center', posV: 'top' };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, tuck: true, standUp: true, standMin: 60, autoHide: false, autoHideSec: 10, monitor: 'primary', monitors: [], posH: 'center', posV: 'top' };
 
   const fmtFocus = (v, unit) => unit === 'sound' ? t('snd_' + v) : unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
     : unit === 'time' ? V.fmtMin(v) : unit === 'sec' ? (v < 60 ? `${v} s` : V.fmtMin(v / 60)) : `${v} min`;
@@ -329,6 +341,7 @@
     $('standOn').checked = focus.standUp;
     $('osdOn').checked = focus.osd !== false;
     $('otherScreenOn').checked = focus.otherScreen !== false;
+    $('tuckOn').checked = focus.tuck !== false;
     $('autoHideOn').checked = !!focus.autoHide;
     $('autoHideOptions').hidden = !focus.autoHide;
     showMonitors();
@@ -355,6 +368,7 @@
   $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
   $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
   $('otherScreenOn').addEventListener('change', (e) => { focus.otherScreen = e.target.checked; saveFocus(); });
+  $('tuckOn').addEventListener('change', (e) => { focus.tuck = e.target.checked; saveFocus(); });
   $('autoHideOn').addEventListener('change', (e) => { focus.autoHide = e.target.checked; showFocus(); saveFocus(); });
   // Monitores: um botão para cada, da esquerda para a direita ("Principal", "Monitor 2", ...); o nome completo na dica
   let monitorSig = '';

@@ -36,7 +36,7 @@ window.Volum = (() => {
       supportQrHint: 'Abra o app do seu banco, vá em Pix → Pagar com QR Code e aponte a câmera. Você escolhe o valor.',
       github: 'Código no GitHub',
       pageIsland: 'Ilha', islandToggle: 'Mostrar a ilha no topo da tela',
-      pageThemes: 'Temas', themesHint: 'Mudam o visual da ilha e do mixer. Mais temas em breve.', skinDefault: 'Padrão', skinChristmas: 'Natal', skinSnowy: 'Noite de neve', skinCandy: 'Bengala', skinSleigh: 'Trenó', skinGlass: 'Vidro', skinFree: 'Grátis',
+      pageThemes: 'Temas', themesHint: 'Mudam o visual da ilha e do mixer. Mais temas em breve.', skinDefault: 'Padrão', skinChristmas: 'Natal', skinSnowy: 'Noite de neve', skinCandy: 'Bengala', skinSleigh: 'Trenó', skinGlass: 'Vidro', skinMiami: 'Miami', skinSunset: 'Pôr do sol', skinGroupClassic: 'Clássicos', skinGroupSummer: 'Verão Vice', skinGroupWinter: 'Inverno', skinFree: 'Grátis', surveyTitle: 'O que você está achando dos temas?', surveyText: 'Conta do que gostou, o que mudaria e o que quer ver. Leva 2 minutos.', surveyBtn: 'Dar minha opinião',
       pageSupport: 'Apoiar', pageFocus: 'Foco', needsIsland: 'Isto aparece na ilha: ligue a ilha em Configurações → Ilha.', calField: 'Endereço da agenda (iCal)', wxField: 'Sua cidade',
       islandHint: 'Passe o mouse para ver a música tocando e a água; os avisos do Volum aparecem nela',
       islandStyle: 'Formato', islandNotch: 'Grudada no topo', islandFloat: 'Flutuante',
@@ -67,6 +67,7 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Principal', monitorOther: 'Outro monitor', monitorN: 'Monitor {0}',
       islandPos: 'Posição', posLeft: 'Esquerda', posCenter: 'Centro', posRight: 'Direita', posTop: 'Em cima', posBottom: 'Embaixo',
       posBottomNote: 'Embaixo, a ilha fica logo acima da barra de tarefas e usa o formato flutuante',
+      islandTuck: 'Sair da frente dos apps', islandTuckHint: 'Quando uma janela chega no topo da tela (navegador, Figma...), a ilha some para não cobrir abas e menus. Desligado, ela fica sempre à vista',
       otherScreen: 'Outro monitor em tela cheia', otherScreenHint: 'Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor',
       waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso',
     },
@@ -96,7 +97,7 @@ window.Volum = (() => {
       supportQrHint: 'Open your bank app, go to Pix → Pay with QR Code and point the camera. You choose the amount.',
       github: 'Code on GitHub',
       pageIsland: 'Island', islandToggle: 'Show the island at the top of the screen',
-      pageThemes: 'Themes', themesHint: 'They change how the island and the mixer look. More themes coming soon.', skinDefault: 'Default', skinChristmas: 'Christmas', skinSnowy: 'Snowy night', skinCandy: 'Candy cane', skinSleigh: 'Sleigh ride', skinGlass: 'Glass', skinFree: 'Free',
+      pageThemes: 'Themes', themesHint: 'They change how the island and the mixer look. More themes coming soon.', skinDefault: 'Default', skinChristmas: 'Christmas', skinSnowy: 'Snowy night', skinCandy: 'Candy cane', skinSleigh: 'Sleigh ride', skinGlass: 'Glass', skinMiami: 'Miami', skinSunset: 'Sunset', skinGroupClassic: 'Classics', skinGroupSummer: 'Vice summer', skinGroupWinter: 'Winter', skinFree: 'Free', surveyTitle: 'What do you think of the themes?', surveyText: 'Tell us what you liked, what you would change and what you want to see. Takes 2 minutes.', surveyBtn: 'Share my opinion',
       pageSupport: 'Support', pageFocus: 'Focus', needsIsland: 'This shows up on the island: turn the island on in Settings → Island.', calField: 'Calendar address (iCal)', wxField: 'Your city',
       islandHint: 'Hover it to see what is playing and your water; Volum alerts show up there',
       islandStyle: 'Shape', islandNotch: 'Attached to the top', islandFloat: 'Floating',
@@ -127,6 +128,7 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Main', monitorOther: 'Other monitor', monitorN: 'Monitor {0}',
       islandPos: 'Position', posLeft: 'Left', posCenter: 'Center', posRight: 'Right', posTop: 'Top', posBottom: 'Bottom',
       posBottomNote: 'At the bottom, the island sits just above the taskbar and uses the floating shape',
+      islandTuck: 'Get out of the way of apps', islandTuckHint: 'When a window reaches the top of the screen (browser, Figma...), the island hides so it does not cover tabs and menus. Off, it always stays visible',
       otherScreen: 'Other monitor in full screen', otherScreenHint: 'With a game or video in full screen on the main monitor, the island moves to the other monitor',
       waterTest: 'Test reminder', waterSound: 'Play a sound',
     },
@@ -156,7 +158,7 @@ window.Volum = (() => {
       supportQrHint: 'Abre la app de tu banco, ve a Pix → Pagar con QR Code y apunta la cámara. Tú eliges el monto.',
       github: 'Código en GitHub',
       pageIsland: 'Isla', islandToggle: 'Mostrar la isla arriba de la pantalla',
-      pageThemes: 'Temas', themesHint: 'Cambian el aspecto de la isla y del mezclador. Más temas pronto.', skinDefault: 'Predeterminado', skinChristmas: 'Navidad', skinSnowy: 'Noche de nieve', skinCandy: 'Bastón de caramelo', skinSleigh: 'Trineo', skinGlass: 'Cristal', skinFree: 'Gratis',
+      pageThemes: 'Temas', themesHint: 'Cambian el aspecto de la isla y del mezclador. Más temas pronto.', skinDefault: 'Predeterminado', skinChristmas: 'Navidad', skinSnowy: 'Noche de nieve', skinCandy: 'Bastón de caramelo', skinSleigh: 'Trineo', skinGlass: 'Cristal', skinMiami: 'Miami', skinSunset: 'Atardecer', skinGroupClassic: 'Clásicos', skinGroupSummer: 'Verano Vice', skinGroupWinter: 'Invierno', skinFree: 'Gratis', surveyTitle: '¿Qué te parecen los temas?', surveyText: 'Cuéntanos qué te gustó, qué cambiarías y qué quieres ver. Son 2 minutos.', surveyBtn: 'Dar mi opinión',
       pageSupport: 'Apoyar', pageFocus: 'Enfoque', needsIsland: 'Esto aparece en la isla: activa la isla en Configuración → Isla.', calField: 'Dirección de la agenda (iCal)', wxField: 'Tu ciudad',
       islandHint: 'Pasa el mouse para ver lo que suena y el agua; los avisos de Volum aparecen ahí',
       islandStyle: 'Forma', islandNotch: 'Pegada arriba', islandFloat: 'Flotante',
@@ -187,6 +189,7 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Principal', monitorOther: 'Otro monitor', monitorN: 'Monitor {0}',
       islandPos: 'Posición', posLeft: 'Izquierda', posCenter: 'Centro', posRight: 'Derecha', posTop: 'Arriba', posBottom: 'Abajo',
       posBottomNote: 'Abajo, la isla queda justo encima de la barra de tareas y usa la forma flotante',
+      islandTuck: 'Apartarse de las apps', islandTuckHint: 'Cuando una ventana llega a la parte superior de la pantalla (navegador, Figma...), la isla se oculta para no tapar pestañas y menús. Desactivado, siempre queda visible',
       otherScreen: 'Otro monitor en pantalla completa', otherScreenHint: 'Con un juego o video en pantalla completa en el monitor principal, la isla pasa al otro monitor',
       waterTest: 'Probar aviso', waterSound: 'Reproducir sonido',
     },
@@ -207,32 +210,16 @@ window.Volum = (() => {
      Aparecem no popup do mixer (uma vez, depois de atualizar) e na página "Sobre" das configurações.
      Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS. */
   const NEWS = {
-    version: '0.7.0',
+    version: '0.8.0',
     items: [
-      { icon: 'island', art: 'island',
-        pt: ['Ilha de cara nova', 'Maior e mais respirada, com música, foco, água, clima e agenda no mesmo padrão. Clique na capa para abrir o player.'],
-        en: ['A brand new island', 'Bigger and roomier, with music, focus, water, weather and calendar in the same style. Click the cover to open the player.'],
-        es: ['Una isla renovada', 'Más grande y espaciosa, con música, enfoque, agua, clima y agenda en el mismo estilo. Haz clic en la portada para abrir el reproductor.'] },
-      { icon: 'timer', art: 'pomo',
-        pt: ['Pomodoro do lado', 'Com o foco rodando, uma bolha mostra o tempo ao lado da ilha e entra nela quando você abre.'],
-        en: ['Pomodoro on the side', 'While you focus, a bubble shows the time next to the island and slides into it when you open it.'],
-        es: ['Pomodoro al lado', 'Mientras te concentras, una burbuja muestra el tiempo junto a la isla y entra en ella cuando la abres.'] },
-      { icon: 'sparkle', art: 'themes',
-        pt: ['Temas de inverno', 'Natal, Noite de neve, Bengala e Trenó, em pixel art e grátis. Escolha em Configurações → Temas.'],
-        en: ['Winter themes', 'Christmas, Snowy night, Candy cane and Sleigh ride, in pixel art and free. Pick one in Settings → Themes.'],
-        es: ['Temas de invierno', 'Navidad, Noche de nieve, Bastón de caramelo y Trineo, en pixel art y gratis. Elige en Configuración → Temas.'] },
-      { icon: 'island', art: 'glass',
-        pt: ['Tema Vidro', 'Vidro de verdade atrás do mixer e, na ilha, uma barra de abas que estica de uma página para a outra.'],
-        en: ['Glass theme', 'Real glass behind the mixer and, on the island, a tab bar that stretches from one page to the next.'],
-        es: ['Tema Cristal', 'Cristal de verdad detrás del mezclador y, en la isla, una barra de pestañas que se estira de una página a otra.'] },
-      { icon: 'bolt', art: 'battery',
-        pt: ['Bateria e mudo', 'No notebook, a bateria fica ao lado da capa e muda de cor com a carga. O alto-falante do player silencia o som.'],
-        en: ['Battery and mute', 'On laptops, the battery sits next to the cover and changes color with the charge. The player speaker mutes the sound.'],
-        es: ['Batería y silencio', 'En portátiles, la batería queda junto a la portada y cambia de color con la carga. El altavoz del reproductor silencia el sonido.'] },
-      { icon: 'fix', art: 'fix',
-        pt: ['Correções', 'A ilha sai da frente de qualquer app no topo (Figma, Photoshop...), acompanha o tamanho do texto do Windows e o clima acha a sua cidade.'],
-        en: ['Fixes', 'The island gets out of the way of any app at the top (Figma, Photoshop...), follows the Windows text size and the weather finds your city.'],
-        es: ['Correcciones', 'La isla se aparta de cualquier app arriba (Figma, Photoshop...), sigue el tamaño del texto de Windows y el clima encuentra tu ciudad.'] },
+      { icon: 'sparkle', art: 'vice',
+        pt: ['Temas Verão Vice', 'Miami, com coqueiros e flamingo, e Pôr do sol, que se põe no mar toda vez que você abre o mixer. Grátis, em Configurações → Temas.'],
+        en: ['Vice summer themes', 'Miami, with palm trees and a flamingo, and Sunset, which sets into the sea every time you open the mixer. Free, in Settings → Themes.'],
+        es: ['Temas Verano Vice', 'Miami, con palmeras y un flamenco, y Atardecer, que se pone en el mar cada vez que abres el mezclador. Gratis, en Configuración → Temas.'] },
+      { icon: 'chat', art: 'survey', link: 'survey',
+        pt: ['E aí, curtiu os temas?', 'Conta pra gente o que você está achando: do que gostou, o que mudaria e o que quer ver. Leva 2 minutos.', 'Dar minha opinião'],
+        en: ['So, how do you like the themes?', 'Tell us what you think: what you liked, what you would change and what you want to see. It takes 2 minutes.', 'Share my opinion'],
+        es: ['¿Y? ¿Te gustan los temas?', 'Cuéntanos qué te parecen: qué te gustó, qué cambiarías y qué quieres ver. Son 2 minutos.', 'Dar mi opinión'] },
     ],
   };
   // Ícones de traço em caixa de 24 (os mesmos do mixer e das configurações; classe .ico no style.css)
@@ -297,6 +284,10 @@ window.Volum = (() => {
     battery: '<div class="na-island na-bat"><i class="na-cover"></i><svg class="na-ring-bat" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" class="na-bat-bg"/>' +
       '<circle cx="12" cy="12" r="10" class="na-bat-fg"/><path d="M13.2 5.2 7.6 13.1h3.9l-1 5.7 5.7-8h-4z" fill="#3f3f3f"/></svg><b>14:30</b><span class="na-mute">' +
       '<svg viewBox="0 0 24 24"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></div>',
+    // Verão Vice: prints de verdade do mixer nos dois temas, alternando devagar (img/news-*.jpg, tirados da página de teste)
+    vice: '<div class="na-shots"><img src="img/news-sunset.jpg" alt=""><img src="img/news-miami.jpg" alt=""></div>',
+    // Pesquisa: as carinhas de nota da própria pesquisa; o "cursor" passa por elas e escolhe a última
+    survey: '<div class="na-rate"><i>😕</i><i>😐</i><i>🙂</i><i>😄</i><i>🤩</i></div>',
     fix: '<div class="na-fix"><span class="na-fix-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS.fix + '</svg></span><i></i><i></i><i></i></div>',
   };
   // Novidades em "slides" para o pop-up do mixer: ilustração + título + texto (+ botão, se tiver)
@@ -389,11 +380,20 @@ window.Volum = (() => {
     '.FFFFFFFFFFFFFF.',
     '.ffffffffffffff.',
   ];
+  // Óculos escuros (tema Miami): armação preta e lentes em degradê rosa, roxo e pêssego; escondidos fora do tema (skins.css)
+  const SHADES_PAL = { k: '#111111', P: '#ff6fa8', p: '#8f5cff', c: '#ffc078' };
+  const M_SHADES = [
+    '.kkkkkkkkkkkkkk.',
+    '.kPPPk....kPPPk.',
+    '.kppck....kppck.',
+    '..kkk......kkk..',
+  ];
   const MASCOT_PX =
     '<svg class="mascot px" viewBox="0 -1 16 11" aria-hidden="true">' +
     '<g class="px-body">' + pixels(M_FACE, M_PAL) +
     '<g class="px-hat">' + pixels(M_HAT, HAT_PAL, 0, -6) + '</g>' +
     Object.entries(M_EYES).map(([k, rows]) => `<g class="pe pe-${k}">${pixels(rows, M_PAL, 0, 2)}</g>`).join('') +
+    '<g class="px-shades">' + pixels(M_SHADES, SHADES_PAL, 0, 2) + '</g>' +
     '</g></svg>';
 
 

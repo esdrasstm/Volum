@@ -35,11 +35,15 @@ sealed class MixerForm : Form
             "github" => "https://github.com/esdrasstm/Volum",
             "store" => "ms-windows-store://pdp/?productid=9PKPDGQ211L4",   // abre o app da Microsoft Store na página do Volum
             "kofi" => "https://ko-fi.com/volum",                            // apoiar o Volum (quem está fora do Brasil)
+            // pesquisa sobre os temas (novidades e Configurações → Temas): leva a versão, o tema em uso e o idioma
+            "survey" => $"{SiteUrl}temas.html?v={Uri.EscapeDataString(Updater.Version)}&skin={Uri.EscapeDataString(AppSettings.Current.Skin)}&lang={Uri.EscapeDataString(AppSettings.Current.Language)}",
             _ => SiteUrl,
         };
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
         catch (Exception ex) { Debug.WriteLine(ex); }
     }
+
+    static string? s_testNewsSeen;   // cópia de teste: novidades vistas só nesta execução
 
     static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -545,7 +549,9 @@ sealed class MixerForm : Form
             systemDark = WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             version = Updater.Version,                 // a interface mostra as novidades se esta versão
-            newsSeen = _settings.LastSeenVersion,
+            // Cópia de teste (pasta bin, fora da Store/instalação): as novidades aparecem uma vez a cada vez que o app abre,
+            // para dar para testar o pop-up sem ficar apagando o que já foi visto
+            newsSeen = Updater.IsRelease ? _settings.LastSeenVersion : s_testNewsSeen,
             store = Updater.IsStore,                   // pela Store: sem a novidade "está na Store"      // ainda não foi vista
             water = WaterDto()
         });
@@ -673,6 +679,7 @@ sealed class MixerForm : Form
                     break;
 
                 case "newsSeen":   // fechou o popup de novidades: não mostra de novo nesta versão
+                    s_testNewsSeen = Updater.Version;
                     _settings.LastSeenVersion = Updater.Version;
                     _settings.Save();
                     break;

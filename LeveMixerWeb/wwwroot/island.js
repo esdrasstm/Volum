@@ -337,13 +337,16 @@
   // As próximas horas continuam com os de traço (pequenos).
   const CLOUD = (y) => '<path transform="translate(0 ' + y + ')" d="M7 17.5h10.6a4.4 4.4 0 0 0 .6-8.76A6.4 6.4 0 0 0 5.8 10a3.8 3.8 0 0 0 1.2 7.5z" fill="currentColor"/>';
   const DROPS = (r) => '<path d="M8.6 18.6l-1 2.6M12.6 18.6l-1 2.6M16.6 18.6l-1 2.6" fill="none" stroke="currentColor" stroke-width="' + r + '" stroke-linecap="round"/>';
+  const CLOUD_P = 'M9.4 21h8.4a3.6 3.6 0 0 0 .5-7.17A5.2 5.2 0 0 0 8.4 14.6 3.2 3.2 0 0 0 9.4 21z';
+  // Sol ou lua com a nuvem na frente: a máscara tira do sol a nuvem e uma folguinha em volta dela
+  const GAP = (id, back) => '<mask id="' + id + '" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/>' +
+    '<path d="' + CLOUD_P + '" fill="#000" stroke="#000" stroke-width="2.8"/></mask><g mask="url(#' + id + ')">' + back + '</g><path d="' + CLOUD_P + '" fill="currentColor"/>';
   const WX_FILL = {
     sun: '<circle cx="12" cy="12" r="4.6" fill="currentColor"/><path d="M12 2.2v2.2M12 19.6v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.2 12h2.2M19.6 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     moon: '<path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z" fill="currentColor"/>',
-    sunCloud: '<circle cx="8.5" cy="8.5" r="3.4" fill="currentColor"/><path d="M8.5 1.8v1.4M2.6 8.5h1.4M3.8 3.8l1 1M13.2 3.8l-1 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
-      '<path d="M9.4 21h8.4a3.6 3.6 0 0 0 .5-7.17A5.2 5.2 0 0 0 8.4 14.6 3.2 3.2 0 0 0 9.4 21z" fill="currentColor" stroke="#000" stroke-width="1.4"/>',
-    moonCloud: '<path d="M12.6 3.6a5.6 5.6 0 0 1-7.4 7.4A5.6 5.6 0 1 0 12.6 3.6z" fill="currentColor"/>' +
-      '<path d="M9.4 21h8.4a3.6 3.6 0 0 0 .5-7.17A5.2 5.2 0 0 0 8.4 14.6 3.2 3.2 0 0 0 9.4 21z" fill="currentColor" stroke="#000" stroke-width="1.4"/>',
+    // A nuvem recorta um vão no sol/lua por máscara (antes era um contorno preto, que aparecia nos temas com fundo colorido)
+    sunCloud: GAP('wxGapSun', '<circle cx="8.5" cy="8.5" r="3.4" fill="currentColor"/><path d="M8.5 1.8v1.4M2.6 8.5h1.4M3.8 3.8l1 1M13.2 3.8l-1 1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+    moonCloud: GAP('wxGapMoon', '<path d="M12.6 3.6a5.6 5.6 0 0 1-7.4 7.4A5.6 5.6 0 1 0 12.6 3.6z" fill="currentColor"/>'),
     cloud: CLOUD(1.5),
     fog: CLOUD(-2.5) + '<path d="M5 18.5h14M7.5 21.5h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
     drizzle: CLOUD(-2.5) + '<path d="M9 19.4v.1M13 19.4v.1M11 21.8v.1M15 21.8v.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
@@ -991,6 +994,9 @@
         showMedia();
         showWater();
         showPomodoro();
+        showAgenda();          // textos montados pelo JS (Agora, Amanhã, Dia todo...) no idioma novo
+        showWeather();
+        showMiniWeather();
         break;
       case 'pomodoro': onPomodoro(m); break;
       case 'pet': if (m.on) rest(m.ms || 0); else wake(); break;   // mascote: PC parado ou passadinha

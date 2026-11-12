@@ -19,6 +19,7 @@
     return l.startsWith('pt') ? 'pt' : l.startsWith('es') ? 'es' : 'en';
   })();
   const tr = (pt, en, es) => (L === 'en' ? en : L === 'es' ? es : pt);
+  const SKIN = new URLSearchParams(location.search).get('skin') || 'default';   // tema (para testar: ?skin=neon)
 
   const listeners = [];
   const send = (msg) => setTimeout(() => listeners.forEach((fn) => fn({ data: msg })), 0);
@@ -38,7 +39,7 @@
   };
 
   // ---------- Estado "do Windows" ----------
-  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: L,
+  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: L, skin: SKIN,
                      hotkey: { mods: 3, key: 86 } };   // Ctrl+Alt+V
   const model = {
     master: { volume: 0.72, muted: false },

@@ -49,6 +49,8 @@ sealed class AppSettings
 
     // Com o monitor principal em tela cheia (jogo, vídeo), a ilha vai para o topo de outro monitor (se houver)
     public bool IslandOtherScreen { get; set; } = true;
+    // Sair da frente dos apps: quando uma janela chega no topo (abas, menus), a ilha some. Desligado: fica sempre à vista
+    public bool IslandTuck { get; set; } = true;
 
     // Esconder a ilha quando não estiver em uso (pedido para telas OLED). Desligado por padrão: o Volum é para a ilha ficar à vista.
     // Some depois de IslandAutoHideSec segundos parada e volta quando o mouse passa no lugar dela; avisos continuam aparecendo.
@@ -118,8 +120,12 @@ sealed class AppSettings
                 return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new AppSettings();
         }
         catch { }
-        return new AppSettings();
+        return new AppSettings { Language = WindowsLanguage() };   // primeira vez: o idioma do Windows
     }
+
+    /// <summary>Idioma do Windows entre os do Volum: português, espanhol ou, para qualquer outro, inglês.</summary>
+    static string WindowsLanguage() =>
+        System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName switch { "pt" => "pt", "es" => "es", _ => "en" };
 
     public void Save()
     {

@@ -1339,6 +1339,23 @@ svg[data-anim] { transform-origin: 50% 50%; overflow: visible; }
 .na-glass { left: 160px; transform: rotate(9deg); animation-delay: -2.4s;
   background: radial-gradient(circle at 30% 25%, rgba(122, 92, 255, .9), transparent 55%), radial-gradient(circle at 75% 80%, rgba(198, 242, 78, .7), transparent 55%), #15151c; }
 @keyframes na-float { 50% { translate: 0 -5px; } }
+/* Verão Vice: prints reais do mixer nos dois temas, um por vez (troca suave + aproximação lenta) */
+.na-shots { position: relative; width: 196px; height: 109px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 26px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .12); }
+.na-shots img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: na-shot 9s ease-in-out infinite; }
+.na-shots img + img { animation-delay: -4.5s; }
+@keyframes na-shot { 0% { opacity: 0; transform: scale(1.02); } 8%, 46% { opacity: 1; } 54%, 100% { opacity: 0; transform: scale(1.1); } }
+:root.lite .na-shots img + img { display: none; }
+:root.lite .na-shots img { animation: none; opacity: 1; }
+/* Pesquisa: as cinco carinhas; a escolha passa por elas e para na última (que pula) */
+.na-rate { display: flex; gap: 8px; }
+.na-rate i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; font-style: normal; font-size: 21px; background: rgba(255, 255, 255, .05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); filter: grayscale(.7); opacity: .6; animation: na-rate 4s ease-in-out infinite; }
+.na-rate i:nth-child(1) { animation-delay: 0s; } .na-rate i:nth-child(2) { animation-delay: .25s; } .na-rate i:nth-child(3) { animation-delay: .5s; } .na-rate i:nth-child(4) { animation-delay: .75s; }
+.na-rate i:nth-child(5) { animation-name: na-rate-pick; animation-delay: 0s; }
+@keyframes na-rate { 0%, 100% { filter: grayscale(.7); opacity: .6; transform: none; } 6% { filter: none; opacity: 1; transform: translateY(-3px); } 14% { filter: grayscale(.7); opacity: .6; transform: none; } }
+@keyframes na-rate-pick { 0%, 25% { filter: grayscale(.7); opacity: .6; transform: none; background: rgba(255, 255, 255, .05); }
+  32%, 88% { filter: none; opacity: 1; transform: translateY(-4px) scale(1.12); background: #fff; } 100% { filter: grayscale(.7); opacity: .6; transform: none; } }
+:root.lite .na-rate i { animation: none; }
 
 /* Vidro: barra de abas com a pílula verde-limão que estica de uma aba para a outra */
 .na-tabs { position: relative; display: flex; gap: 8px; padding: 6px; border-radius: 24px; background: rgba(255, 255, 255, .05);

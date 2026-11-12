@@ -32,7 +32,9 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Ilha de cara nova: maior, com música, foco, água, clima e agenda no mesmo visual; clique na capa para abrir o player. O Pomodoro vira uma bolha ao lado da ilha. Temas de inverno grátis em pixel art (Natal, Noite de neve, Bengala e Trenó) e o novo tema Vidro, com vidro de verdade atrás do mixer. No notebook, a bateria muda de cor com a carga. Correções: a ilha sai da frente de qualquer app no topo, acompanha o tamanho do texto do Windows e o clima acha a sua cidade.
+Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas.
+
+<!-- 0.7.0: Ilha de cara nova: maior, com música, foco, água, clima e agenda no mesmo visual; clique na capa para abrir o player. O Pomodoro vira uma bolha ao lado da ilha. Temas de inverno grátis em pixel art (Natal, Noite de neve, Bengala e Trenó) e o novo tema Vidro, com vidro de verdade atrás do mixer. No notebook, a bateria muda de cor com a carga. Correções: a ilha sai da frente de qualquer app no topo, acompanha o tamanho do texto do Windows e o clima acha a sua cidade. -->
 
 <!-- 0.6.0: Escolha o monitor e a posição da ilha (esquerda, centro ou direita; em cima ou embaixo, acima da barra de tarefas). Nova opção para esconder a ilha quando não estiver em uso (telas OLED). Em cima das abas do navegador a ilha some de vez. O Volum agora se atualiza sozinho pela Store. Correção: a hora não pisca mais ao abrir e fechar a ilha. -->
 
@@ -88,7 +90,9 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-A brand new island: bigger, with music, focus, water, weather and calendar in the same style; click the cover to open the player. Pomodoro becomes a bubble next to the island. Free winter themes in pixel art (Christmas, Snowy night, Candy cane and Sleigh ride) and the new Glass theme, with real glass behind the mixer. On laptops, the battery changes color with the charge. Fixes: the island gets out of the way of any app at the top, follows the Windows text size and the weather finds your city.
+Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes.
+
+<!-- 0.7.0: A brand new island: bigger, with music, focus, water, weather and calendar in the same style; click the cover to open the player. Pomodoro becomes a bubble next to the island. Free winter themes in pixel art (Christmas, Snowy night, Candy cane and Sleigh ride) and the new Glass theme, with real glass behind the mixer. On laptops, the battery changes color with the charge. Fixes: the island gets out of the way of any app at the top, follows the Windows text size and the weather finds your city. -->
 
 <!-- 0.6.0: Pick the monitor and the island position (left, center or right; top or bottom, above the taskbar). New option to hide the island when not in use (OLED screens). Over browser tabs the island hides completely. Volum now updates itself through the Store. Fix: the clock no longer flickers when the island opens and closes. -->
 
@@ -144,7 +148,9 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Una isla renovada: más grande, con música, enfoque, agua, clima y agenda en el mismo estilo; haz clic en la portada para abrir el reproductor. El Pomodoro se convierte en una burbuja junto a la isla. Temas de invierno gratis en pixel art (Navidad, Noche de nieve, Bastón de caramelo y Trineo) y el nuevo tema Cristal, con cristal de verdad detrás del mezclador. En portátiles, la batería cambia de color con la carga. Correcciones: la isla se aparta de cualquier app arriba, sigue el tamaño del texto de Windows y el clima encuentra tu ciudad.
+Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas.
+
+<!-- 0.7.0: Una isla renovada: más grande, con música, enfoque, agua, clima y agenda en el mismo estilo; haz clic en la portada para abrir el reproductor. El Pomodoro se convierte en una burbuja junto a la isla. Temas de invierno gratis en pixel art (Navidad, Noche de nieve, Bastón de caramelo y Trineo) y el nuevo tema Cristal, con cristal de verdad detrás del mezclador. En portátiles, la batería cambia de color con la carga. Correcciones: la isla se aparta de cualquier app arriba, sigue el tamaño del texto de Windows y el clima encuentra tu ciudad. -->
 
 <!-- 0.6.0: Elige el monitor y la posición de la isla (izquierda, centro o derecha; arriba o abajo, encima de la barra de tareas). Nueva opción para ocultar la isla cuando no se use (pantallas OLED). Sobre las pestañas del navegador la isla se oculta del todo. Volum ahora se actualiza solo desde la Store. Corrección: la hora ya no parpadea al abrir y cerrar la isla. -->
 
@@ -182,15 +188,8 @@ sonido
 **Direitos autorais:** © 2026 Esdras Tomé
 **Requisitos adicionais:** Windows 10 versão 1809 ou mais novo, 64 bits.
 
-### Notas para a certificação (campo "Notas para certificação", em inglês)
-Volum is a system tray volume mixer built with .NET and WebView2. It needs runFullTrust because it uses the Windows Core Audio APIs to read and change the volume of each app's audio session and of the microphone, and to switch the default microphone when the user picks one from the list.
-- The keyboard is only locked when the user clicks "Lock keyboard to clean" (a low-level keyboard hook that is removed after 10 minutes or when the user clicks "Unlock"; Ctrl+Alt+Del always works).
-- Caps Lock / Num Lock indicators use Raw Input only to detect those two keys; no keystrokes are stored or sent anywhere.
-- Volume and media keys (VK 0xAD-0xB3 only) are intercepted with a low-level keyboard hook so the change is shown on the app's island instead of the Windows flyout; every other key is passed through immediately and nothing is stored or sent. It can be turned off in Settings > Island > Island indicators.
-- Optional app notifications on the island use the userNotificationListener capability; Windows asks the user for permission first. Notifications are only displayed locally, never stored or sent.
-- Network connections in the Store version are optional: if the user pastes an iCal (.ics) calendar address in Settings > Calendar, the app downloads that calendar every 15 minutes; if the user types a city in Settings > Weather, it looks the city up and downloads the forecast from Open-Meteo (open-meteo.com) every 30 minutes. Updates come from the Store (the app only checks for them with StoreContext and shows a notice).
-- Clicking the album cover on the island brings the app that is playing to the front (its own window, or IApplicationActivationManager for Store apps). The Glass theme turns on the Windows acrylic backdrop behind the mixer window.
-- To test: click the Volum icon in the system tray (near the clock). Optional features are in Settings (gear icon): island at the top of the screen, Pomodoro, water reminder.
+### Notas para a certificação (campo "Notas para certificação", em inglês; curto: o campo é pequeno)
+Volum is a tray volume mixer (.NET + WebView2). runFullTrust: Core Audio to change per-app and mic volume. Keyboard hook only for "Lock keyboard to clean" (user action, auto-unlocks) and volume/media keys. Notifications (optional, user permission) are shown locally. Optional network: iCal URL and Open-Meteo weather. Test: click the tray icon; options in Settings.
 
 ### Capturas de tela
 Mínimo 1, em 1366×768 ou maior (recomendado 1920×1080), PNG. Sugestões:
