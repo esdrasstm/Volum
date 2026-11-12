@@ -1100,7 +1100,12 @@
 
   <!-- Textos e mascote do app (o mesmo shared.js da interface) -->
   <script src="../LeveMixerWeb/wwwroot/shared.js"></script>
+  <!-- Idioma: português, inglês ou espanhol, pelo idioma do navegador (textos no i18n.js) -->
+  <script src="i18n.js"></script>
   <script>
+    const tr = window.SiteI18n ? SiteI18n.tr : (t) => t;
+    if (window.SiteI18n) SiteI18n.apply(document);   // antes das animações, que mexem nos títulos
+
     // Animações ao rolar (scroll-triggered). Sem suporte ou sem script, tudo fica visível direto.
     // "Modo Figma" (index.html?figma): tudo visível de uma vez, sem animações — para importar no Figma
     const figma = new URLSearchParams(location.search).has('figma');
@@ -1141,7 +1146,7 @@
     function countUp(el) {
       const target = parseFloat(el.dataset.count);
       const decimals = parseInt(el.dataset.decimals || '0', 10);
-      const fmt = (v) => v.toFixed(decimals).replace('.', ',');
+      const fmt = (v) => (window.SiteI18n && SiteI18n.LANG === 'en' ? v.toFixed(decimals) : v.toFixed(decimals).replace('.', ','));
       const start = performance.now(), ms = 1800;
       el.textContent = fmt(0);
       requestAnimationFrame(function step(now) {
@@ -1254,18 +1259,18 @@
     const fbVersion = fromApp ? `Volum ${params.get('v')} · Windows build ${(params.get('w') || '?').replace(/\D/g, '')}` : 'site';
     if (fromApp) {
       track('veio-do-app');   // clicou no balão de sugestões dentro do Volum
-      document.getElementById('feedbackNote').textContent = `Vai junto: ${fbVersion}. Não precisa de cadastro.`;
+      document.getElementById('feedbackNote').textContent = tr('Vai junto: {0}. Não precisa de cadastro.').replace('{0}', fbVersion);
       addEventListener('load', () => setTimeout(() => fbMessage.focus({ preventScroll: true }), 600));
     }
 
     // O texto de exemplo muda com o tipo
     fbForm.addEventListener('change', () => {
       fbMessage.placeholder = fbForm.elements.kind.value === 'Bug'
-        ? 'O que aconteceu? O que você estava fazendo na hora?'
-        : 'O que você gostaria que o Volum fizesse?';
+        ? tr('O que aconteceu? O que você estava fazendo na hora?')
+        : tr('O que você gostaria que o Volum fizesse?');
     });
 
-    const fbShow = (text, cls) => { fbStatus.textContent = text; fbStatus.className = 'form-status ' + cls; };
+    const fbShow = (text, cls) => { fbStatus.textContent = tr(text); fbStatus.className = 'form-status ' + cls; };
 
     fbForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1309,7 +1314,7 @@
     const frame = document.getElementById('demoFrame');
     const hint = document.getElementById('demoHint');
     const tellDemo = (action) => frame.contentWindow.postMessage({ volumDemo: true, action }, '*');
-    const HINT = 'Passe o mouse na ilha, use os botões da barra de tarefas e clique no Volum na bandeja';
+    const HINT = tr('Passe o mouse na ilha, use os botões da barra de tarefas e clique no Volum na bandeja');
     let demoUsed = false;   // estatística: alguém mexeu na demo (conta uma vez por visita)
     const islandFrame = document.getElementById('islandFrame');
     const tellIsland = (action) => islandFrame.contentWindow.postMessage({ volumIsland: true, action }, '*');
@@ -1318,7 +1323,7 @@
     const openMixer = () => {
       if (!demo.classList.contains('min')) return;
       demo.classList.remove('min');
-      hint.textContent = 'Arraste os volumes e silencie os apps. Clique de novo no Volum para fechar';
+      hint.textContent = tr('Arraste os volumes e silencie os apps. Clique de novo no Volum para fechar');
       tellDemo('open');
     };
 
@@ -1343,7 +1348,7 @@
       if (m.type === 'top') window.scrollTo({ top: 0, behavior: 'smooth' });   // "Site do Volum" na demo
       if (m.type === 'feedback') document.getElementById('sugestoes').scrollIntoView({ behavior: 'smooth' });   // balão na demo
       if (m.type === 'settings') {   // engrenagem na demo: no app ela abre a janela de configurações
-        hint.textContent = 'No app, a engrenagem abre a janela de configurações';
+        hint.textContent = tr('No app, a engrenagem abre a janela de configurações');
         clearTimeout(hint._t);
         hint._t = setTimeout(() => { hint.textContent = HINT; }, 3500);
       }
@@ -1380,8 +1385,9 @@
     const clock = document.getElementById('clock');
     const tickClock = () => {
       const d = new Date();
-      clock.innerHTML = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
-        '<br>' + d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const loc = document.documentElement.lang;
+      clock.innerHTML = d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' }) +
+        '<br>' + d.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' });
     };
     tickClock();
     setInterval(tickClock, 30000);

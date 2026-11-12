@@ -10,6 +10,14 @@
    ========================================================= */
 (() => {
   'use strict';
+  // Idioma: o mesmo do site (?lang= na página ou no iframe; senão, o idioma do navegador: pt, es, ou inglês)
+  const L = (() => {
+    let q = new URLSearchParams(location.search).get('lang');
+    try { q = q || new URLSearchParams(parent.location.search).get('lang'); } catch (e) { /* fora do site */ }
+    const l = (q || (navigator.languages && navigator.languages[0]) || navigator.language || 'pt').toLowerCase();
+    return l.startsWith('pt') ? 'pt' : l.startsWith('es') ? 'es' : 'en';
+  })();
+  const tr = (pt, en, es) => (L === 'en' ? en : L === 'es' ? es : pt);
 
   const listeners = [];
   const send = (msg) => setTimeout(() => listeners.forEach((fn) => fn({ data: msg })), 0);
@@ -22,10 +30,10 @@
     `<rect width='40' height='40' fill='url(#g)'/><circle cx='28' cy='13' r='6' fill='#fff' opacity='.35'/>` +
     `<path d='M0 30 Q10 24 20 29 T40 27 V40 H0z' fill='#000' opacity='.25'/></svg>`);
   const SONGS = [
-    { title: 'Noites de Verão', artist: 'Lua Azul', album: 'Ao Vivo', cover: cover('#ff8a65', '#ba68c8', '#283593'), duration: 214 },
-    { title: 'Céu de Neon', artist: 'Os Satélites', album: 'Órbita', cover: cover('#22d3ee', '#6366f1', '#1e1b4b'), duration: 187 },
-    { title: 'Café às Sete', artist: 'Marina Sol', album: 'Manhãs', cover: cover('#fde047', '#f97316', '#7c2d12'), duration: 241 },
-    { title: 'Onda Leve', artist: 'Trio Maré', album: 'Litoral', cover: cover('#86efac', '#14b8a6', '#134e4a'), duration: 199 },
+    { title: tr('Noites de Verão', 'Summer Nights', 'Noches de Verano'), artist: tr('Lua Azul', 'Blue Moon', 'Luna Azul'), album: tr('Ao Vivo', 'Live', 'En Vivo'), cover: cover('#ff8a65', '#ba68c8', '#283593'), duration: 214 },
+    { title: tr('Céu de Neon', 'Neon Sky', 'Cielo de Neón'), artist: tr('Os Satélites', 'The Satellites', 'Los Satélites'), album: tr('Órbita', 'Orbit', 'Órbita'), cover: cover('#22d3ee', '#6366f1', '#1e1b4b'), duration: 187 },
+    { title: tr('Café às Sete', 'Coffee at Seven', 'Café a las Siete'), artist: 'Marina Sol', album: tr('Manhãs', 'Mornings', 'Mañanas'), cover: cover('#fde047', '#f97316', '#7c2d12'), duration: 241 },
+    { title: tr('Onda Leve', 'Gentle Wave', 'Ola Suave'), artist: tr('Trio Maré', 'Tide Trio', 'Trío Marea'), album: tr('Litoral', 'Coastline', 'Litoral'), cover: cover('#86efac', '#14b8a6', '#134e4a'), duration: 199 },
   ];
   let song = 0, playing = true, position = 52, positionAt = Date.now();
   const nowPos = () => Math.min(SONGS[song].duration, position + (playing ? (Date.now() - positionAt) / 1000 : 0));
@@ -118,21 +126,21 @@
 
   // ---------- Ações vindas da página (botões da barra de tarefas) ----------
   const ACTS = {
-    music: () => { togglePlay(); showNotice({ icon: playing ? 'play' : 'pause', kind: 'osd', title: playing ? 'Tocando' : 'Pausado', text: SONGS[song].title }, 1800); },
-    water: () => showNotice({ icon: 'drop', kind: 'drop', title: 'Hora da água', text: 'Beba um copo', action: '+250 ml' }, 7000),
+    music: () => { togglePlay(); showNotice({ icon: playing ? 'play' : 'pause', kind: 'osd', title: playing ? tr('Tocando', 'Playing', 'Reproduciendo') : tr('Pausado', 'Paused', 'En pausa'), text: SONGS[song].title }, 1800); },
+    water: () => showNotice({ icon: 'drop', kind: 'drop', title: tr('Hora da água', 'Water time', 'Hora del agua'), text: tr('Beba um copo', 'Drink a glass', 'Bebe un vaso'), action: '+250 ml' }, 7000),
     pomo: () => {
       pomo = { phase: 'focus', paused: false, leftMs: 25 * 60000, totalMs: 25 * 60000, done: 1, every: 4, focusMin: 25 };
       pomoStartedAt = Date.now();
       send(pomoMsg());
-      showNotice({ icon: 'timer', kind: 'act', title: 'Foco', text: '25 min · bora!' }, 2600);
+      showNotice({ icon: 'timer', kind: 'act', title: tr('Foco', 'Focus', 'Enfoque'), text: tr('25 min · bora!', "25 min · let's go!", '25 min · ¡vamos!') }, 2600);
     },
-    calendar: () => showNotice({ icon: 'calendar', kind: 'act', title: 'Em 10 min', text: 'Reunião de design' }, 5000),
-    charger: () => showNotice({ icon: 'charging', kind: 'act', title: 'Carregando', text: '82%', level: 0.82 }, 2600),
-    headphones: () => showNotice({ icon: 'headphones', kind: 'act', title: 'Fone conectado', text: 'Fone sem fio' }, 2600),
+    calendar: () => showNotice({ icon: 'calendar', kind: 'act', title: tr('Em 10 min', 'In 10 min', 'En 10 min'), text: tr('Reunião de design', 'Design meeting', 'Reunión de diseño') }, 5000),
+    charger: () => showNotice({ icon: 'charging', kind: 'act', title: tr('Carregando', 'Charging', 'Cargando'), text: '82%', level: 0.82 }, 2600),
+    headphones: () => showNotice({ icon: 'headphones', kind: 'act', title: tr('Fone conectado', 'Headphones connected', 'Auriculares conectados'), text: tr('Fone sem fio', 'Wireless headphones', 'Auriculares inalámbricos') }, 2600),
     camera: () => {
       camOn = !camOn;
-      send({ type: 'privacy', mic: camOn ? ['Chamada'] : [], cam: camOn ? ['Chamada'] : [] });
-      if (camOn) showNotice({ icon: 'camera', kind: 'act', title: 'Câmera em uso', text: 'Chamada' }, 2600);
+      send({ type: 'privacy', mic: camOn ? [tr('Chamada', 'Call', 'Llamada')] : [], cam: camOn ? [tr('Chamada', 'Call', 'Llamada')] : [] });
+      if (camOn) showNotice({ icon: 'camera', kind: 'act', title: tr('Câmera em uso', 'Camera in use', 'Cámara en uso'), text: tr('Chamada', 'Call', 'Llamada') }, 2600);
     },
   };
   let camOn = false;
@@ -148,7 +156,7 @@
     switch (m.type) {
       case 'ready': {
         const now = Date.now();
-        send({ type: 'settings', language: 'pt', lite: false, pomodoro: true, style: 'float' });
+        send({ type: 'settings', language: L, lite: false, pomodoro: true, style: 'float' });
         send({ type: 'battery', present: true, percent: 82, charging: false });
         send({ type: 'water', water });
         send(mediaMsg());
@@ -156,20 +164,20 @@
         send(pomoMsg());
         // Clima de exemplo (no app: Open-Meteo, pela cidade das configurações)
         const hr = new Date().getHours();
-        send({ type: 'weather', on: true, unit: 'c', show: 'both', weather: { place: 'São Paulo', temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
+        send({ type: 'weather', on: true, unit: L === 'en' ? 'f' : 'c', show: 'both', weather: { place: tr('São Paulo', 'San Francisco', 'Madrid'), temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
           hours: [0, 1, 2, 3, 4].map((i) => {
             const h = (hr + 1 + i) % 24;
             return { hour: String(h).padStart(2, '0'), temp: [24, 25, 23, 21, 20][i], code: [2, 1, 3, 61, 61][i], day: h >= 6 && h < 18 };
           }) } });
         send({ type: 'agenda', on: true, events: [
-          { title: 'Reunião de design', start: now + 40 * 60000, end: now + 100 * 60000, allDay: false },
-          { title: 'Academia', start: now + 4 * 3600000, end: now + 5 * 3600000, allDay: false },
-          { title: 'Aniversário da Ana', start: now + 20 * 3600000, end: now + 44 * 3600000, allDay: true },
+          { title: tr('Reunião de design', 'Design meeting', 'Reunión de diseño'), start: now + 40 * 60000, end: now + 100 * 60000, allDay: false },
+          { title: tr('Academia', 'Gym', 'Gimnasio'), start: now + 4 * 3600000, end: now + 5 * 3600000, allDay: false },
+          { title: tr('Aniversário da Ana', "Ana's birthday", 'Cumpleaños de Ana'), start: now + 20 * 3600000, end: now + 44 * 3600000, allDay: true },
         ] });
         send({ type: 'mode', mode: 'closed', seq: ++seq });
         // Dá oi ao abrir a página (no app: quando o PC liga)
         const h = new Date().getHours();
-        setTimeout(() => showNotice({ icon: 'greet', kind: 'greet', title: h < 12 && h >= 5 ? 'Bom dia!' : h < 18 && h >= 12 ? 'Boa tarde!' : 'Boa noite!' }, 3200), 900);
+        setTimeout(() => showNotice({ icon: 'greet', kind: 'greet', title: h < 12 && h >= 5 ? tr('Bom dia!', 'Good morning!', '¡Buenos días!') : h < 18 && h >= 12 ? tr('Boa tarde!', 'Good afternoon!', '¡Buenas tardes!') : tr('Boa noite!', 'Good evening!', '¡Buenas noches!') }, 3200), 900);
         poke();
         break;
       }

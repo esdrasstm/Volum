@@ -11,6 +11,14 @@
    ========================================================= */
 (() => {
   'use strict';
+  // Idioma: o mesmo do site (?lang= na página ou no iframe; senão, o idioma do navegador: pt, es, ou inglês)
+  const L = (() => {
+    let q = new URLSearchParams(location.search).get('lang');
+    try { q = q || new URLSearchParams(parent.location.search).get('lang'); } catch (e) { /* fora do site */ }
+    const l = (q || (navigator.languages && navigator.languages[0]) || navigator.language || 'pt').toLowerCase();
+    return l.startsWith('pt') ? 'pt' : l.startsWith('es') ? 'es' : 'en';
+  })();
+  const tr = (pt, en, es) => (L === 'en' ? en : L === 'es' ? es : pt);
 
   const listeners = [];
   const send = (msg) => setTimeout(() => listeners.forEach((fn) => fn({ data: msg })), 0);
@@ -30,14 +38,14 @@
   };
 
   // ---------- Estado "do Windows" ----------
-  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: 'pt',
+  const settings = { theme: 'dark', autostart: true, glass: true, lite: false, language: L,
                      hotkey: { mods: 3, key: 86 } };   // Ctrl+Alt+V
   const model = {
     master: { volume: 0.72, muted: false },
     mic: {
       volume: 0.85, muted: false, id: 'mic-usb',
       devices: [
-        { id: 'mic-usb', name: 'Microfone (USB Audio)' },
+        { id: 'mic-usb', name: tr('Microfone (USB Audio)', 'Microphone (USB Audio)', 'Micrófono (USB Audio)') },
         { id: 'mic-headset', name: 'Headset (Bluetooth)' },
         { id: 'mic-array', name: 'Microphone Array (Realtek Audio)' },
       ],
@@ -45,16 +53,16 @@
     output: {
       id: 'out-headset',
       devices: [
-        { id: 'out-headset', name: 'Fone de ouvido (Bluetooth)' },
+        { id: 'out-headset', name: tr('Fone de ouvido (Bluetooth)', 'Headphones (Bluetooth)', 'Auriculares (Bluetooth)') },
         { id: 'out-soundbar', name: 'Soundbar (HDMI)' },
-        { id: 'out-speakers', name: 'Alto-falantes (Realtek Audio)' },
+        { id: 'out-speakers', name: tr('Alto-falantes (Realtek Audio)', 'Speakers (Realtek Audio)', 'Altavoces (Realtek Audio)') },
       ],
     },
     apps: [
-      { id: 'chamada', name: 'Chamada', volume: 1, muted: false, active: true, icon: ICONS.chamada },
-      { id: 'jogo', name: 'Jogo', volume: 0.35, muted: false, active: true, icon: ICONS.jogo },
-      { id: 'musica', name: 'Música', volume: 0.6, muted: false, active: true, icon: ICONS.musica },
-      { id: 'navegador', name: 'Navegador', volume: 0.8, muted: false, active: false, icon: ICONS.navegador },
+      { id: 'chamada', name: tr('Chamada', 'Call', 'Llamada'), volume: 1, muted: false, active: true, icon: ICONS.chamada },
+      { id: 'jogo', name: tr('Jogo', 'Game', 'Juego'), volume: 0.35, muted: false, active: true, icon: ICONS.jogo },
+      { id: 'musica', name: tr('Música', 'Music', 'Música'), volume: 0.6, muted: false, active: true, icon: ICONS.musica },
+      { id: 'navegador', name: tr('Navegador', 'Browser', 'Navegador'), volume: 0.8, muted: false, active: false, icon: ICONS.navegador },
       { id: '__system', name: 'Sons do sistema', volume: 0.5, muted: false, active: false, icon: null },
     ],
   };
