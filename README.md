@@ -35,6 +35,7 @@ A lógica fica em C# (WinForms + WebView2) e a interface é HTML/CSS/JS, para o 
 
 ## Compilar
 Precisa do [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+O equalizador tem uma parte em C++ (`LeveMixerWeb/native`), compilada junto: precisa também do Visual Studio 2022 ou das [Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) com "Desenvolvimento para desktop com C++".
 
     cd LeveMixerWeb
     dotnet run -c Release

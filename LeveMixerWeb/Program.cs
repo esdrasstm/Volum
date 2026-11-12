@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -26,14 +27,54 @@ static class Program
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     static extern bool AllowSetForegroundWindow(int processId);
 
+    /// <summary>
+    /// Comandos do equalizador. --eq-selftest roda o autoteste (resultado em %TEMP%olum-eq-selftest.txt);
+    /// --eq-install / --eq-remove "id" e --eq-remove-all rodam elevados, chamados pela janela do equalizador.
+    /// </summary>
+    static bool EqCommand(string[] args)
+    {
+        if (args.Contains("--eq-selftest", StringComparer.OrdinalIgnoreCase))
+        {
+            var err = EqConfig.SelfTest();
+            File.WriteAllText(Path.Combine(Path.GetTempPath(), "volum-eq-selftest.txt"), err ?? "ok");
+            Environment.Exit(err == null ? 0 : 1);
+        }
+        string[] actions = { "--eq-install", "--eq-remove", "--eq-remove-all" };
+        int i = Array.FindIndex(args, a => actions.Contains(a, StringComparer.OrdinalIgnoreCase));
+        if (i < 0) return false;
+        string action = args[i].ToLowerInvariant();
+        string id = action != "--eq-remove-all" && i + 1 < args.Length ? args[i + 1] : "";
+        int r = Array.FindIndex(args, a => a.Equals("--eq-result", StringComparison.OrdinalIgnoreCase));
+        string? result = r >= 0 && r + 1 < args.Length ? args[r + 1] : null;
+        Environment.ExitCode = EqInstaller.RunCommand(action, id, result);
+        return true;
+    }
+
+    /// <summary>Desinstalando o Volum: o equalizador sai do Windows junto (pede permissão; se negar, o efeito só deixa o som passar).</summary>
+    static void RemoveEqOnUninstall()
+    {
+        try { File.Delete(EqConfig.BinPath); } catch { }   // sem curva, o efeito passa o som intacto
+        try
+        {
+            if (!EqInstaller.AnyInstalled() || Environment.ProcessPath == null) return;
+            var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath) { UseShellExecute = true, Verb = "runas" };
+            psi.ArgumentList.Add("--eq-remove-all");
+            using var p = System.Diagnostics.Process.Start(psi);
+            p?.WaitForExit(25000);
+        }
+        catch { }
+    }
+
     [STAThread]
     static void Main(string[] args)
     {
         // Velopack (instalador/atualizador): precisa ser a primeira coisa do app. Durante a
         // instalação, atualização e desinstalação ele roda o Volum rapidinho e sai daqui mesmo.
         VelopackApp.Build()
-            .OnBeforeUninstallFastCallback(_ => AutoStart.Set(false))   // desinstalou: tira do "iniciar com o Windows"
+            .OnBeforeUninstallFastCallback(_ => { AutoStart.Set(false); RemoveEqOnUninstall(); })   // desinstalou: sai do "iniciar com o Windows" e o equalizador sai do sistema
             .Run();
+
+        if (EqCommand(args)) return;
 
         DevMode = args.Contains("--dev", StringComparer.OrdinalIgnoreCase);
         TestUpdateNotice = args.Contains("--test-update-notice", StringComparer.OrdinalIgnoreCase);
