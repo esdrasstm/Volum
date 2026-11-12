@@ -117,6 +117,12 @@ static class Program
         }
 
         using var tray = new TrayController();
+        if (args.Contains("--open-eq", StringComparer.OrdinalIgnoreCase))   // Volum.exe --dev --open-eq: já abre o equalizador
+        {
+            var later = new System.Windows.Forms.Timer { Interval = 300 };
+            later.Tick += (_, _) => { later.Dispose(); EqForm.ShowWindow(); };
+            later.Start();
+        }
         MemoryTrim.Run();
         Application.Run();
     }

@@ -664,6 +664,10 @@ sealed class MixerForm : Form
                     SettingsForm.ShowWindow();
                     break;
 
+                case "openEq":
+                    EqForm.ShowWindow();
+                    break;
+
                 case "openSupport":   // coração: abre as configurações direto em "Apoiar o Volum"
                     SettingsForm.ShowWindow("support");
                     break;

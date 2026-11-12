@@ -68,7 +68,7 @@ window.Volum = (() => {
       islandPos: 'Posição', posLeft: 'Esquerda', posCenter: 'Centro', posRight: 'Direita', posTop: 'Em cima', posBottom: 'Embaixo',
       posBottomNote: 'Embaixo, a ilha fica logo acima da barra de tarefas e usa o formato flutuante',
       otherScreen: 'Outro monitor em tela cheia', otherScreenHint: 'Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor',
-      waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso',
+      waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso', eqTitle: 'Equalizador',
     },
     en: {
       settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
@@ -128,7 +128,7 @@ window.Volum = (() => {
       islandPos: 'Position', posLeft: 'Left', posCenter: 'Center', posRight: 'Right', posTop: 'Top', posBottom: 'Bottom',
       posBottomNote: 'At the bottom, the island sits just above the taskbar and uses the floating shape',
       otherScreen: 'Other monitor in full screen', otherScreenHint: 'With a game or video in full screen on the main monitor, the island moves to the other monitor',
-      waterTest: 'Test reminder', waterSound: 'Play a sound',
+      waterTest: 'Test reminder', waterSound: 'Play a sound', eqTitle: 'Equalizer',
     },
     es: {
       settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
@@ -188,7 +188,7 @@ window.Volum = (() => {
       islandPos: 'Posición', posLeft: 'Izquierda', posCenter: 'Centro', posRight: 'Derecha', posTop: 'Arriba', posBottom: 'Abajo',
       posBottomNote: 'Abajo, la isla queda justo encima de la barra de tareas y usa la forma flotante',
       otherScreen: 'Otro monitor en pantalla completa', otherScreenHint: 'Con un juego o video en pantalla completa en el monitor principal, la isla pasa al otro monitor',
-      waterTest: 'Probar aviso', waterSound: 'Reproducir sonido',
+      waterTest: 'Probar aviso', waterSound: 'Reproducir sonido', eqTitle: 'Ecualizador',
     },
   };
 

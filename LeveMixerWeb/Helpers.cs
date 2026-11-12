@@ -113,6 +113,7 @@ static class Strings
         ["autostart"] = new[] { "Iniciar com o Windows", "Start with Windows", "Iniciar con Windows" },
         ["exit"]      = new[] { "Sair", "Exit", "Salir" },
         ["settings"]  = new[] { "Configurações", "Settings", "Configuración" },
+        ["eq"]        = new[] { "Equalizador", "Equalizer", "Ecualizador" },
         // Travar o teclado para limpar (menu da bandeja e aviso na tela)
         ["kbLock"]    = new[] { "Travar teclado para limpar", "Lock keyboard to clean", "Bloquear teclado para limpiar" },
         ["kbLocked"]  = new[] { "Teclado travado", "Keyboard locked", "Teclado bloqueado" },
