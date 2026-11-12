@@ -67,8 +67,14 @@ sealed class AppSettings
     public string IslandStyle { get; set; } = "notch";
     /// <summary>Notificações dos outros apps na ilha (só na versão da Store; precisa da permissão do Windows).</summary>
     public bool IslandAppNotes { get; set; }
-    /// <summary>Endereço iCal (.ics) da agenda (Google Agenda, Outlook). Vazio = sem agenda. Fica só neste PC.</summary>
-    public string CalendarUrl { get; set; } = "";
+    /// <summary>Endereço iCal (.ics) da agenda (Google Agenda, Outlook). Vazio = sem agenda. É um endereço secreto:
+    /// fica salvo protegido pelo Windows (CalendarUrlSafe), que só este usuário, neste PC, consegue abrir.</summary>
+    [JsonIgnore]
+    public string CalendarUrl { get => Secret.Unprotect(CalendarUrlSafe); set => CalendarUrlSafe = Secret.Protect(value); }
+    public string CalendarUrlSafe { get; set; } = "";
+    /// <summary>Como era salvo antes (texto puro): lido uma vez, passa para o CalendarUrlSafe e não é mais gravado.</summary>
+    [JsonPropertyName("CalendarUrl"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? CalendarUrlOld { get => null; set { if (!string.IsNullOrEmpty(value)) CalendarUrl = value; } }
 
     // Clima na ilha (Open-Meteo): cidade digitada pela pessoa (vazio = desligado), nome achado e coordenadas
     public string WeatherCity { get; set; } = "";

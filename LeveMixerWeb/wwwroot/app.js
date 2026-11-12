@@ -325,6 +325,7 @@
     setLite(!!s.lite);
     document.documentElement.classList.toggle('acrylic', !!s.acrylic);   // tema Vidro com o acrílico do Windows atrás
     document.documentElement.dataset.skin = s.skin || 'default';   // tema (Configurações → Temas)
+    if (V.useSkin) V.useSkin(s.skin);                              // carrega só o arquivo desse tema
     if (s.water) water = s.water;                   // lembrete de água: o contador de hoje
     showWater();
     setMicListOpen(false);                          // sempre abre com a lista de microfones fechada

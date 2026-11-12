@@ -32,7 +32,8 @@ static class Agenda
     public static IReadOnlyList<CalEvent> Upcoming { get; private set; } = Array.Empty<CalEvent>();
     public static string LastError { get; private set; } = "";
 
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    // No máximo 5 MB: um endereço errado apontando para um arquivo enorme não enche a memória
+    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20), MaxResponseContentBufferSize = 5 * 1024 * 1024 };
     static readonly Timer FetchTimer = new() { Interval = 15 * 60 * 1000 };
     static readonly Timer AlertTimer = new();
     static readonly HashSet<string> Alerted = new();
@@ -63,6 +64,8 @@ static class Agenda
         var url = (AppSettings.Current.CalendarUrl ?? "").Trim();
         if (url.Length == 0) return -1;
         if (url.StartsWith("webcal://", StringComparison.OrdinalIgnoreCase)) url = "https://" + url[9..];
+        // Só endereço criptografado: o endereço da agenda é secreto e não pode trafegar aberto na rede
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) { LastError = "https"; return -1; }
         try
         {
             var text = await Http.GetStringAsync(url);

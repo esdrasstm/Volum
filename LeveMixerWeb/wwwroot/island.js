@@ -987,6 +987,7 @@
         document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
         document.documentElement.classList.toggle('at-bottom', !!m.bottom);
         document.documentElement.dataset.skin = m.skin || 'default';
+        if (V.useSkin) V.useSkin(m.skin);   // carrega só o arquivo desse tema
         tabPos = null; tabKey = ''; setTimeout(showPages, 0);                   // tema (Configurações → Temas)           // embaixo (acima da barra de tarefas): cresce para cima
         pomoOn = m.pomodoro !== false;
         V.applyI18n(lang);

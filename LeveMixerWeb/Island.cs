@@ -317,9 +317,12 @@ sealed class IslandForm : Form
         }
         catch { _out?.Dispose(); _out = null; }   // sem saída de áudio (ou trocou agora): tenta de novo no próximo
         bool on = (DateTime.UtcNow - _lastSound).TotalMilliseconds < 1500;   // segura 1,5 s (pausas curtas entre músicas)
+        // Ritmo: com som e a ilha na tela, 10 vezes por segundo (a onda acompanha); sem som, devagar;
+        // com a ilha escondida (jogo em tela cheia, recolhida em cima de um app), só 1 vez por segundo
+        int every = !Visible || _hiddenByFullscreen ? 1000 : on ? 100 : 400;
+        if (_soundTimer.Interval != every) _soundTimer.Interval = every;
         if (on == _soundOn) return;
         _soundOn = on;
-        _soundTimer.Interval = on ? 100 : 400;   // sem som, volta a olhar devagar
         Post(new { type = "sound", on });
     }
 

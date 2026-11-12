@@ -1,0 +1,51 @@
+/* Volum — tema "glass" (gerado a partir do skins.css; não editar à mão) */
+[data-skin="glass"] { --lime: #c6f24e; --lime-grad: linear-gradient(135deg, #f0ffae, #c6f24e 55%, #9fd82e); --lime-glow: 0 0 18px rgba(198, 242, 78, .45);
+  --glass-ring: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .12); }
+[data-skin="glass"] .deco .d-cap { display: block; top: 0; bottom: 0; height: auto; background: radial-gradient(130% 60% at 50% 0%, rgba(255, 255, 255, .1), rgba(255, 255, 255, 0) 70%); image-rendering: auto; }
+[data-skin="glass"] .shape > .deco .d-cap, html.floating[data-skin="glass"] .shape > .deco .d-cap, html[data-skin="glass"].floating .shape > .deco .d-cap { left: 0; right: 0; }
+:root[data-skin="glass"] .card { background: rgba(14, 14, 18, .5); border-radius: 8px; }
+:root[data-skin="glass"]:not(.acrylic) .card { background: rgba(14, 14, 18, .94); border-radius: 14px; }
+:root[data-skin="glass"][data-scheme="light"] .card { background: rgba(250, 250, 252, .5); }
+:root[data-skin="glass"][data-scheme="light"]:not(.acrylic) .card { background: rgba(248, 248, 252, .96); }
+:root[data-skin="glass"] .card::before { background: linear-gradient(165deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .06) 38%, rgba(255, 255, 255, .04) 70%, rgba(255, 255, 255, .16)); }
+:root[data-skin="glass"] .header .icon-btn { width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .05); box-shadow: var(--glass-ring); }
+:root[data-skin="glass"] .header .icon-btn:hover { background: rgba(255, 255, 255, .1); }
+:root[data-skin="glass"] .slider-track, :root[data-skin="glass"] .slider:hover .slider-track, :root[data-skin="glass"] .row.dragging .slider-track { background: rgba(255, 255, 255, .1); }
+:root[data-skin="glass"] .slider-fill, :root[data-skin="glass"].glass .slider-fill { background: var(--lime-grad); box-shadow: 0 0 10px rgba(198, 242, 78, .4); }
+:root[data-skin="glass"] .slider-thumb, :root[data-skin="glass"] .row.dragging .slider-thumb { background: #fff; box-shadow: 0 0 0 3px rgba(198, 242, 78, .25), 0 0 8px rgba(198, 242, 78, .5); }
+:root[data-skin="glass"] .shape-svg path { fill: rgba(14, 14, 18, .62); stroke: rgba(255, 255, 255, .16); stroke-width: 1; }
+:root[data-skin="glass"] .pomo-bubble { background: rgba(14, 14, 18, .62); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); }
+:root[data-skin="glass"] .pomo-bubble .ring-fg { stroke: var(--lime); }
+:root[data-skin="glass"] :is(.mini, .full, .noticebar) { text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+:root[data-skin="glass"] .progress .bar span, :root[data-skin="glass"].island .progress .bar span { background: var(--lime-grad); box-shadow: 0 0 8px rgba(198, 242, 78, .35); }
+:root[data-skin="glass"] .controls .play { background: var(--lime-grad); color: #0b0d06; border-radius: 50%; box-shadow: var(--lime-glow); text-shadow: none; }
+:root[data-skin="glass"] .controls .play:hover { background: var(--lime-grad); filter: brightness(1.06); }
+:root[data-skin="glass"] .controls .play svg { width: 22px; height: 22px; }
+:root[data-skin="glass"] .focus-buttons .main { background: var(--lime-grad); color: #0b0d06; border-radius: 50%; box-shadow: var(--lime-glow); }
+:root[data-skin="glass"] .focus-ring .ring-fg, :root[data-skin="glass"] .pomo-chip .ring-fg { stroke: var(--lime); }
+:root[data-skin="glass"] .dots, :root[data-skin="glass"] .page-arrow, :root[data-skin="glass"] .pomo-chip { display: none !important; }
+:root[data-skin="glass"] .tabbar { position: relative; display: flex; height: 38px; margin-top: 12px; padding: 0 4px; }
+:root[data-skin="glass"] .tab { position: relative; z-index: 1; flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; height: 38px;
+  padding: 0; border: 0; background: none; color: rgba(255, 255, 255, .62); cursor: pointer; text-shadow: none; transition: color .25s ease; }
+:root[data-skin="glass"] .tab .tab-ico { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; flex: none;
+  background: rgba(255, 255, 255, .05); box-shadow: var(--glass-ring); transition: background .25s ease, box-shadow .25s ease, width .3s ease; }
+:root[data-skin="glass"] .tab .tab-ico svg { width: 16px; height: 16px; }
+:root[data-skin="glass"] .tab:hover:not(.on) .tab-ico { background: rgba(255, 255, 255, .1); color: #fff; }
+:root[data-skin="glass"] .tab .tab-label { max-width: 0; overflow: hidden; white-space: nowrap; font-size: 11.5px; font-weight: 600; letter-spacing: -.3px; opacity: 0;
+  transition: opacity .2s ease, max-width .3s ease; }
+:root[data-skin="glass"] .tab.on { color: #0b0d06; --tab-cut: #c6f24e; }
+:root[data-skin="glass"] .tab.on .tab-ico { width: 16px; background: none; box-shadow: none; }
+:root[data-skin="glass"] .tab.on .tab-label { max-width: 70px; opacity: 1; transition: opacity .3s ease .2s, max-width .3s ease; }
+:root[data-skin="glass"] .tab-pill { position: absolute; left: 0; top: 2px; height: 34px; width: 34px; border-radius: 17px; background: var(--lime-grad); box-shadow: var(--lime-glow); will-change: transform, width; }
+:root[data-skin="glass"] .tab-drop { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #c6f24e; opacity: 0; pointer-events: none; }
+:root[data-skin="glass"] .tab-drop.go { animation: tab-drop .5s cubic-bezier(.2, .8, .3, 1) both; }
+:root.lite[data-skin="glass"] .tab-drop { display: none; }
+.skin-prev[data-skin="glass"] { background: radial-gradient(circle at 18% 22%, rgba(122, 92, 255, .75), transparent 55%), radial-gradient(circle at 86% 80%, rgba(198, 242, 78, .55), transparent 55%), #121216;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.skin-prev[data-skin="glass"] .sp-bar { background: rgba(255, 255, 255, .14); }
+.skin-prev[data-skin="glass"] .sp-bar i { background: linear-gradient(135deg, #f0ffae, #c6f24e 55%, #9fd82e); box-shadow: 0 0 8px rgba(198, 242, 78, .5); }
+:root[data-skin="glass"] .noticebar:not([data-kind="drop"]) .notice-action { background: var(--lime-grad); color: #0b0d06; text-shadow: none; box-shadow: 0 0 12px rgba(198, 242, 78, .4); }
+:root[data-skin="glass"] .noticebar .notice-close { background: rgba(255, 255, 255, .06); box-shadow: var(--glass-ring); color: rgba(255, 255, 255, .7); }
+:root[data-skin="glass"] .noticebar[data-kind="osd"] .osd-bar i { background: var(--lime-grad); box-shadow: 0 0 6px rgba(198, 242, 78, .5); }
+:root[data-skin="glass"] .noticebar .osd-bar { background: rgba(255, 255, 255, .1); }
+:root[data-skin="glass"] .noticebar[data-kind="app"] .notice-icon { background: rgba(255, 255, 255, .06); box-shadow: var(--glass-ring); }

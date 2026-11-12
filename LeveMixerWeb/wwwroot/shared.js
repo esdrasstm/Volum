@@ -44,7 +44,7 @@ window.Volum = (() => {
       appNotesToggle: 'Notificações dos apps', appNotesHint: 'WhatsApp, Discord, e-mail... aparecem na ilha. Ligue o "Não incomodar" do Windows para elas aparecerem só aqui',
       appNotesStoreOnly: 'Só na versão da Microsoft Store: o Windows exige para deixar um app ler as notificações', appNotesAsking: 'Confirme a permissão na janela do Windows...', appNotesDenied: 'O Windows não deu a permissão. Libere em Configurações do Windows → Privacidade → Notificações',
       calTitle: 'Agenda', calHint: 'Cole o endereço iCal (.ics) da sua agenda. No Google Agenda: Configurações → sua agenda → "Endereço secreto no formato iCal". A ilha avisa 10 min antes de cada compromisso',
-      calSave: 'Salvar', calLoading: 'Lendo a agenda...', calOk: 'Pronto! {0} compromisso(s) hoje e amanhã', calError: 'Não consegui abrir esse endereço. Confira se ele está completo', calNotIcs: 'Esse endereço não é de uma agenda iCal (.ics)',
+      calSave: 'Salvar', calLoading: 'Lendo a agenda...', calOk: 'Pronto! {0} compromisso(s) hoje e amanhã', calError: 'Não consegui abrir esse endereço. Confira se ele está completo', calNotIcs: 'Esse endereço não é de uma agenda iCal (.ics)', calHttps: 'Use um endereço que comece com https:// (o da agenda é secreto e precisa ir protegido)',
       islandAgenda: 'Agenda', agendaEmpty: 'Nada na agenda hoje', agendaAllDay: 'Dia todo', agendaTomorrow: 'Amanhã', agendaNow: 'Agora',
       wxTitle: 'Clima', wxHint: 'Digite a sua cidade para ver o clima e as próximas horas na ilha. Se houver outra com o mesmo nome, coloque o estado (ex.: Ubá, MG). Deixe vazio para desligar', wxPlaceholder: 'Ex.: Ubá, MG',
       wxLoading: 'Procurando a cidade...', wxOk: 'Pronto! {0}', wxNotFound: 'Não achei essa cidade. Confira o nome', wxError: 'Não consegui buscar o clima agora. Confira a internet',
@@ -105,7 +105,7 @@ window.Volum = (() => {
       appNotesToggle: 'App notifications', appNotesHint: 'WhatsApp, Discord, email... show up on the island. Turn on Windows "Do not disturb" so they only show up here',
       appNotesStoreOnly: 'Microsoft Store version only: Windows requires it to let an app read notifications', appNotesAsking: 'Confirm the permission in the Windows window...', appNotesDenied: 'Windows did not grant the permission. Allow it in Windows Settings → Privacy → Notifications',
       calTitle: 'Calendar', calHint: 'Paste your calendar iCal (.ics) address. In Google Calendar: Settings → your calendar → "Secret address in iCal format". The island alerts you 10 min before each event',
-      calSave: 'Save', calLoading: 'Reading the calendar...', calOk: 'Done! {0} event(s) today and tomorrow', calError: "Couldn't open that address. Check that it's complete", calNotIcs: "That address isn't an iCal (.ics) calendar",
+      calSave: 'Save', calLoading: 'Reading the calendar...', calOk: 'Done! {0} event(s) today and tomorrow', calError: "Couldn't open that address. Check that it's complete", calNotIcs: "That address isn't an iCal (.ics) calendar", calHttps: 'Use an address that starts with https:// (calendar addresses are secret and must be sent securely)',
       islandAgenda: 'Calendar', agendaEmpty: 'Nothing on the calendar today', agendaAllDay: 'All day', agendaTomorrow: 'Tomorrow', agendaNow: 'Now',
       wxTitle: 'Weather', wxHint: 'Type your city to see the weather and the next hours on the island. If there are others with the same name, add the state or country (e.g.: Springfield, Illinois). Leave it empty to turn it off', wxPlaceholder: 'E.g.: London',
       wxLoading: 'Looking up the city...', wxOk: 'Done! {0}', wxNotFound: "Couldn't find that city. Check the name", wxError: "Couldn't get the weather right now. Check your internet",
@@ -166,7 +166,7 @@ window.Volum = (() => {
       appNotesToggle: 'Notificaciones de las apps', appNotesHint: 'WhatsApp, Discord, correo... aparecen en la isla. Activa "No molestar" de Windows para que aparezcan solo aquí',
       appNotesStoreOnly: 'Solo en la versión de Microsoft Store: Windows lo exige para dejar que una app lea las notificaciones', appNotesAsking: 'Confirma el permiso en la ventana de Windows...', appNotesDenied: 'Windows no dio el permiso. Actívalo en Configuración de Windows → Privacidad → Notificaciones',
       calTitle: 'Agenda', calHint: 'Pega la dirección iCal (.ics) de tu agenda. En Google Calendar: Configuración → tu calendario → "Dirección secreta en formato iCal". La isla avisa 10 min antes de cada evento',
-      calSave: 'Guardar', calLoading: 'Leyendo la agenda...', calOk: '¡Listo! {0} evento(s) hoy y mañana', calError: 'No pude abrir esa dirección. Revisa que esté completa', calNotIcs: 'Esa dirección no es de una agenda iCal (.ics)',
+      calSave: 'Guardar', calLoading: 'Leyendo la agenda...', calOk: '¡Listo! {0} evento(s) hoy y mañana', calError: 'No pude abrir esa dirección. Revisa que esté completa', calNotIcs: 'Esa dirección no es de una agenda iCal (.ics)', calHttps: 'Usa una dirección que empiece con https:// (la de la agenda es secreta y debe ir protegida)',
       islandAgenda: 'Agenda', agendaEmpty: 'Nada en la agenda hoy', agendaAllDay: 'Todo el día', agendaTomorrow: 'Mañana', agendaNow: 'Ahora',
       wxTitle: 'Clima', wxHint: 'Escribe tu ciudad para ver el clima y las próximas horas en la isla. Si hay otra con el mismo nombre, agrega la provincia o el país (ej.: Córdoba, Argentina). Déjalo vacío para desactivarlo', wxPlaceholder: 'Ej.: Madrid',
       wxLoading: 'Buscando la ciudad...', wxOk: '¡Listo! {0}', wxNotFound: 'No encontré esa ciudad. Revisa el nombre', wxError: 'No pude obtener el clima ahora. Revisa la conexión',
@@ -397,6 +397,18 @@ window.Volum = (() => {
     '</g></svg>';
 
 
-  return { I18N, t, langTag, applyI18n, NEWS, newsItems, newsSlides, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX,
+  // Tema: o mixer e a ilha carregam só a parte comum (skins/base.css, link #skinBase) e o arquivo do tema escolhido.
+  // Páginas com o skins.css inteiro (configurações, site) não têm o #skinBase: aí não faz nada.
+  function useSkin(id) {
+    const base = document.getElementById('skinBase');
+    if (!base) return;
+    let link = document.getElementById('skinCss');
+    if (!id || id === 'default' || !/^[a-z-]+$/.test(id)) { if (link) link.remove(); return; }
+    const href = base.getAttribute('href').replace(/base\.css$/, id + '.css');
+    if (!link) { link = document.createElement('link'); link.rel = 'stylesheet'; link.id = 'skinCss'; base.after(link); }
+    if (link.getAttribute('href') !== href) link.setAttribute('href', href);
+  }
+
+  return { I18N, t, langTag, applyI18n, NEWS, newsItems, newsSlides, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX, useSkin,
     MASCOT_PARTS: { pal: M_PAL, face: M_FACE, eyes: M_EYES } };   // o site monta o mascote interativo com estas peças
 })();

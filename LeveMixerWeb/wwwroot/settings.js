@@ -488,7 +488,7 @@
         break;
       case 'calendar':    // resposta do setCalendar: quantos compromissos hoje e amanhã, ou erro
         $('calSave').disabled = false;
-        $('calStatus').textContent = m.empty ? '' : m.count < 0 ? t(m.error === 'notIcs' ? 'calNotIcs' : 'calError')
+        $('calStatus').textContent = m.empty ? '' : m.count < 0 ? t(m.error === 'notIcs' ? 'calNotIcs' : m.error === 'https' ? 'calHttps' : 'calError')
           : t('calOk').replace('{0}', m.count);
         $('calStatus').classList.toggle('bad', !m.empty && m.count < 0);
         break;

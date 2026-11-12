@@ -1,0 +1,68 @@
+/* Volum — tema "base" (gerado a partir do skins.css; não editar à mão) */
+.mascot.px .px-hat { display: none; }
+:is([data-skin="christmas"], [data-skin="snowy"], [data-skin="candy"], [data-skin="sleigh"]) .mascot.px .px-hat { display: inline; }
+.deco { display: none; }
+.deco > i { display: none; position: absolute; left: 0; right: 0; image-rendering: pixelated; }
+:is([data-skin="christmas"], [data-skin="snowy"], [data-skin="candy"], [data-skin="sleigh"], [data-skin="glass"], [data-skin="miami"], [data-skin="sunset"]) .deco { display: block; position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.card > .deco { position: absolute; z-index: 0; }
+.shape > .deco { z-index: 0; }
+.island.tucked .deco { display: none !important; }
+html:not(.floating) .shape > .deco { border-radius: 0 0 var(--r) var(--r); }
+html.floating .shape > .deco { border-radius: var(--r); }
+.deco .d-snow1 { top: -120px; bottom: 0; background: var(--deco-snow1) 0 0 / 120px 120px; opacity: .45; animation: deco-fall1 18s linear infinite; will-change: transform; }
+.deco .d-snow2 { top: -160px; bottom: 0; background: var(--deco-snow2) 0 0 / 160px 160px; opacity: .55; animation: deco-fall2 11s linear infinite; will-change: transform; }
+.deco .d-cap { top: 0; background-image: var(--deco-cap); background-repeat: repeat-x; }
+.deco .d-l { top: 0; background-repeat: repeat-x; opacity: .15; will-change: opacity; animation: deco-blink 2.2s ease-in-out infinite alternate; }
+.deco .d-l0 { background-image: var(--deco-l0); animation-duration: 1.9s; }
+.deco .d-l1 { background-image: var(--deco-l1); animation-duration: 2.7s; animation-delay: -.9s; }
+.deco .d-l2 { background-image: var(--deco-l2); animation-duration: 2.3s; animation-delay: -1.6s; }
+.deco .d-l3 { background-image: var(--deco-l3); animation-duration: 3.1s; animation-delay: -.4s; }
+@keyframes deco-blink { from { opacity: .1; } to { opacity: 1; } }
+@keyframes deco-fall1 { from { transform: translateY(0); } to { transform: translateY(120px); } }
+@keyframes deco-fall2 { from { transform: translateY(0); } to { transform: translateY(160px); } }
+.island:not(.open) .deco .d-snow2 { display: none !important; }
+.shape > .deco :is(.d-cap, .d-l) { left: 14px; right: 14px; }
+html.floating .shape > .deco :is(.d-cap, .d-l) { left: calc(var(--r) * .6); right: calc(var(--r) * .6); }
+:is([data-skin="christmas"], [data-skin="snowy"], [data-skin="candy"], [data-skin="sleigh"]) .header { height: 68px; padding-top: 16px; }
+:is([data-skin="christmas"], [data-skin="snowy"], [data-skin="candy"], [data-skin="sleigh"]) .full { padding-top: 24px; }
+:root.lite .deco > i, :root.lite .deco > i::before { animation: none !important; }
+:root.lite .deco .d-l { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .deco > i, .deco > i::before { animation: none !important; }
+  .deco .d-l { opacity: 1; }
+}
+@keyframes candy-walk { to { background-position: 14.142px 0; } }
+@keyframes tab-drop { from { opacity: .85; transform: scale(1); } to { opacity: 0; transform: scale(.15); } }
+@keyframes deco-fall-d1 { from { transform: translateY(0); } to { transform: translateY(100px); } }
+@keyframes deco-fall-d2 { from { transform: translateY(0); } to { transform: translateY(140px); } }
+@keyframes sleigh-fly {
+  from { transform: translate(-106px, 6px); }
+  to   { transform: translate(380px, -10px); }
+}
+@keyframes sleigh-bob { from { transform: translateY(-2px); } to { transform: translateY(2px); } }
+@keyframes sleigh-legs { 0% { background-position: 0 0; } 50% { background-position: 0 -28px; } }
+@keyframes sleigh-fly-prev { from { transform: translate(-106px, 4px); } to { transform: translate(240px, -6px); } }
+.pomo-bubble { overflow: hidden; isolation: isolate; }
+.pomo-bubble::before { content: none; position: absolute; left: 3px; right: 3px; top: 0; pointer-events: none; image-rendering: pixelated; z-index: -1; }
+.mascot.px .px-shades { display: none; }
+@keyframes miami-sway { from { transform: rotate(-2deg); } to { transform: rotate(2.5deg); } }
+@keyframes miami-sway2 { from { transform: rotate(.8deg); } to { transform: rotate(-1deg); } }
+@property --sb-cut { syntax: '<number>'; inherits: false; initial-value: 1; }
+@keyframes sb-sea { to { background-position: 360px 0; } }
+@keyframes sb-drift { to { background-position: -720px 0; } }
+@keyframes sb-shimmer { from { opacity: .25; } to { opacity: 1; } }
+@keyframes sb-twinkle { from { opacity: .3; } to { opacity: 1; } }
+@keyframes sb-flap { 0% { background-position: 0 0; } 50% { background-position: 0 -14px; } }
+@keyframes sb-set {
+  0%   { transform: translateY(-40px) scaleY(1); --sb-cut: 0; animation-timing-function: cubic-bezier(.5, 0, .3, 1); }
+  15%  { transform: translateY(-39px) scaleY(1); --sb-cut: 0; animation-timing-function: cubic-bezier(.45, 0, .2, 1); }
+  72%  { transform: translateY(-2px) scaleY(.97); --sb-cut: .85; animation-timing-function: ease-out; }
+  100% { transform: translateY(0) scaleY(.94); --sb-cut: 1; }
+}
+@keyframes sb-dusk { 0%, 25% { opacity: 0; } 100% { opacity: .82; } }
+@keyframes sb-stars { 0%, 70% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes sb-clouds { 0%, 15% { filter: hue-rotate(0deg) saturate(1) brightness(1.08); } 100% { filter: hue-rotate(-34deg) saturate(1.25) brightness(.9); } }
+@keyframes sb-horizon { 0%, 35% { opacity: .2; filter: hue-rotate(0deg); } 72% { opacity: 1; filter: hue-rotate(-8deg); } 100% { opacity: .85; filter: hue-rotate(-28deg); } }
+@keyframes sb-reflect { 0%, 50% { clip-path: inset(0 0 100% 0); opacity: .4; } 85% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 0); opacity: 1; } }
+@keyframes sb-fly { 0% { opacity: 0; transform: translate(-40px, 10px); } 6% { opacity: 1; } 50% { transform: translate(160px, -6px); } 92% { opacity: 1; } 100% { opacity: 0; transform: translate(380px, 4px); } }
+@keyframes sb-bob { from { transform: translateY(0); } to { transform: translateY(8px); } }
