@@ -524,6 +524,7 @@
 
   /* ---------------- Botões do cabeçalho ---------------- */
   $('settingsBtn').addEventListener('click', () => post({ type: 'openSettings' }));   // o C# abre a janela de configurações
+  $('eqBtn').addEventListener('click', () => post({ type: 'openEq' }));
   $('supportBtn')?.addEventListener('click', () => post({ type: 'openSupport' }));    // coração: configurações → Apoiar   // o C# abre a janela de configurações
   $('minimizeBtn').addEventListener('click', () => post({ type: 'hide' }));
   $('feedbackBtn')?.addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));   // sugestões e bugs, no site

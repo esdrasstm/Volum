@@ -25,6 +25,16 @@
     <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
+  <Target Name="BuildEqEngine" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\native\build.ps1&quot;" />
+  </Target>
+  <Target Name="CopyEqEngine" AfterTargets="Build">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\native\build\VolumEqApo.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(MSBuildProjectDirectory)\native\build\VolumEqApo.dll')" />
+  </Target>
+  <Target Name="CopyEqEnginePublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\native\build\VolumEqApo.dll" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition="Exists('$(MSBuildProjectDirectory)\native\build\VolumEqApo.dll')" />
+  </Target>
+
   <!-- A interface (HTML/CSS/JS) fica numa pasta ao lado do .exe: dá para editar sem recompilar -->
   <ItemGroup>
     <Content Include="wwwroot\**\*.*">

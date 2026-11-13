@@ -69,7 +69,7 @@ window.Volum = (() => {
       posBottomNote: 'Embaixo, a ilha fica logo acima da barra de tarefas e usa o formato flutuante',
       islandTuck: 'Sair da frente dos apps', islandTuckHint: 'Quando uma janela chega no topo da tela (navegador, Figma...), a ilha some para não cobrir abas e menus. Desligado, ela fica sempre à vista',
       otherScreen: 'Outro monitor em tela cheia', otherScreenHint: 'Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor',
-      waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso',
+      waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso', eqTitle: 'Equalizador',
     },
     en: {
       settings: 'Settings', minimize: 'Minimize', theme: 'Theme', language: 'Language',
@@ -130,7 +130,7 @@ window.Volum = (() => {
       posBottomNote: 'At the bottom, the island sits just above the taskbar and uses the floating shape',
       islandTuck: 'Get out of the way of apps', islandTuckHint: 'When a window reaches the top of the screen (browser, Figma...), the island hides so it does not cover tabs and menus. Off, it always stays visible',
       otherScreen: 'Other monitor in full screen', otherScreenHint: 'With a game or video in full screen on the main monitor, the island moves to the other monitor',
-      waterTest: 'Test reminder', waterSound: 'Play a sound',
+      waterTest: 'Test reminder', waterSound: 'Play a sound', eqTitle: 'Equalizer',
     },
     es: {
       settings: 'Configuración', minimize: 'Minimizar', theme: 'Tema', language: 'Idioma',
@@ -191,7 +191,7 @@ window.Volum = (() => {
       posBottomNote: 'Abajo, la isla queda justo encima de la barra de tareas y usa la forma flotante',
       islandTuck: 'Apartarse de las apps', islandTuckHint: 'Cuando una ventana llega a la parte superior de la pantalla (navegador, Figma...), la isla se oculta para no tapar pestañas y menús. Desactivado, siempre queda visible',
       otherScreen: 'Otro monitor en pantalla completa', otherScreenHint: 'Con un juego o video en pantalla completa en el monitor principal, la isla pasa al otro monitor',
-      waterTest: 'Probar aviso', waterSound: 'Reproducir sonido',
+      waterTest: 'Probar aviso', waterSound: 'Reproducir sonido', eqTitle: 'Ecualizador',
     },
   };
 
