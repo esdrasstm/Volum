@@ -57,9 +57,7 @@ static class Program
         try
         {
             if (!EqInstaller.AnyInstalled() || Environment.ProcessPath == null) return;
-            var psi = new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath) { UseShellExecute = true, Verb = "runas" };
-            psi.ArgumentList.Add("--eq-remove-all");
-            using var p = System.Diagnostics.Process.Start(psi);
+            using var p = EqInstaller.StartElevated(Environment.ProcessPath, "--eq-remove-all");
             p?.WaitForExit(25000);
         }
         catch { }

@@ -124,6 +124,38 @@ static class EqInstaller
         catch { return false; }
     }
 
+    /// <summary>
+    /// Abre o Volum como administrador (o Windows mostra o pedido de permissão). Em alguns PCs, uma política
+    /// ou um antivírus não deixa elevar um .exe que mora em AppData (onde o instalador põe o Volum): o Windows
+    /// responde "caminho não encontrado". Aí quem é elevado é o cmd do sistema, que chama o Volum com os mesmos
+    /// argumentos. O código de saída é o do Volum. Recusar o pedido continua lançando o erro 1223.
+    /// </summary>
+    public static Process? StartElevated(string exe, params string[] args)
+    {
+        var direct = new ProcessStartInfo(exe)
+        {
+            UseShellExecute = true,
+            Verb = "runas",
+            WindowStyle = ProcessWindowStyle.Hidden,
+            WorkingDirectory = Path.GetDirectoryName(exe) ?? ""
+        };
+        foreach (var a in args) direct.ArgumentList.Add(a);
+        try { return Process.Start(direct); }
+        catch (Win32Exception ex) when (ex.NativeErrorCode is 2 or 3)
+        {
+            static string Quote(string a) => "\"" + a.Replace("\"", "") + "\"";
+            var line = Quote(exe) + (args.Length > 0 ? " " + string.Join(" ", args.Select(Quote)) : "");
+            var viaCmd = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"), "/d /s /c \"" + line + "\"")
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                WorkingDirectory = Environment.SystemDirectory
+            };
+            return Process.Start(viaCmd);
+        }
+    }
+
     // ================================================================ ações (processo elevado)
 
     public sealed class Result

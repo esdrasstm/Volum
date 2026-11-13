@@ -379,17 +379,7 @@ sealed class EqForm : Form
         List<string> notes = new();
         try
         {
-            var psi = new ProcessStartInfo(Environment.ProcessPath!)
-            {
-                UseShellExecute = true,
-                Verb = "runas",
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-            psi.ArgumentList.Add(action);
-            psi.ArgumentList.Add(id);
-            psi.ArgumentList.Add("--eq-result");
-            psi.ArgumentList.Add(resultPath);
-            using var p = Process.Start(psi);
+            using var p = EqInstaller.StartElevated(Environment.ProcessPath!, action, id, "--eq-result", resultPath);
             if (p != null) await p.WaitForExitAsync();
             if (File.Exists(resultPath))
             {
