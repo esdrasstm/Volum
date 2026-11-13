@@ -32,7 +32,7 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas.
+Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas. Mais segurança na agenda (só endereços https, guardados protegidos pelo Windows) e a ilha gasta menos quando está escondida.
 
 <!-- 0.7.0: Ilha de cara nova: maior, com música, foco, água, clima e agenda no mesmo visual; clique na capa para abrir o player. O Pomodoro vira uma bolha ao lado da ilha. Temas de inverno grátis em pixel art (Natal, Noite de neve, Bengala e Trenó) e o novo tema Vidro, com vidro de verdade atrás do mixer. No notebook, a bateria muda de cor com a carga. Correções: a ilha sai da frente de qualquer app no topo, acompanha o tamanho do texto do Windows e o clima acha a sua cidade. -->
 
@@ -90,7 +90,7 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes.
+Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes. Safer calendar (https addresses only, stored protected by Windows) and the island uses less when hidden.
 
 <!-- 0.7.0: A brand new island: bigger, with music, focus, water, weather and calendar in the same style; click the cover to open the player. Pomodoro becomes a bubble next to the island. Free winter themes in pixel art (Christmas, Snowy night, Candy cane and Sleigh ride) and the new Glass theme, with real glass behind the mixer. On laptops, the battery changes color with the charge. Fixes: the island gets out of the way of any app at the top, follows the Windows text size and the weather finds your city. -->
 
@@ -148,7 +148,7 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas.
+Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas. Agenda más segura (solo direcciones https, guardadas protegidas por Windows) y la isla consume menos cuando está oculta.
 
 <!-- 0.7.0: Una isla renovada: más grande, con música, enfoque, agua, clima y agenda en el mismo estilo; haz clic en la portada para abrir el reproductor. El Pomodoro se convierte en una burbuja junto a la isla. Temas de invierno gratis en pixel art (Navidad, Noche de nieve, Bastón de caramelo y Trineo) y el nuevo tema Cristal, con cristal de verdad detrás del mezclador. En portátiles, la batería cambia de color con la carga. Correcciones: la isla se aparta de cualquier app arriba, sigue el tamaño del texto de Windows y el clima encuentra tu ciudad. -->
 
