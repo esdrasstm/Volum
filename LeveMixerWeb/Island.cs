@@ -31,10 +31,11 @@ sealed class IslandForm : Form
     const int Ear = 10;
     // Visual do Figma (10/11/2026): maior que antes, para os elementos respirarem. Precisa bater com o island.css.
     const int ClosedW = 270, ClosedH = 50, IdleH = 58, TuckW = 130, TuckH = 6, OpenW = 400, NoticeW = 400, NoticeH = 50;
+    const int PomoH = 76;              // aviso do Pomodoro (fim do foco/da pausa): título grande e texto embaixo
     const int ActW = 330;              // largura da faixa de uma atividade (carregador, fone, microfone/câmera em uso)
     const int BubbleW = 50, BubbleGap = 8;   // bolha do Pomodoro ao lado da ilha fechada (o JS avisa quando ela aparece)
     const int FloatGap = 8;            // ilha flutuante: distância da borda de cima da tela
-    const int AnimMs = 900;            // garantia: se o "animDone" do JS não vier, a janela fica do tamanho exato depois disso
+    const int AnimMs = 1600;          // garantia: se o "animDone" do JS não vier, a janela fica do tamanho exato depois disso
     const int MoveSlack = 10;          // folga embaixo da janela enquanto a forma anima (a mola passa um pouquinho)
     const int NoticeMs = 12_000;       // quanto tempo um aviso fica aberto, se ninguém disser outro
 
@@ -83,6 +84,14 @@ sealed class IslandForm : Form
         StandUp.Apply();
         Agenda.Apply(enabled);   // a agenda só avisa com a ilha ligada
         Weather.Apply(enabled);  // o clima só é baixado com a ilha ligada
+        Devices.Apply(enabled && AppSettings.Current.DevicesEnabled);   // bateria dos aparelhos sem fio
+    }
+
+    /// <summary>Ligou/desligou a bateria dos aparelhos nas configurações.</summary>
+    public static void ApplyDevices()
+    {
+        Devices.Apply(IsOn && AppSettings.Current.DevicesEnabled);
+        if (IsOn) s_island!.PostDevices();
     }
 
     /// <summary>Mudou algo nas configurações que a ilha mostra (ex.: Pomodoro ligado, tempos).</summary>
@@ -97,11 +106,42 @@ sealed class IslandForm : Form
 
     /// <summary>Mostra um aviso do Volum na ilha (abre sozinha por alguns segundos).
     /// <paramref name="action"/> roda se a pessoa clicar no botão principal. Falso se a ilha não pode mostrar.</summary>
-    public static bool Notify(string icon, string title, string text, string? actionLabel, Action? action, int ms = NoticeMs)
+    /// <param name="queue">true: com a ilha escondida por tela cheia (ou ainda carregando), o aviso espera e aparece
+    /// quando ela voltar (só um na fila; o mais novo ganha). Usado no Pomodoro, que não pode passar batido.</param>
+    public static bool Notify(string icon, string title, string text, string? actionLabel, Action? action, int ms = NoticeMs,
+        string? kind = null, bool queue = false)
     {
-        if (!IsOn || s_island!._hiddenByFullscreen || !s_island._ready) return false;
-        s_island.ShowNotice(icon, title, text, actionLabel, action, ms);
+        if (!IsOn) return false;
+        if (s_island!._hiddenByFullscreen || !s_island._ready)
+        {
+            if (queue) s_island._pending = () => s_island.ShowNotice(icon, title, text, actionLabel, action, ms, kind: kind);
+            return false;
+        }
+        s_island._pending = null;
+        s_island.ShowNotice(icon, title, text, actionLabel, action, ms, kind: kind);
         return true;
+    }
+
+    /// <summary>Esse tipo de aviso está na tela agora (ou esperando a tela cheia acabar)?</summary>
+    public static bool Showing(string kind) =>
+        IsOn && (s_island!._notice && s_island._noticeKind == kind || s_island._pending != null);
+
+    /// <summary>Tira um aviso desse tipo da tela (e da fila), se estiver lá.</summary>
+    public static void Dismiss(string kind)
+    {
+        if (!IsOn) return;
+        s_island!._pending = null;
+        if (s_island._notice && s_island._noticeKind == kind) s_island.EndNotice();
+    }
+
+    Action? _pending;   // aviso esperando a tela cheia acabar (Notify com queue)
+
+    void ShowPending()
+    {
+        if (_pending == null || _hiddenByFullscreen || !_ready) return;
+        var p = _pending;
+        _pending = null;
+        BeginInvoke(() => { if (!IsDisposed) p(); });
     }
 
     IslandForm()
@@ -120,7 +160,7 @@ sealed class IslandForm : Form
         Controls.Add(_web);
         Place(Mode.Closed);
 
-        _collapse.Tick += (_, _) => { _collapse.Stop(); if (!_hover && !_notice) SetMode(Resting); };
+        _collapse.Tick += (_, _) => { _collapse.Stop(); if (!_hover && !_notice && !_typing) SetMode(Resting); };
         _noticeEnd.Tick += (_, _) => EndNotice();
         _watch.Tick += (_, _) => OnWatch();
         _soundTimer.Tick += (_, _) => CheckSound();
@@ -128,6 +168,7 @@ sealed class IslandForm : Form
         _dwell.Tick += (_, _) => CheckDwell();
         _autoHide.Tick += (_, _) => { _autoHide.Stop(); if (CanAutoHide) { _hiddenByAuto = true; UpdateShown(); } };
         Water.Changed += OnWaterChanged;
+        Todo.Changed += PostTodo;
         Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
         _ = InitAsync();
@@ -147,11 +188,21 @@ sealed class IslandForm : Form
         }
     }
 
-    // Clicar na ilha não tira o foco do app que está na frente
+    // Clicar na ilha não tira o foco do app que está na frente (menos na página Tarefas, que precisa do teclado)
     protected override void WndProc(ref Message m)
     {
-        const int WM_MOUSEACTIVATE = 0x21, MA_NOACTIVATE = 3;
-        if (m.Msg == WM_MOUSEACTIVATE) { m.Result = (IntPtr)MA_NOACTIVATE; return; }
+        const int WM_MOUSEACTIVATE = 0x21, MA_ACTIVATE = 1, MA_NOACTIVATE = 3;
+        if (m.Msg == WM_MOUSEACTIVATE)
+        {
+            if (_kbArmed)
+            {
+                var fg = GetForegroundWindow();
+                if (fg != Handle && fg != IntPtr.Zero) _prevFg = fg;   // para devolver o foco depois
+                m.Result = (IntPtr)MA_ACTIVATE;
+            }
+            else m.Result = (IntPtr)MA_NOACTIVATE;
+            return;
+        }
         if (m.Msg == 0x00FF /* WM_INPUT */) OnRawKey(m.LParam);   // Caps Lock / Num Lock (indicadores)
         base.WndProc(ref m);
     }
@@ -188,8 +239,9 @@ sealed class IslandForm : Form
         bool tall = m == Mode.Notice && _noticeKind == "walk";     // levantar: largura do aviso, altura da ilha ociosa (cabe a cena)
         bool osd = m == Mode.Notice && _noticeKind == "osd";       // indicador rápido (volume, Caps Lock...): estreito
         bool act = m == Mode.Notice && _noticeKind == "act";       // atividade (carregador, fone, câmera...): um pouco mais larga
+        bool pomo = m == Mode.Notice && _noticeKind == "pomo";     // fim do foco/pausa: mais alta, para chamar atenção
         int w = act ? ActW : greet || osd ? ClosedW : m switch { Mode.Open => OpenW, Mode.Notice => NoticeW, Mode.Tucked => TuckW, _ => ClosedW };
-        int h = greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH };
+        int h = pomo ? PomoH : greet || tall ? IdleH : m switch { Mode.Open => _openH, Mode.Notice => NoticeH, Mode.Tucked => TuckH, Mode.Idle => IdleH, _ => ClosedH };
         return new Size(w, h);
     }
 
@@ -221,11 +273,13 @@ sealed class IslandForm : Form
         // Bolha do Pomodoro: fica à direita da ilha fechada; a janela cresce só para a direita (a ilha não sai do lugar)
         if (_bubble)
         {
-            float right = ClosedW / 2f + BubbleGap + BubbleW, half = s.Width / 2f + Ear;
+            // Animando: folga à direita, porque a gota passa um pouco do lugar e estica no sentido em que anda
+            float right = ClosedW / 2f + BubbleGap + BubbleW + (slack > 0 ? 12 : 0), half = s.Width / 2f + Ear;
             if (right > half) box.Width += (int)Math.Ceiling((right - half) * k);
             box.Height = Math.Max(box.Height, (int)Math.Round((ClosedH + slack) * k));
         }
         SetBounds(box.X, box.Y, box.Width, box.Height);
+        PostHz();
         // WebView do tamanho da maior ilha possível, sempre no mesmo lugar da tela: só a posição dele dentro da janela muda.
         // Embaixo, ele fica preso pela borda de baixo (a ilha cresce para cima).
         int webW = (int)Math.Round((OpenW + 2 * Ear) * k), webH = (int)Math.Round((400 + MoveSlack) * k);
@@ -277,6 +331,7 @@ sealed class IslandForm : Form
         if (m != Mode.Tucked && _hiddenByTuck) { _hiddenByTuck = false; UpdateShown(); }   // aviso, lembrete ou saiu de cima das abas: aparece
         if (m is Mode.Open or Mode.Notice && _hiddenByAuto) { _hiddenByAuto = false; UpdateShown(); }   // escondida pela opção: aviso aparece
         ArmAutoHide();
+        if (m is Mode.Open or Mode.Notice) UiSound.Warm();   // cliques (água, tarefas) com som na hora
         MoveTo(m);
         PostMode();
         var t = new Timer { Interval = AnimMs };
@@ -329,7 +384,7 @@ sealed class IslandForm : Form
     void OnWatch()
     {
         CheckScreen();
-        if (++_watchTicks % 40 == 0) PostBattery();   // bateria a cada ~1 min (e quando o Windows avisa)
+        if (++_watchTicks % 40 == 0) { PostBattery(); PostMonitors(); }   // bateria e monitores a cada ~1 min (e quando o Windows avisa)
     }
 
     // Monitor onde a ilha está: o principal; com ele em tela cheia, outro monitor (opção, ligada por padrão)
@@ -354,7 +409,12 @@ sealed class IslandForm : Form
                 Place(_mode);
                 BeginInvoke(() => { if (!IsDisposed) Place(_mode); });
             }
-            if (fullThere != _hiddenByFullscreen) { _hiddenByFullscreen = fullThere; UpdateShown(); }
+            if (fullThere != _hiddenByFullscreen && (DateTime.UtcNow - _fullAt).TotalMilliseconds > 2000)
+            {
+                _fullAt = DateTime.UtcNow;
+                _hiddenByFullscreen = fullThere;
+                UpdateShown();
+            }
             var fg2 = fullThere || AtBottom ? IntPtr.Zero : ForegroundTouchingIsland();
             if (fg2 == IntPtr.Zero) { SetTuck(false); return; }
             CheckObstruction(fg2);
@@ -376,8 +436,9 @@ sealed class IslandForm : Form
         }
 
         bool hide = full && other == null;   // um monitor só (ou opção desligada): some, como antes
-        if (hide != _hiddenByFullscreen)
+        if (hide != _hiddenByFullscreen && (DateTime.UtcNow - _fullAt).TotalMilliseconds > 2000)
         {
+            _fullAt = DateTime.UtcNow;
             _hiddenByFullscreen = hide;
             UpdateShown();
         }
@@ -390,6 +451,7 @@ sealed class IslandForm : Form
     void UpdateShown()
     {
         bool hide = _hiddenByFullscreen || _hiddenByTuck || _hiddenByAuto;
+        ShowPending();   // saiu da tela cheia: mostra o aviso que estava esperando
         if (hide && Visible) Hide();
         else if (!hide && !Visible) ShowWindow(Handle, 4 /* SW_SHOWNOACTIVATE */);
         if ((_hiddenByTuck || _hiddenByAuto) && !_hiddenByFullscreen) { _dwellMs = 0; _dwell.Start(); }
@@ -444,6 +506,7 @@ sealed class IslandForm : Form
     void SetTuck(bool tuck)
     {
         if (tuck == _tuck) return;
+        if (!AllowFlip(_tuckGuard, tuck, "recolher")) return;
         _tuck = tuck;
         if (_mode is Mode.Closed or Mode.Tucked or Mode.Idle) SetMode(Resting);
     }
@@ -465,9 +528,52 @@ sealed class IslandForm : Form
         if (pid == Environment.ProcessId) return IntPtr.Zero;
         var cls = new System.Text.StringBuilder(64);
         GetClassName(fg, cls, cls.Capacity);
-        if (cls.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd") return IntPtr.Zero;
-        if (!GetWindowRect(fg, out var r)) return IntPtr.Zero;
-        return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom).IntersectsWith(ClosedRect()) ? fg : IntPtr.Zero;
+        // Área de trabalho, barras de tarefas e peças do próprio Windows (Iniciar, busca, central de notificações,
+        // avisos de volume, Alt+Tab, menus) não contam: elas aparecem e somem e faziam a ilha piscar
+        if (cls.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "Windows.UI.Core.CoreWindow"
+            or "XamlExplorerHostIslandWindow" or "TopLevelWindowForOverflowXamlIsland" or "NotifyIconOverflowWindow"
+            or "MultitaskingViewFrame" or "ForegroundStaging" or "#32768") return IntPtr.Zero;
+        if (IsCloaked(fg)) return IntPtr.Zero;   // janela "escondida" pelo Windows (app suspenso, outra área de trabalho)
+        var vis = VisibleRect(fg);
+        if (vis.IsEmpty) return IntPtr.Zero;
+        return vis.IntersectsWith(ClosedRect()) ? fg : IntPtr.Zero;
+    }
+
+    // Retângulo que aparece de verdade na tela. O GetWindowRect inclui a borda invisível do Windows 10/11 (~7 px em volta,
+    // usada para redimensionar): uma janela logo abaixo da ilha "encostava" nela sem encostar.
+    [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attr, out RECT value, int size);
+    [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr hwnd, int attr, out int value, int size);
+    static Rectangle VisibleRect(IntPtr hwnd)
+    {
+        if (DwmGetWindowAttribute(hwnd, 9 /* DWMWA_EXTENDED_FRAME_BOUNDS */, out RECT r, Marshal.SizeOf<RECT>()) != 0
+            && !GetWindowRect(hwnd, out r)) return Rectangle.Empty;
+        return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+    }
+    static bool IsCloaked(IntPtr hwnd) =>
+        DwmGetWindowAttribute(hwnd, 14 /* DWMWA_CLOAKED */, out int c, sizeof(int)) == 0 && c != 0;
+
+    // Anti-pisca: cada resposta diferente da conferência (a cada 1,5 s) mudava a ilha na hora; uma janela que entra e sai
+    // do lugar dela (ou uma conferência que oscila) fazia a ilha sumir e voltar sem parar. Agora:
+    // - depois de mudar, só muda de volta na conferência seguinte que passar de 2,5 s;
+    // - se mudar mais de 4 vezes em 30 s, fica à vista (não recolhe) por 60 s.
+    sealed class FlipGuard { public DateTime At, Since, CalmUntil; public int Count; }
+    readonly FlipGuard _tuckGuard = new();
+    DateTime _fullAt;
+
+    static bool AllowFlip(FlipGuard g, bool toHidden, string what)
+    {
+        var now = DateTime.UtcNow;
+        if (now < g.CalmUntil) return !toHidden;                        // acalmando: só deixa aparecer
+        if ((now - g.At).TotalMilliseconds < 2500) return false;        // acabou de mudar: espera
+        if ((now - g.Since).TotalSeconds > 30) { g.Since = now; g.Count = 0; }
+        if (++g.Count > 4)
+        {
+            g.CalmUntil = now.AddSeconds(60);
+            DevLog.Write($"ilha: {what} trocando sem parar; fica à vista por 60 s");
+            if (toHidden) return false;
+        }
+        g.At = now;
+        return true;
     }
 
     // Janela encostando no lugar da ilha = a ilha recolhe (some), como em cima das abas do navegador.
@@ -572,6 +678,52 @@ sealed class IslandForm : Form
         Agenda.Changed += OnAgendaChanged;
         Agenda.Alert += OnAgendaAlert;
         Weather.Changed += OnWeatherChanged;
+        Devices.Changed += OnDevicesChanged;
+        Devices.Connected += OnDeviceConnected;
+        Devices.Low += OnDeviceLow;
+    }
+
+    // ---------- aparelhos sem fio (Devices.cs): página na ilha + aviso ao conectar e com bateria fraca ----------
+
+    void OnDevicesChanged() { try { if (!IsDisposed) BeginInvoke(new Action(PostDevices)); } catch { } }
+
+    void PostDevices()
+    {
+        if (!_ready || IsDisposed) return;
+        Post(new
+        {
+            type = "devices",
+            on = AppSettings.Current.DevicesEnabled,
+            items = Devices.List.Select(d => new { id = d.Id, name = d.Name, battery = d.Battery, kind = d.Kind }).ToArray(),
+        });
+    }
+
+    // Conectou: "Pebble K380s · Conectado · 95%" com a barrinha (no lugar do "Fone conectado" da saída de áudio)
+    void OnDeviceConnected(WirelessDevice d)
+    {
+        try
+        {
+            if (IsDisposed) return;
+            BeginInvoke(new Action(() => ShowActivity("dev-" + d.Kind, d.Name, Strings.Get(AppSettings.Current.Language, "devConnected").Replace("{0}", d.Battery.ToString()), d.Battery / 100.0)));
+        }
+        catch { }
+    }
+
+    // Bateria fraca: fica 8 s, uma vez por descida
+    void OnDeviceLow(WirelessDevice d)
+    {
+        try
+        {
+            if (IsDisposed) return;
+            BeginInvoke(new Action(() =>
+            {
+                if (!_ready || _hiddenByFullscreen) return;
+                if (_notice && _noticeKind is not ("osd" or "act" or "app")) return;   // não atropela água/Pomodoro
+                var lang = AppSettings.Current.Language;
+                ShowNotice("dev-" + d.Kind, Strings.Get(lang, "devLow"), $"{d.Name} · {d.Battery}%", null, null, 8000, d.Battery / 100.0, kind: "act");
+            }));
+        }
+        catch { }
     }
 
     // ---------- clima (Weather.cs): página na ilha ----------
@@ -694,6 +846,8 @@ sealed class IslandForm : Form
             uint form = 0;
             try { form = Convert.ToUInt32(dev.Properties[NAudio.CoreAudioApi.PropertyKeys.PKEY_AudioEndpoint_FormFactor].Value); } catch { }
             bool phones = form is 3 /* fone */ or 5 /* headset */;
+            // Fone Bluetooth: o aviso dos aparelhos (com a bateria) já saiu ou vai sair; não repete
+            if (phones && AppSettings.Current.DevicesEnabled && (DateTime.Now - Devices.LastConnectAt).TotalSeconds < 6) return;
             var lang = AppSettings.Current.Language;
             ShowActivity(phones ? "headphones" : "speaker", Strings.Get(lang, phones ? "actHeadphones" : "actOutput"), dev.FriendlyName);
         }
@@ -1176,6 +1330,36 @@ sealed class IslandForm : Form
         catch { }
     }
 
+    // Seletor de volume da ilha: nível atual e volume escolhido (sobe tirando do mudo; tique a cada 5%, como no mixer)
+    void PostVolumeLevel()
+    {
+        try
+        {
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            var ep = dev.AudioEndpointVolume;
+            Post(new { type = "volLevel", v = ep.MasterVolumeLevelScalar, muted = ep.Mute });
+        }
+        catch { }
+    }
+
+    float _tickVol = -1;
+    void SetVolume(float v)
+    {
+        try
+        {
+            v = Math.Clamp(v, 0f, 1f);
+            _osdEnum ??= new NAudio.CoreAudioApi.MMDeviceEnumerator();
+            using var dev = _osdEnum.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia);
+            var ep = dev.AudioEndpointVolume;
+            ep.MasterVolumeLevelScalar = v;
+            if (ep.Mute && v > 0.005f) ep.Mute = false;
+            _lastVol = v; _lastMute = ep.Mute;   // o aviso do Windows sobre essa mudança não vira indicador de novo
+            if (_tickVol < 0 || Math.Abs(v - _tickVol) >= 0.05f) { _tickVol = v; TickSound.Play(); }
+        }
+        catch { }
+    }
+
     // Rodinha do mouse na ilha. Mostra o nível dentro da ilha aberta (mesmo com os indicadores desligados).
     void StepVolume(int d)
     {
@@ -1283,6 +1467,104 @@ sealed class IslandForm : Form
         t.Start();
     }
 
+    // Taxa de atualização do monitor onde a ilha está (60, 144, 165...): manda para a ilha quando muda de monitor.
+    // As animações da ilha seguem o monitor sozinhas (requestAnimationFrame + física em passos fixos); isto é para medir.
+    string _hzScreen = "";
+    void PostHz()
+    {
+        if (!_ready) return;
+        var scr = Screen.FromHandle(Handle);
+        if (scr.DeviceName == _hzScreen) return;
+        _hzScreen = scr.DeviceName;
+        Post(new { type = "hz", hz = MonitorHz(scr) });
+        PostMonitors();
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    struct DEVMODE
+    {
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+        public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+        public int dmFields, dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+        public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+        public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+    }
+    [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
+
+    static int MonitorHz(Screen s)
+    {
+        var dm = new DEVMODE { dmSize = (short)System.Runtime.InteropServices.Marshal.SizeOf<DEVMODE>() };
+        return EnumDisplaySettings(s.DeviceName, -1 /* ENUM_CURRENT_SETTINGS */, ref dm) && dm.dmDisplayFrequency > 1 ? dm.dmDisplayFrequency : 60;
+    }
+
+    // Botão de monitor da ilha aberta: passa a ilha para o próximo monitor (da esquerda para a direita) e salva a escolha
+    // (a mesma de Configurações → Ilha → Monitor)
+    static List<Screen> ScreensLeftToRight() => Screen.AllScreens.OrderBy(s => s.Bounds.X).ThenBy(s => s.Bounds.Y).ToList();
+    void NextMonitor()
+    {
+        var list = ScreensLeftToRight();
+        if (list.Count < 2) return;
+        int i = list.FindIndex(s => s.DeviceName == Screen.FromHandle(Handle).DeviceName);
+        var next = list[(i + 1) % list.Count];
+        var st = AppSettings.Current;
+        st.IslandMonitor = next.Primary ? "primary" : next.DeviceName;
+        st.Save();
+        _hover = false;          // o mouse ficou no outro monitor: a ilha fecha lá
+        _collapse.Stop();
+        SetMode(Resting);
+        ApplyHideAndScreen();
+        BeginInvoke(PostMonitors);
+    }
+
+    void PostMonitors()
+    {
+        if (IsDisposed || !_ready) return;
+        var list = ScreensLeftToRight();
+        Post(new { type = "monitors", count = list.Count, index = list.FindIndex(s => s.DeviceName == Screen.FromHandle(Handle).DeviceName) + 1 });
+    }
+
+    bool _typing;   // digitando uma tarefa: a ilha não fecha sozinha
+
+    // Teclado na página Tarefas. A ilha é WS_EX_NOACTIVATE (nunca pega o foco) e o Windows recusa o SetForegroundWindow
+    // pedido depois do clique (quem recebe o clique é o processo do WebView2, não o Volum). Então, enquanto a ilha está
+    // aberta na página Tarefas (o JS manda "todoArm"), ela vira uma janela que aceita foco ao ser clicada; ao sair da
+    // página ou fechar, volta a não roubar o foco e devolve o foco ao app que estava na frente.
+    bool _kbArmed;
+    IntPtr _prevFg;
+    const int GWL_EXSTYLE = -20, WS_EX_NOACTIVATE = 0x08000000;
+
+    void SetKeyboardArmed(bool on)
+    {
+        if (on == _kbArmed || IsDisposed) return;
+        _kbArmed = on;
+        int ex = GetWindowLong(Handle, GWL_EXSTYLE);
+        SetWindowLong(Handle, GWL_EXSTYLE, on ? ex & ~WS_EX_NOACTIVATE : ex | WS_EX_NOACTIVATE);
+        if (!on)
+        {
+            _typing = false;
+            if (GetForegroundWindow() == Handle && _prevFg != IntPtr.Zero && IsWindow(_prevFg)) SetForegroundWindow(_prevFg);
+            _prevFg = IntPtr.Zero;
+        }
+    }
+
+    void PostTodo()
+    {
+        if (!_ready || IsDisposed) return;
+        Post(new
+        {
+            type = "todo",
+            on = AppSettings.Current.TodoEnabled,
+            items = Todo.Items.Select(i => new { id = i.Id, text = i.Text, done = i.Done, created = i.Created }).ToArray()
+        });
+    }
+
+    /// <summary>Ligou/desligou a lista de tarefas nas configurações.</summary>
+    public static void ApplyTodo() { if (IsOn) s_island!.PostTodo(); }
+
     void PostSettings()
     {
         var s = AppSettings.Current;
@@ -1346,8 +1628,13 @@ sealed class IslandForm : Form
                     OnWaterChanged();
                     _ = _media?.RefreshAsync();
                     CheckScreen();
+                    ShowPending();
+                    _hzScreen = "";
+                    PostHz();
                     PostAgenda();
                     PostWeather();
+                    PostTodo();
+                    PostDevices();
                     _ = StartAppNotesAsync();
                     Greet();
                     break;
@@ -1375,6 +1662,8 @@ sealed class IslandForm : Form
                 case "showSource": _media?.ShowSource(); break;   // clicou na capa: traz para a frente o app que está tocando
                 case "prev": _media?.Previous(); break;
                 case "openMixer": OpenMixer?.Invoke(); break;
+                case "openSettings": SettingsForm.ShowWindow("island"); break;   // engrenagem da ilha aberta
+                case "nextMonitor": NextMonitor(); break;                       // botão de monitor da ilha aberta
                 case "animDone":   // a forma parou: janela no tamanho exato (sem a folga), se não mudou de estado nesse meio-tempo
                     if (root.TryGetProperty("seq", out var sq) && sq.GetInt32() == _modeSeq) Place(_mode);
                     break;
@@ -1382,8 +1671,38 @@ sealed class IslandForm : Form
                     ToggleMute();
                     break;
 
+                case "getVolume":   // abriu o seletor de volume: manda o nível atual
+                    PostVolumeLevel();
+                    break;
+
+                case "setVolume":   // arrastou a barra do seletor de volume
+                    SetVolume((float)root.GetProperty("v").GetDouble());
+                    break;
+
                 case "volStep":   // rodinha do mouse em cima da ilha: volume geral de 2 em 2%
                     StepVolume(root.GetProperty("d").GetInt32());
+                    break;
+
+                // Tarefas (página da ilha)
+                case "todoAdd": Todo.Add(root.GetProperty("text").GetString()); break;
+                case "todoToggle": Todo.Toggle(root.GetProperty("id").GetString()); break;
+                case "todoRemove": Todo.Remove(root.GetProperty("id").GetString()); break;
+                case "todoClear": Todo.ClearDone(); break;
+                case "todoArm":     // ilha aberta na página Tarefas (ou saiu dela): aceita foco ao ser clicada
+                    SetKeyboardArmed(root.GetProperty("on").GetBoolean());
+                    break;
+                case "todoFocus":   // campo de tarefa focado: a ilha não fecha enquanto a pessoa digita
+                    _typing = root.GetProperty("on").GetBoolean();
+                    // Só pede o teclado se a ilha ainda não estiver na frente (o clique já ativa a ilha na página Tarefas).
+                    // Mexer no foco de novo fazia o campo perder o foco por um instante.
+                    if (_typing && GetForegroundWindow() != Handle)
+                    {
+                        var fg = GetForegroundWindow();
+                        if (fg != IntPtr.Zero) _prevFg = fg;
+                        SetForegroundWindow(Handle);
+                        _web.Focus();
+                    }
+                    else if (!_hover) { _collapse.Stop(); _collapse.Start(); }
                     break;
 
                 case "waterAdd":
@@ -1398,6 +1717,10 @@ sealed class IslandForm : Form
 
                 case "noticeClose":
                     EndNotice();
+                    break;
+
+                case "fps":   // quadros que a animação da ilha consegue (só para o log do --dev)
+                    DevLog.Write($"ilha: animação a {root.GetProperty("fps").GetInt32()} fps num monitor de {root.GetProperty("hz").GetInt32()} Hz");
                     break;
 
                 // Pomodoro (página Foco da ilha)
@@ -1417,6 +1740,7 @@ sealed class IslandForm : Form
         {
             if (_winEventHook != IntPtr.Zero) UnhookWinEvent(_winEventHook);
             Water.Changed -= OnWaterChanged;
+            Todo.Changed -= PostTodo;
             Pomodoro.Changed -= PostPomodoro;
             Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerChanged;
             _media?.Dispose();
@@ -1433,6 +1757,9 @@ sealed class IslandForm : Form
             Agenda.Changed -= OnAgendaChanged;
             Agenda.Alert -= OnAgendaAlert;
             Weather.Changed -= OnWeatherChanged;
+            Devices.Changed -= OnDevicesChanged;
+            Devices.Connected -= OnDeviceConnected;
+            Devices.Low -= OnDeviceLow;
             _osdEnum?.Dispose();
             _out?.Dispose();
             _enum?.Dispose();
@@ -1457,6 +1784,10 @@ sealed class IslandForm : Form
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hwnd, int cmd);
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern int GetWindowLong(IntPtr hwnd, int index);
+    [DllImport("user32.dll")] static extern int SetWindowLong(IntPtr hwnd, int index, int value);
+    [DllImport("user32.dll")] static extern bool IsWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder name, int max);

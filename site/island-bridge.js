@@ -22,6 +22,7 @@
 
   const listeners = [];
   const send = (msg) => setTimeout(() => listeners.forEach((fn) => fn({ data: msg })), 0);
+  window.volumDemoSend = send;   // testes: mandar à ilha uma mensagem como se fosse o C#
   const toPage = (msg) => { try { window.parent.postMessage(Object.assign({ volumIsland: true }, msg), '*'); } catch (e) { /* sem página de fora */ } };
 
   // ---------- Músicas de exemplo (capas em degradê desenhadas aqui) ----------
@@ -128,6 +129,7 @@
   // ---------- Ações vindas da página (botões da barra de tarefas) ----------
   const ACTS = {
     music: () => { togglePlay(); showNotice({ icon: playing ? 'play' : 'pause', kind: 'osd', title: playing ? tr('Tocando', 'Playing', 'Reproduciendo') : tr('Pausado', 'Paused', 'En pausa'), text: SONGS[song].title }, 1800); },
+    pomoEnd: () => showNotice({ icon: 'timer', kind: 'pomo', title: tr('Hora da pausa', 'Break time', 'Hora del descanso'), text: tr('5 min para descansar', '5 min to rest', '5 min para descansar'), action: tr('Beleza!', 'Got it!', '¡Vale!') }, 8000),
     water: () => showNotice({ icon: 'drop', kind: 'drop', title: tr('Hora da água', 'Water time', 'Hora del agua'), text: tr('Beba um copo', 'Drink a glass', 'Bebe un vaso'), action: '+250 ml' }, 7000),
     pomo: () => {
       pomo = { phase: 'focus', paused: false, leftMs: 25 * 60000, totalMs: 25 * 60000, done: 1, every: 4, focusMin: 25 };
@@ -153,6 +155,21 @@
   });
 
   // ---------- O "C#" ----------
+  // Tarefas de exemplo
+  let todos = [
+    { id: 't1', text: tr('Responder os e-mails', 'Reply to emails', 'Responder los correos'), done: true, created: 1 },
+    { id: 't2', text: tr('Ligar para a Ana', 'Call Ana', 'Llamar a Ana'), done: false, created: 2 },
+    { id: 't3', text: tr('Revisar o layout novo', 'Review the new layout', 'Revisar el diseño nuevo'), done: false, created: 3 },
+  ];
+  const sendTodo = () => send({ type: 'todo', on: true, items: todos });
+  // Aparelhos sem fio de exemplo (no app vêm do Windows: Devices.cs)
+  const sendDevices = () => send({ type: 'devices', on: true, items: [
+    { id: 'a', name: tr('Fone QCY H3', 'QCY H3 earbuds', 'Auriculares QCY H3'), battery: 30, kind: 'headphones' },
+    { id: 'b', name: 'MX Master 3S', battery: 82, kind: 'mouse' },
+    { id: 'c', name: 'Pebble K380s', battery: 95, kind: 'keyboard' },
+    { id: 'd', name: 'JBL Flip 6', battery: 14, kind: 'speaker' },
+  ] });
+
   function onUi(m) {
     switch (m.type) {
       case 'ready': {
@@ -163,6 +180,8 @@
         send(mediaMsg());
         syncSound();
         send(pomoMsg());
+        sendTodo();
+        sendDevices();
         // Clima de exemplo (no app: Open-Meteo, pela cidade das configurações)
         const hr = new Date().getHours();
         send({ type: 'weather', on: true, unit: L === 'en' ? 'f' : 'c', show: 'both', weather: { place: tr('São Paulo', 'San Francisco', 'Madrid'), temp: 24, code: 2, day: hr >= 6 && hr < 18, max: 27, min: 18,
@@ -190,11 +209,18 @@
       case 'volStep': volume = Math.min(1, Math.max(0, volume + m.d * 0.02)); send({ type: 'volume', v: volume, muted: false }); break;
       case 'openMixer': toPage({ type: 'openMixer' }); break;
       case 'showSource': break;   // no app, traz o player para a frente
+      case 'getVolume': send({ type: 'volLevel', v: volume, muted: demoMuted }); break;
+      case 'setVolume': volume = Math.min(1, Math.max(0, m.v)); if (volume > 0) demoMuted = false; send({ type: 'mute', muted: demoMuted }); break;
       case 'toggleMute': demoMuted = !demoMuted; send({ type: 'mute', muted: demoMuted }); break;
       case 'waterAdd': water.todayMl = Math.max(0, water.todayMl + m.ml); send({ type: 'water', water }); break;
       case 'noticeAction': { const was = notice; endNotice(); if (was && was.icon === 'drop') onUi({ type: 'waterAdd', ml: 250 }); break; }
       case 'noticeClose': endNotice(); break;
       case 'pomoStart': ACTS.pomo(); break;
+      // Tarefas (no app: o C# guarda em todo.json)
+      case 'todoAdd': todos.push({ id: 't' + Date.now(), text: String(m.text || '').slice(0, 120), done: false, created: Date.now() }); sendTodo(); break;
+      case 'todoToggle': todos.forEach((t) => { if (t.id === m.id) t.done = !t.done; }); sendTodo(); break;
+      case 'todoRemove': todos = todos.filter((t) => t.id !== m.id); sendTodo(); break;
+      case 'todoClear': todos = todos.filter((t) => !t.done); sendTodo(); break;
       case 'pomoPause': pomo.leftMs = pomoMsg().leftMs; pomo.paused = true; send(pomoMsg()); break;
       case 'pomoResume': pomo.paused = false; pomoStartedAt = Date.now(); send(pomoMsg()); break;
       case 'pomoSkip': case 'pomoStop': pomo = { phase: 'idle', paused: false, leftMs: 0, totalMs: 1500000, done: 1, every: 4, focusMin: 25 }; send(pomoMsg()); break;

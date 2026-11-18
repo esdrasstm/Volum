@@ -38,7 +38,7 @@
 
   <div id="island" class="island closed">
     <!-- A forma é desenhada pelo island.js (SVG com cantos contínuos e as orelhas), animada por uma mola -->
-    <div class="shape" aria-hidden="true"><svg class="shape-svg"><path id="shapePath"/></svg><div class="deco" aria-hidden="true"><i class="d-snow1"></i><i class="d-snow2"></i><i class="d-cap"></i><i class="d-base"></i><i class="d-l d-l0"></i><i class="d-l d-l1"></i><i class="d-l d-l2"></i><i class="d-l d-l3"></i><i class="d-pile"></i><i class="d-sleigh"></i></div></div>
+    <div class="shape" aria-hidden="true"><svg class="shape-svg"><path id="shapePath"/></svg><svg class="shape-svg blob-svg"><path id="blobNeck"/><path id="blobBody"/></svg><div class="deco" aria-hidden="true"><i class="d-snow1"></i><i class="d-snow2"></i><i class="d-cap"></i><i class="d-base"></i><i class="d-l d-l0"></i><i class="d-l d-l1"></i><i class="d-l d-l2"></i><i class="d-l d-l3"></i><i class="d-pile"></i><i class="d-sleigh"></i></div></div>
 
     <!-- Fechada -->
     <div class="mini">
@@ -52,10 +52,14 @@
           <circle cx="10" cy="10" r="7.5" class="ring-bg"/>
           <circle cx="10" cy="10" r="7.5" class="ring-fg" id="miniRingFg"/>
         </svg>
+        <!-- Tarefas pendentes: um quadradinho com o número, bem discreto -->
+        <span class="mini-todo" id="miniTodo" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="tdMa"><rect width="24" height="24" fill="#fff"/><path d="M5.4 12l3.3 3.3L19.8 4.2" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><rect x="2.5" y="6.5" width="15" height="15" rx="4.5" fill="currentColor" mask="url(#tdMa)"/></svg><b id="miniTodoN"></b></span>
       </span>
       <b id="clock" class="clock">--:--</b>
       <!-- Direita: pontinhos de microfone/câmera em uso (como no iPhone) e a onda do som -->
       <span class="mini-right">
+        <!-- Aparelhos sem fio conectados: ícone dentro de um anel com a carga (entre a hora e o clima) -->
+        <span class="mini-devs" id="miniDevs" hidden></span>
         <span class="privacy" id="miniPrivacy" hidden><i class="cam"></i><i class="mic"></i></span>
         <!-- Clima: ícone (sol, nuvem, chuva...) e a temperatura, com a cidade salva nas configurações -->
         <span class="mini-wx" id="miniWx" hidden><span class="mini-wx-icon" id="miniWxIcon"></span><b id="miniWxTemp"></b></span>
@@ -66,7 +70,7 @@
     <!-- Pomodoro rodando: bolha ao lado da ilha fechada; ao abrir a ilha, ela entra nela (vira o chip embaixo, à direita) -->
     <div class="pomo-bubble" id="pomoBubble" aria-hidden="true">
       <svg class="bubble-ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" class="ring-bg"/><circle cx="18" cy="18" r="14" class="ring-fg" id="bubbleRingFg"/></svg>
-      <svg class="bubble-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#efe2e2"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg class="bubble-clock" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8.5" fill="#fff"/><path d="M12 9v4.4l2.8 1.7" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 2.8h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
     </div>
 
     <!-- Aviso do Volum: faixa fina, da altura da ilha (ex.: lembrete de água) -->
@@ -123,8 +127,8 @@
             <span id="remaining">-0:00</span>
           </div>
           <div class="controls">
-            <!-- Esquerda: mudo do som geral (o alto-falante cortado quando está mudo) -->
-            <button class="side" id="muteBtn" title="Silenciar" data-i18n-title="islandMute">
+            <!-- Esquerda: volume geral (abre o seletor; o alto-falante aparece cortado quando está mudo) -->
+            <button class="side" id="muteBtn" title="Volume" data-i18n-title="islandVolume">
               <svg class="i-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 8.8a4.6 4.6 0 0 1 0 6.4M19.2 6.2a8.4 8.4 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               <svg class="i-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
@@ -132,14 +136,24 @@
               <svg class="i-skip" viewBox="0 0 32 18" aria-hidden="true"><path d="M15 2.2v13.6c0 1-1.1 1.6-1.9 1L3.6 10.2a1.5 1.5 0 0 1 0-2.4l9.5-6.6c.8-.6 1.9 0 1.9 1zM30 2.2v13.6c0 1-1.1 1.6-1.9 1l-9.5-6.6a1.5 1.5 0 0 1 0-2.4l9.5-6.6c.8-.6 1.9 0 1.9 1z" fill="currentColor"/></svg>
             </button>
             <button id="play" class="play" title="Tocar / pausar" data-i18n-title="islandPlay">
-              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4c0 1.1 1.2 1.8 2.2 1.2l13.4-8.2a1.4 1.4 0 0 0 0-2.4L8.2 2.6C7.2 2 6 2.7 6 3.8z" fill="currentColor"/></svg>
-              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="5" height="18" rx="1.6" fill="currentColor"/><rect x="14" y="3" width="5" height="18" rx="1.6" fill="currentColor"/></svg>
+              <svg class="pp" viewBox="0 0 24 24" aria-hidden="true"><path class="pp-a"/><path class="pp-b"/></svg>
             </button>
             <button id="next" title="Próxima" data-i18n-title="islandNext">
               <svg class="i-skip" viewBox="0 0 32 18" aria-hidden="true"><path d="M2 2.2v13.6c0 1 1.1 1.6 1.9 1l9.5-6.6a1.5 1.5 0 0 0 0-2.4L3.9 1.2C3.1.6 2 1.2 2 2.2zM17 2.2v13.6c0 1 1.1 1.6 1.9 1l9.5-6.6a1.5 1.5 0 0 0 0-2.4l-9.5-6.6c-.8-.6-1.9 0-1.9 1z" fill="currentColor"/></svg>
             </button>
-            <!-- Direita: o tempo de agora (abre a página do clima); sem cidade salva, +1 copo de água -->
-            <button class="side gone" id="wxQuick" title="Clima" data-i18n-title="islandWeather"></button>
+<!-- Seletor de volume: o alto-falante abre esta barra no lugar dos controles (o alto-falante dela silencia) -->
+            <div class="volpanel" id="volPanel" aria-hidden="true">
+              <button class="vp-mute" id="vpMute" title="Silenciar" data-i18n-title="islandMute"><svg class="i-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 8.8a4.6 4.6 0 0 1 0 6.4M19.2 6.2a8.4 8.4 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="i-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.2v5.6c0 .6.4 1 1 1h3l4.6 3.9c.6.5 1.4.1 1.4-.7V5c0-.8-.8-1.2-1.4-.7L7.5 8.2h-3c-.6 0-1 .4-1 1z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+              <div class="vp-track" id="vpTrack" role="slider" aria-label="Volume" data-i18n-aria="islandVolume" aria-valuemin="0" aria-valuemax="100"><span class="vp-rail"><i id="vpFill"></i></span><b id="vpKnob"></b></div>
+              <span class="vp-pct" id="vpPct">0%</span>
+              <button class="vp-close" id="vpClose" title="Fechar" data-i18n-title="islandClose"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            </div>
+            <!-- Direita: o que está ativo agora. Pomodoro rodando: a bolha de fora entra na ilha e para aqui (abre a página Foco);
+                 senão, +1 copo (com o lembrete de água ligado) ou um espaço vazio -->
+            <button class="side pomo-quick gone" id="pomoQuick" title="Foco" data-i18n-title="tabFocus">
+              <svg class="bubble-ring" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="14" class="ring-bg"/><circle cx="18" cy="18" r="14" class="ring-fg" id="quickRingFg"/></svg>
+              <svg class="bubble-clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" fill="#fff"/><path d="M12 9v4.4l2.8 1.7" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 2.8h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+            </button>
             <button class="side" id="waterQuick" title="Água" aria-label="Água">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6c3.8 4.5 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.6 8.2 7.1 12 2.6z" fill="currentColor"/><path d="M12 10.8v6M9 13.8h6" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>
             </button>
@@ -156,7 +170,7 @@
                   <circle cx="24" cy="24" r="20" class="ring-bg"/>
                   <circle cx="24" cy="24" r="20" class="ring-fg" id="focusRingFg"/>
                 </svg>
-                <svg class="focus-clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#efe2e2"/><path d="M12 6.5V12l3.6 2.2" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg class="focus-clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8.5" fill="#fff"/><path d="M12 9v4.4l2.8 1.7" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 2.8h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
               </div>
               <div class="focus-text">
                 <b id="focusPhase"></b>
@@ -170,8 +184,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor"/></svg>
               </button>
               <button id="focusMain" class="main" title="Começar" data-i18n-title="focusStart">
-                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.8v16.4c0 1.1 1.2 1.8 2.2 1.2l13.4-8.2a1.4 1.4 0 0 0 0-2.4L8.2 2.6C7.2 2 6 2.7 6 3.8z" fill="currentColor"/></svg>
-                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="5" height="18" rx="1.6" fill="currentColor"/><rect x="14" y="3" width="5" height="18" rx="1.6" fill="currentColor"/></svg>
+                <svg class="pp" viewBox="0 0 24 24" aria-hidden="true"><path class="pp-a"/><path class="pp-b"/></svg>
               </button>
               <button id="focusSkip" class="soft" title="Pular" data-i18n-title="focusSkip">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.3v15.4c0 1 1.1 1.6 1.9 1l11-7.7a1.2 1.2 0 0 0 0-2L4.9 3.3C4.1 2.7 3 3.3 3 4.3z" fill="currentColor"/><rect x="17.5" y="3" width="3.5" height="18" rx="1.4" fill="currentColor"/></svg>
@@ -207,6 +220,31 @@
           </div>
         </section>
 
+        <!-- Página: tarefas (lista curta; o C# guarda em todo.json). O "+" vira o campo de digitar -->
+        <section class="page" data-page="todo" hidden>
+          <div class="todo" id="todo">
+            <div class="todo-head">
+              <svg class="todo-icon" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="tdIa"><rect width="24" height="24" fill="#fff"/><path d="M5.4 12l3.3 3.3L19.8 4.2" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><rect x="2.5" y="6.5" width="15" height="15" rx="4.5" fill="currentColor" mask="url(#tdIa)"/></svg>
+              <span class="todo-title"><b data-i18n="tabTodo">Tarefas</b><span id="todoCount"></span></span>
+              <button class="todo-clear" id="todoClear" hidden data-i18n="todoClear">Limpar feitas</button>
+              <form class="todo-new" id="todoForm" autocomplete="off"><input id="todoInput" maxlength="120" spellcheck="false" placeholder="Escreva e aperte Enter" data-i18n-placeholder="todoPlaceholder" aria-label="Nova tarefa" data-i18n-aria="todoAdd"></form>
+              <button class="todo-plus" id="todoPlus" type="button" title="Nova tarefa" data-i18n-title="todoAdd" aria-label="Nova tarefa" data-i18n-aria="todoAdd"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+            </div>
+            <ul class="todo-list" id="todoList"></ul>
+          </div>
+        </section>
+
+        <!-- Página: bateria dos aparelhos sem fio conectados (fone, mouse, teclado, caixinha); o JS preenche -->
+        <section class="page" data-page="devices" hidden>
+          <div class="devs">
+            <div class="devs-head">
+              <span class="devs-icon" id="devsIcon"></span>
+              <span class="devs-title"><b data-i18n="tabDevices">Aparelhos</b><span id="devCount"></span></span>
+            </div>
+            <ul class="devs-list" id="devList"></ul>
+          </div>
+        </section>
+
         <!-- Página: clima (só com a cidade salva nas configurações); o JS preenche -->
         <section class="page" data-page="weather" hidden>
           <div class="wx">
@@ -232,12 +270,27 @@
       </div>
 
       <div class="dots" id="dots"></div>
+      <!-- Indicador líquido das páginas (island.js, "Gota das páginas"): a gota estica, solta gotinhas e se junta de novo -->
+      <svg class="dots-goo" id="dotsGoo" aria-hidden="true">
+        <defs><filter id="dotsGooF" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="1.6"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6"/></filter></defs>
+        <g class="dg-rest"></g>
+        <g class="dg-drop" filter="url(#dotsGooF)"><rect id="dgPill" rx="2.5" ry="2.5" height="5"/><circle id="dgD1" r="2.7"/><circle id="dgD2" r="2.2"/></g>
+      </svg>
       <!-- Tema Vidro: barra de abas no lugar das bolinhas (o JS monta os botões e anima a pílula) -->
       <nav class="tabbar" id="tabbar" hidden><span class="tab-pill" id="tabPill"></span><span class="tab-drop" id="tabDrop"></span></nav>
       <!-- Pomodoro rodando: a bolha de fora "entra" aqui quando a ilha abre (anel + tempo que falta) -->
       <div class="pomo-chip" id="pomoChip" aria-hidden="true">
         <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" class="ring-bg"/><circle cx="10" cy="10" r="8" class="ring-fg" id="chipRingFg"/></svg>
         <b id="pomoChipTime"></b>
+      </div>
+      <!-- Embaixo à esquerda: configurações e, com 2 monitores ou mais, passar a ilha para o próximo -->
+      <div class="full-tools">
+        <button id="gearBtn" title="Configurações" data-i18n-title="settings" aria-label="Configurações" data-i18n-aria="settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button id="monBtn" hidden aria-label="Monitor">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4"/></svg>
+        </button>
       </div>
 
     </div>

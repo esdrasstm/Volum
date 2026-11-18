@@ -32,7 +32,9 @@ Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas. Mais segurança na agenda (só endereços https, guardados protegidos pelo Windows) e a ilha gasta menos quando está escondida.
+Lista de tarefas na ilha: anote e risque tarefas rápidas, com um numerozinho na ilha fechada mostrando o que falta. Bateria dos fones, mouses, teclados e caixinhas Bluetooth na ilha, com aviso de bateria fraca. Mude o volume direto no player da ilha. A ilha inteira ganhou movimentos de gota, macios em qualquer monitor. O fim do foco do Pomodoro aparece grande e espera você, mesmo depois de um jogo em tela cheia. Botão para procurar atualização e atalho para as configurações direto na ilha. Sons de clique mais rápidos. Correção: a ilha não pisca mais em cima dos apps.
+
+<!-- 0.8.0: Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas. Mais segurança na agenda (só endereços https, guardados protegidos pelo Windows) e a ilha gasta menos quando está escondida. -->
 
 <!-- 0.7.0: Ilha de cara nova: maior, com música, foco, água, clima e agenda no mesmo visual; clique na capa para abrir o player. O Pomodoro vira uma bolha ao lado da ilha. Temas de inverno grátis em pixel art (Natal, Noite de neve, Bengala e Trenó) e o novo tema Vidro, com vidro de verdade atrás do mixer. No notebook, a bateria muda de cor com a carga. Correções: a ilha sai da frente de qualquer app no topo, acompanha o tamanho do texto do Windows e o clima acha a sua cidade. -->
 
@@ -44,6 +46,8 @@ Microfone: ganho, mudo e troca do microfone padrão
 Abre no meio do jogo com Ctrl+Alt+V
 Ilha no topo da tela com a música tocando e os controles
 Pomodoro com tempos ajustáveis
+Lista de tarefas rápidas na ilha
+Bateria dos fones, mouses e teclados Bluetooth
 Lembrete de água com meta do dia
 Aviso para levantar e esticar as pernas
 Indicadores de volume, microfone, Caps Lock e Num Lock
@@ -90,7 +94,9 @@ Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes. Safer calendar (https addresses only, stored protected by Windows) and the island uses less when hidden.
+Task list in the island: jot down and check off quick tasks, with a tiny number on the closed island showing what is left. Battery of your Bluetooth headphones, mice, keyboards and speakers in the island, with a low battery heads-up. Change the volume right in the island player. The whole island now moves like a droplet, smooth on any monitor. The end of a Pomodoro focus session shows up big and waits for you, even after a full-screen game. A button to check for updates and a shortcut to settings right from the island. Snappier click sounds. Fix: the island no longer flickers over apps.
+
+<!-- 0.8.0: Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes. Safer calendar (https addresses only, stored protected by Windows) and the island uses less when hidden. -->
 
 <!-- 0.7.0: A brand new island: bigger, with music, focus, water, weather and calendar in the same style; click the cover to open the player. Pomodoro becomes a bubble next to the island. Free winter themes in pixel art (Christmas, Snowy night, Candy cane and Sleigh ride) and the new Glass theme, with real glass behind the mixer. On laptops, the battery changes color with the charge. Fixes: the island gets out of the way of any app at the top, follows the Windows text size and the weather finds your city. -->
 
@@ -102,6 +108,8 @@ Microphone: gain, mute and default microphone switching
 Opens mid-game with Ctrl+Alt+V
 Island at the top of the screen with music and controls
 Pomodoro with adjustable times
+Quick task list in the island
+Battery of Bluetooth headphones, mice and keyboards
 Water reminder with a daily goal
 Stand-up and stretch reminder
 Volume, microphone, Caps Lock and Num Lock indicators
@@ -148,7 +156,9 @@ Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs má
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas. Agenda más segura (solo direcciones https, guardadas protegidas por Windows) y la isla consume menos cuando está oculta.
+Lista de tareas en la isla: anota y tacha tareas rápidas, con un numerito en la isla cerrada que muestra lo que falta. Batería de tus auriculares, ratones, teclados y altavoces Bluetooth en la isla, con aviso de batería baja. Cambia el volumen directo en el reproductor de la isla. Toda la isla ahora se mueve como una gota, suave en cualquier monitor. El fin del enfoque del Pomodoro aparece grande y te espera, incluso después de un juego a pantalla completa. Botón para buscar actualizaciones y acceso a los ajustes desde la isla. Sonidos de clic más rápidos. Corrección: la isla ya no parpadea sobre las apps.
+
+<!-- 0.8.0: Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas. Agenda más segura (solo direcciones https, guardadas protegidas por Windows) y la isla consume menos cuando está oculta. -->
 
 <!-- 0.7.0: Una isla renovada: más grande, con música, enfoque, agua, clima y agenda en el mismo estilo; haz clic en la portada para abrir el reproductor. El Pomodoro se convierte en una burbuja junto a la isla. Temas de invierno gratis en pixel art (Navidad, Noche de nieve, Bastón de caramelo y Trineo) y el nuevo tema Cristal, con cristal de verdad detrás del mezclador. En portátiles, la batería cambia de color con la carga. Correcciones: la isla se aparta de cualquier app arriba, sigue el tamaño del texto de Windows y el clima encuentra tu ciudad. -->
 
@@ -160,6 +170,8 @@ Micrófono: ganancia, silencio y cambio del predeterminado
 Se abre en medio del juego con Ctrl+Alt+V
 Isla arriba de la pantalla con la música y los controles
 Pomodoro con tiempos ajustables
+Lista de tareas rápidas en la isla
+Batería de auriculares, ratones y teclados Bluetooth
 Recordatorio de agua con meta diaria
 Aviso para levantarte y estirar las piernas
 Indicadores de volumen, micrófono, Bloq Mayús y Bloq Num
@@ -189,7 +201,7 @@ sonido
 **Requisitos adicionais:** Windows 10 versão 1809 ou mais novo, 64 bits.
 
 ### Notas para a certificação (campo "Notas para certificação", em inglês; curto: o campo é pequeno)
-Volum is a tray volume mixer (.NET + WebView2). runFullTrust: Core Audio to change per-app and mic volume. Keyboard hook only for "Lock keyboard to clean" (user action, auto-unlocks) and volume/media keys. Notifications (optional, user permission) are shown locally. Optional network: iCal URL and Open-Meteo weather. Test: click the tray icon; options in Settings.
+Volum is a tray volume mixer (.NET + WebView2). runFullTrust: Core Audio to change per-app and mic volume. Keyboard hook only for "Lock keyboard to clean" (user action, auto-unlocks) and volume/media keys. Notifications (optional, user permission) are shown locally. Bluetooth device battery is read locally from Windows (no pairing, no scanning). Optional network: iCal URL and Open-Meteo weather. Test: click the tray icon; options in Settings.
 
 ### Capturas de tela
 Mínimo 1, em 1366×768 ou maior (recomendado 1920×1080), PNG. Sugestões:

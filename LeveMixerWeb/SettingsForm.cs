@@ -123,6 +123,15 @@ sealed class SettingsForm : Form
         }
     }
 
+    async Task CheckUpdateAsync()
+    {
+        string state;
+        string? version = null;
+        if (Updater.IsStore) state = await StoreUpdate.CheckNowAsync();
+        else (state, version) = await Updater.CheckNowAsync();
+        if (!IsDisposed) Post(new { type = "update", state, version, store = Updater.IsStore });
+    }
+
     void Post(object message)
     {
         try { _web.CoreWebView2?.PostWebMessageAsJson(JsonSerializer.Serialize(message, Json)); }
@@ -187,6 +196,8 @@ sealed class SettingsForm : Form
                 osd = _settings.IslandOsd,
                 otherScreen = _settings.IslandOtherScreen,
                 tuck = _settings.IslandTuck,
+                todo = _settings.TodoEnabled,
+                devices = _settings.DevicesEnabled,
                 autoHide = _settings.IslandAutoHide,
                 autoHideSec = _settings.IslandAutoHideSec,
                 monitor = _settings.IslandMonitor ?? "primary",
@@ -348,6 +359,9 @@ sealed class SettingsForm : Form
                     if (root.TryGetProperty("osd", out var osd)) _settings.IslandOsd = osd.GetBoolean();
                     if (root.TryGetProperty("otherScreen", out var os)) _settings.IslandOtherScreen = os.GetBoolean();
                     if (root.TryGetProperty("tuck", out var tk)) _settings.IslandTuck = tk.GetBoolean();
+                    if (root.TryGetProperty("todo", out var td)) _settings.TodoEnabled = td.GetBoolean();
+                    bool devBefore = _settings.DevicesEnabled;
+                    if (root.TryGetProperty("devices", out var dv)) _settings.DevicesEnabled = dv.GetBoolean();
                     if (root.TryGetProperty("autoHide", out var ah)) _settings.IslandAutoHide = ah.GetBoolean();
                     _settings.IslandAutoHideSec = Get("autoHideSec", 10, 5, 300);
                     if (root.TryGetProperty("monitor", out var mo) && mo.GetString() is { Length: > 0 } mon) _settings.IslandMonitor = mon;
@@ -359,7 +373,9 @@ sealed class SettingsForm : Form
                     Pomodoro.Configure();
                     StandUp.Apply();
                     IslandForm.ApplyOsd();
+                    if (devBefore != _settings.DevicesEnabled) IslandForm.ApplyDevices();
                     IslandForm.ApplyHideAndScreen();
+                    IslandForm.ApplyTodo();
                     IslandForm.SettingsChanged();
                     break;
 
@@ -373,6 +389,14 @@ sealed class SettingsForm : Form
 
                 case "copyPix":   // "Apoiar o Volum": copia o Pix copia e cola para colar no app do banco
                     try { Clipboard.SetText(Support.Pix); } catch (Exception ex) { Debug.WriteLine(ex); }
+                    break;
+
+                case "checkUpdate":   // Sobre → "Procurar atualização"
+                    _ = CheckUpdateAsync();
+                    break;
+
+                case "applyUpdate":   // achou versão nova: GitHub reinicia e atualiza; Store pede para a Store instalar
+                    if (Updater.IsStore) StoreUpdate.InstallNow(); else Updater.ApplyNow();
                     break;
 
                 case "openSite":   // "Sobre": site, sugestões e GitHub (a janela continua aberta)

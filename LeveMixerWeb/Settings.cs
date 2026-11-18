@@ -51,6 +51,10 @@ sealed class AppSettings
     public bool IslandOtherScreen { get; set; } = true;
     // Sair da frente dos apps: quando uma janela chega no topo (abas, menus), a ilha some. Desligado: fica sempre à vista
     public bool IslandTuck { get; set; } = true;
+    /// <summary>Página "Tarefas" na ilha (lista em todo.json).</summary>
+    public bool TodoEnabled { get; set; } = true;
+    /// <summary>Bateria dos aparelhos sem fio (fone, mouse, teclado...) na ilha.</summary>
+    public bool DevicesEnabled { get; set; } = true;
 
     // Esconder a ilha quando não estiver em uso (pedido para telas OLED). Desligado por padrão: o Volum é para a ilha ficar à vista.
     // Some depois de IslandAutoHideSec segundos parada e volta quando o mouse passa no lugar dela; avisos continuam aparecendo.

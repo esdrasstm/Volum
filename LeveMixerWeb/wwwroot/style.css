@@ -520,6 +520,22 @@ button:focus-visible, input:focus-visible + span { outline: 2px solid var(--acce
 .switch input:checked + span::after { transform: translateX(16px); }
 .switch input:active + span::after { width: 19px; }
 
+/* Chave líquida: a bolinha é presa pelas duas pontas (left/right). A ponta da frente sai primeiro e a de trás
+   vem depois: no meio do caminho ela estica como uma gota e, ao chegar, encolhe com uma molinha.
+   Apertando, ela incha para o lado em que vai. */
+.switch span::after {
+  width: auto; right: 19px; transform: none;
+  transition: left .34s var(--bounce) .07s, right .34s var(--bounce), height .25s ease, top .25s ease;
+}
+.switch input:checked + span::after {
+  transform: none; left: 19px; right: 3px;
+  transition: left .34s var(--bounce) .07s, right .34s var(--bounce), height .25s ease, top .25s ease;
+}
+.switch input:not(:checked) + span::after { transition: left .34s var(--bounce), right .34s var(--bounce) .07s, height .25s ease, top .25s ease; }
+.switch input:active:not(:checked) + span::after { width: auto; right: 14px; top: 4px; height: 14px; }
+.switch input:active:checked + span::after { width: auto; left: 14px; top: 4px; height: 14px; }
+:root.lite .switch span::after { transition: none; }
+
 /* ---------- Volume geral ---------- */
 .master { padding: 2px 0; }
 .master .row { padding: 10px 8px 10px 12px; }
@@ -1396,3 +1412,34 @@ svg[data-anim] { transform-origin: 50% 50%; overflow: visible; }
 
 /* Tema claro: o palco da ilustração continua escuro (as miniaturas são da ilha, que é sempre preta) */
 :root[data-scheme="light"] .news-art { background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .08), transparent 60%), #111; }
+
+/* ---------- Novidades 0.9.0: tarefas e aparelhos ---------- */
+.na-todo { display: grid; gap: 7px; width: 200px; padding: 12px 14px; border-radius: 16px; background: #000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 10px 24px rgba(0, 0, 0, .5); }
+.na-todo p { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 12.5px; color: #fff; }
+.na-todo i { flex: none; width: 14px; height: 14px; border-radius: 5px; box-shadow: inset 0 0 0 1.6px rgba(255, 255, 255, .55); position: relative; }
+.na-todo i.on, .na-todo i.tick { background: #fff; box-shadow: none; }
+.na-todo i.on::after, .na-todo i.tick::after { content: ""; position: absolute; left: 4px; top: 2px; width: 4px; height: 7px;
+  border: solid #000; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.na-todo i.tick { animation: na-tick 3.2s ease-in-out infinite; }
+.na-todo i.tick::after { animation: na-tick-mark 3.2s ease-in-out infinite; }
+.na-todo b { display: block; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, .85); position: relative; }
+.na-todo p:first-child b { background: rgba(255, 255, 255, .35); }
+.na-todo b.strike { animation: na-fade 3.2s ease-in-out infinite; }
+@keyframes na-fade { 0%, 40% { background: rgba(255, 255, 255, .85); } 55%, 100% { background: rgba(255, 255, 255, .35); } }
+@keyframes na-tick { 0%, 30% { background: transparent; box-shadow: inset 0 0 0 1.6px rgba(255, 255, 255, .55); } 38%, 100% { background: #fff; box-shadow: none; } }
+@keyframes na-tick-mark { 0%, 34% { opacity: 0; } 42%, 100% { opacity: 1; } }
+@keyframes na-strike { 0%, 38% { width: 0; } 52%, 100% { width: 100%; } }
+
+.na-devs { display: flex; gap: 18px; }
+.na-devs span { position: relative; display: grid; place-items: center; width: 54px; height: 54px; }
+.na-devs svg { position: absolute; inset: 0; width: 54px; height: 54px; transform: rotate(-90deg); }
+.na-dev-bg { fill: #000; stroke: rgba(255, 255, 255, .14); stroke-width: 2.6; }
+.na-dev-fg { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 94.2; stroke-dashoffset: 94.2;
+  stroke: hsl(calc((var(--p) - 20) / 80 * 110), 88%, 54%); animation: na-dev-fill 1.4s cubic-bezier(.3, .8, .3, 1) .2s forwards; }
+.na-devs span:nth-child(2) .na-dev-fg { animation-delay: .35s; } .na-devs span:nth-child(3) .na-dev-fg { animation-delay: .5s; }
+.na-dev-ico { position: relative; width: 20px !important; height: 20px !important; inset: auto !important; transform: none !important; color: #fff; }
+.na-devs em { position: absolute; bottom: -18px; font-style: normal; font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, .7); }
+@keyframes na-dev-fill { to { stroke-dashoffset: calc(94.2 - 94.2 * var(--p) / 100); } }
+.lite .na-todo *, .lite .na-dev-fg { animation: none !important; }
+.lite .na-dev-fg { stroke-dashoffset: calc(94.2 - 94.2 * var(--p) / 100); }

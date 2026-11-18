@@ -183,7 +183,7 @@ html.floating .shape > .deco :is(.d-cap, .d-l) { left: calc(var(--r) * .6); righ
 /* Aba ativa: ícone e nome pretos em cima da pílula (o círculo de vidro some) */
 :root[data-skin="glass"] .tab.on { color: #0b0d06; --tab-cut: #c6f24e; }
 :root[data-skin="glass"] .tab.on .tab-ico { width: 16px; background: none; box-shadow: none; }
-:root[data-skin="glass"] .tab.on .tab-label { max-width: 70px; opacity: 1; transition: opacity .3s ease .2s, max-width .3s ease; }
+:root[data-skin="glass"] .tab.on .tab-label { max-width: 0; opacity: 0; }   /* só o ícone: os nomes cortavam (pedido do Esdras, 17/11) */
 :root[data-skin="glass"] .tab-pill { position: absolute; left: 0; top: 2px; height: 34px; width: 34px; border-radius: 17px; background: var(--lime-grad); box-shadow: var(--lime-glow); will-change: transform, width; }
 :root[data-skin="glass"] .tab-drop { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #c6f24e; opacity: 0; pointer-events: none; }
 :root[data-skin="glass"] .tab-drop.go { animation: tab-drop .5s cubic-bezier(.2, .8, .3, 1) both; }

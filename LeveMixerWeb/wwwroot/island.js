@@ -380,7 +380,6 @@
     $('wxPlace').textContent = w.place;
     $('wxTemp').textContent = deg(w.temp);
     $('wxIcon').innerHTML = wxIconFill(w.code, w.day);
-    $('wxQuick').innerHTML = wxIconFill(w.code, w.day);
     $('wxCond').textContent = t('wx_' + wxGroup(w.code));
     $('wxRange').textContent = deg(w.max) + ' / ' + deg(w.min);   // máxima / mínima (curto: a condição do tempo cabe inteira)
     $('wxRange').title = t('wxMax') + ' ' + deg(w.max) + ' · ' + t('wxMin') + ' ' + deg(w.min);
@@ -446,6 +445,20 @@
     const r = seekBar.getBoundingClientRect();
     return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * media.duration;
   };
+  // Bolinha líquida: estica no sentido em que é arrastada (quanto mais rápido, mais) e volta redonda com mola
+  const gooLast = new WeakMap();
+  function goo(el, e, viaVar) {
+    const now = performance.now(), last = gooLast.get(el);
+    gooLast.set(el, { x: e.clientX, t: now });
+    if (!last || now - last.t > 120) return;
+    const vx = (e.clientX - last.x) / Math.max(1, now - last.t);   // px por ms
+    const s = Math.min(0.7, Math.abs(vx) * 0.45);
+    const sx = (1 + s).toFixed(3), sy = (1 - s * 0.35).toFixed(3);
+    if (viaVar) { el.style.setProperty('--ksx', sx); el.style.setProperty('--ksy', sy); } else el.style.scale = sx + ' ' + sy;
+    clearTimeout(el._gooT);
+    el._gooT = setTimeout(() => { if (viaVar) { el.style.removeProperty('--ksx'); el.style.removeProperty('--ksy'); } else el.style.scale = ''; }, 70);
+  }
+
   const seekShow = (s) => {
     $('elapsed').textContent = fmtTime(s);
     $('remaining').textContent = '-' + fmtTime(media.duration - s);
@@ -459,7 +472,7 @@
     seekBar.setPointerCapture(e.pointerId);
     seekShow(seekAt(e));
   });
-  seekBar.addEventListener('pointermove', (e) => { if (seeking) seekShow(seekAt(e)); });
+  seekBar.addEventListener('pointermove', (e) => { if (seeking) { seekShow(seekAt(e)); goo(seekBar, e, true); } });
   const endSeek = (e, apply) => {
     if (!seeking) return;
     seeking = false;
@@ -507,13 +520,84 @@
   document.querySelector('.cover').addEventListener('click', () => { if (media) post({ type: 'showSource' }); });
   $('next').addEventListener('click', () => post({ type: 'next' }));
   $('prev').addEventListener('click', () => post({ type: 'prev' }));
-  // Alto-falante do player: silencia / devolve o som geral (abrir o mixer continua no "apertar e segurar" a ilha)
-  $('muteBtn').addEventListener('click', () => post({ type: 'toggleMute' }));
+  // Alto-falante do player: abre o seletor de volume no lugar dos controles (abrir o mixer continua no "apertar e segurar")
+  $('muteBtn').addEventListener('click', () => openVol());
   function showMute(muted) {
-    const b = $('muteBtn');
-    b.classList.toggle('muted', !!muted);
-    b.title = t(muted ? 'islandUnmute' : 'islandMute');
+    $('muteBtn').classList.toggle('muted', !!muted);
+    $('vpMute').classList.toggle('muted', !!muted);
+    $('vpMute').title = t(muted ? 'islandUnmute' : 'islandMute');
+    if (volOpen) vpShow(vpVal, !!muted);
   }
+
+  /* ---------------- Seletor de volume (volume geral do Windows) ----------------
+     A barra entra no lugar dos controles do player; arrastar ou clicar muda o volume (manda setVolume no máximo
+     a cada 40 ms), o alto-falante dela silencia, o ✕ fecha. Fecha sozinha depois de 5 s sem mexer ou quando a ilha fecha. */
+  let volOpen = false, vpVal = 0, vpMuted = false, vpDrag = false, vpSent = 0, vpTimer = 0, vpPending = null;
+  const controlsEl = document.querySelector('.controls');
+  function vpShow(v, muted) {
+    vpVal = Math.min(1, Math.max(0, v)); vpMuted = !!muted;
+    const pct = Math.round((vpMuted ? 0 : vpVal) * 100);
+    $('vpFill').style.width = pct + '%';
+    $('vpKnob').style.left = pct + '%';
+    $('vpPct').textContent = pct + '%';
+    $('vpTrack').setAttribute('aria-valuenow', pct);
+    $('vpMute').classList.toggle('muted', vpMuted);
+  }
+  function vpIdle() { clearTimeout(vpTimer); vpTimer = setTimeout(() => { if (!vpDrag) closeVol(); }, 5000); }
+  function openVol() {
+    if (volOpen) { closeVol(); return; }
+    volOpen = true;
+    // a barra usa a mesma cor da barra do tempo da música (acompanha o tema)
+    const bf = getComputedStyle($('barFill'));
+    $('vpFill').style.background = bf.backgroundImage !== 'none' ? bf.backgroundImage : bf.backgroundColor;
+    controlsEl.classList.add('vol-open');
+    $('volPanel').setAttribute('aria-hidden', 'false');
+    post({ type: 'getVolume' });
+    vpIdle();
+  }
+  function closeVol() {
+    if (!volOpen) return;
+    volOpen = false; vpDrag = false;
+    clearTimeout(vpTimer);
+    controlsEl.classList.remove('vol-open');
+    $('volPanel').setAttribute('aria-hidden', 'true');
+  }
+  function vpSend(v, final) {
+    const now = Date.now();
+    if (!final && now - vpSent < 40) { vpPending = v; return; }
+    vpSent = now; vpPending = null;
+    post({ type: 'setVolume', v: Math.round(v * 100) / 100 });
+  }
+  function vpFromX(x) {
+    const r = $('vpTrack').getBoundingClientRect();
+    return Math.min(1, Math.max(0, (x - r.left) / r.width));
+  }
+  $('vpTrack').addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    vpDrag = true;
+    $('vpTrack').setPointerCapture(e.pointerId);
+    $('vpTrack').classList.add('dragging');
+    const v = vpFromX(e.clientX); vpShow(v, false); vpSend(v);
+    vpIdle();
+  });
+  $('vpTrack').addEventListener('pointermove', (e) => {
+    if (!vpDrag) return;
+    const v = vpFromX(e.clientX); vpShow(v, false); vpSend(v);
+    goo($('vpKnob'), e);
+  });
+  const vpEnd = (e) => {
+    if (!vpDrag) return;
+    vpDrag = false;
+    $('vpTrack').classList.remove('dragging');
+    vpSend(vpPending ?? vpFromX(e.clientX), true);
+    vpIdle();
+  };
+  $('vpTrack').addEventListener('pointerup', vpEnd);
+  $('vpTrack').addEventListener('pointercancel', vpEnd);
+  $('vpMute').addEventListener('click', () => { post({ type: 'toggleMute' }); vpIdle(); });
+  $('vpClose').addEventListener('click', () => closeVol());
+  $('volPanel').addEventListener('pointerdown', (e) => e.stopPropagation());   // não vira arrastar página / segurar a ilha
 
   /* ---------------- Água ---------------- */
   function showWater() {
@@ -524,17 +608,47 @@
     $('waterFill').style.width = Math.min(100, (water.todayMl / water.goalMl) * 100) + '%';
     $('waterPlus').textContent = '+ ' + V.fmtMl(water.cupMl, lang);
     $('waterMinus').disabled = water.todayMl <= 0;
-    $('waterQuick').hidden = !water.enabled;
     $('waterQuick').title = '+ ' + V.fmtMl(water.cupMl, lang);
     showQuick();
     showPages();
   }
-  // Direita do player: com cidade salva, o ícone do tempo (abre a página do clima); sem, o +1 copo (ou um espaço vazio)
+  // Direita do player: o que está ativo agora. Pomodoro rodando = a bolha de fora, que entra na ilha e para aqui
+  // quando ela abre no player; sem nada ativo, um espaço vazio do mesmo tamanho, para voltar, tocar/pausar e avançar
+  // ficarem no centro (o +1 copo saiu daqui, pedido do Esdras; a água continua na página Água)
   function showQuick() {
-    $('wxQuick').classList.toggle('gone', !weatherOn);
-    $('waterQuick').classList.toggle('gone', weatherOn);
+    const pq = pomoActive();
+    $('pomoQuick').classList.toggle('gone', !pq);
+    $('waterQuick').classList.toggle('gone', pq);
+    $('waterQuick').hidden = true;
+    const list = pages();
+    island.classList.toggle('quick-pomo', pq && list[Math.min(page, list.length - 1)]?.dataset.page === 'media');
+    aimBubble();
   }
-  $('wxQuick').addEventListener('click', () => goToPage('weather'));
+  $('pomoQuick').addEventListener('click', () => goToPage('focus'));
+
+  // Ferramentas da ilha aberta (embaixo à esquerda): configurações (abre na página Ilha) e, com 2 monitores ou mais,
+  // passar a ilha para o próximo monitor (o C# salva a escolha)
+  let monitors = { count: 1, index: 1 };
+  function showMonitors(m) {
+    if (m) monitors = m;
+    const b = $('monBtn');
+    b.hidden = !(monitors.count > 1);
+    b.title = t('islandNextMon').replace('{0}', monitors.index).replace('{1}', monitors.count);
+    b.setAttribute('aria-label', b.title);
+  }
+  $('gearBtn').addEventListener('click', () => post({ type: 'openSettings' }));
+  $('monBtn').addEventListener('click', () => post({ type: 'nextMonitor' }));
+
+  // Centro de um elemento da ilha aberta em coordenadas do #island, pelo layout (sem as animações).
+  // O .full fica centralizado com translateX(-50%); o resto não tem transformação parado.
+  function centerIn(el) {
+    const full = $('full');
+    if (!el || !el.offsetWidth) return null;
+    let x = el.offsetWidth / 2, y = el.offsetHeight / 2;
+    for (let n = el; n && n !== full; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+    return { x: x + full.offsetLeft - full.offsetWidth / 2, y: y + full.offsetTop };
+  }
+  const aimBubble = () => blobTo();
 
   const addWater = (ml) => {
     water.todayMl = Math.max(0, water.todayMl + ml);
@@ -589,7 +703,8 @@
     setRing($('focusRingFg'), 20);
     setRing($('bubbleRingFg'), 14);
     setRing($('chipRingFg'), 8);
-    for (const el of [$('pomoBubble'), $('pomoChip')]) el.classList.toggle('break', brk);
+    setRing($('quickRingFg'), 14);
+    for (const el of [$('pomoBubble'), $('pomoChip'), $('pomoQuick')]) el.classList.toggle('break', brk);
     // Bolha ao lado da ilha fechada: o C# alarga a janela para a direita enquanto ela está na tela
     const on = pomoActive();
     if (on !== island.classList.contains('pomo-on')) { island.classList.toggle('pomo-on', on); post({ type: 'bubble', on }); }
@@ -607,6 +722,7 @@
     showFocusTime();
     syncFocusTimer();
     showMini();
+    showQuick();
   }
 
   $('focusMain').addEventListener('click', () => {
@@ -624,10 +740,158 @@
     showPomodoro();
   }
 
+  /* ---------------- Tarefas ----------------
+     Lista curta: anotar, riscar e apagar. Os dados ficam no C# (todo.json); aqui só desenha e avisa.
+     A ilha nunca pega o teclado (para não roubar o foco dos apps): ao clicar no campo, o JS manda todoFocus e o C#
+     traz a janela da ilha para a frente só enquanto a pessoa digita; ela também não fecha nesse meio-tempo. */
+  /* ---------------- Aparelhos sem fio (Devices.cs) ----------------
+     Fone, mouse, teclado, caixinha e controle conectados, com a bateria que eles informam ao Windows.
+     Ícones cheios (como as abas); o recorte usa --tab-cut (preto no fundo da ilha). */
+  const CUT = 'var(--tab-cut, #000)';
+  const DEV_ICONS = {
+    headphones: '<svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="3" y="13" width="5" height="8" rx="2" fill="currentColor"/><rect x="16" y="13" width="5" height="8" rx="2" fill="currentColor"/></svg>',
+    mouse: '<svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="6" fill="currentColor"/><path d="M12 6.2v3.6" stroke="' + CUT + '" stroke-width="2" stroke-linecap="round"/></svg>',
+    keyboard: '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3" fill="currentColor"/><path d="M6 10h.01M9.3 10h.01M12.6 10h.01M15.9 10h.01M18 10h.01M8 14h8" stroke="' + CUT + '" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    speaker: '<svg viewBox="0 0 24 24"><rect x="5.5" y="2.5" width="13" height="19" rx="3.2" fill="currentColor"/><circle cx="12" cy="14.6" r="3.4" fill="' + CUT + '"/><circle cx="12" cy="7" r="1.3" fill="' + CUT + '"/></svg>',
+    gamepad: '<svg viewBox="0 0 24 24"><path d="M7.5 7h9a5 5 0 0 1 4.8 3.6l1 3.7a2.8 2.8 0 0 1-4.8 2.6L15.6 15H8.4l-1.9 1.9a2.8 2.8 0 0 1-4.8-2.6l1-3.7A5 5 0 0 1 7.5 7z" fill="currentColor"/><path d="M7.5 9.8v3.4M5.8 11.5h3.4" stroke="' + CUT + '" stroke-width="1.6" stroke-linecap="round"/><circle cx="16.4" cy="11.5" r="1.25" fill="' + CUT + '"/></svg>',
+    device: '<svg viewBox="0 0 24 24"><path d="M7 7.5l10 9-5 4.5V3l5 4.5-10 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  };
+  let devicesOn = true, devices = [];
+  // Cor da bateria igual à do notebook: verde (100%) → amarelo-laranja → vermelho (20% ou menos)
+  const battColor = (p) => { const hue = Math.round(Math.max(0, Math.min(1, (p - 20) / 80)) * 110); return 'hsl(' + hue + ', 88%, ' + (hue > 60 ? 52 : 56) + '%)'; };
+  // Ilha fechada: até 2 aparelhos, cada um com o ícone dentro de um anel que mostra a carga (como a bateria do notebook)
+  function miniDevicesSvg(d) {
+    const p = Math.max(0, Math.min(100, Number(d.battery) || 0)), cr = 2 * Math.PI * 10;
+    return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="rgba(135,135,135,.4)" stroke-width="1.8"/>' +
+      '<circle cx="12" cy="12" r="10" fill="none" stroke="' + battColor(p) + '" stroke-width="1.8" stroke-linecap="round" ' +
+      'stroke-dasharray="' + (cr * p / 100).toFixed(2) + ' ' + cr.toFixed(2) + '" transform="rotate(-90 12 12)"/>' +
+      '<g transform="translate(6.5 6.5) scale(.458)">' + (DEV_ICONS[d.kind] || DEV_ICONS.device).replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</g></svg>';
+  }
+  let miniDevMax = 2;
+  function showMiniDevices() {
+    const box = $('miniDevs'), list = devicesOn ? devices.slice(0, miniDevMax) : [];
+    if (box.hidden !== !list.length) box.hidden = !list.length;   // só quando muda (o observador do fit não entra em laço)
+    box.replaceChildren(...list.map((d) => {
+      const s = document.createElement('span');
+      s.className = 'mini-dev';
+      s.title = d.name + ' · ' + d.battery + '%';   // nome do aparelho só no título (texto)
+      s.innerHTML = miniDevicesSvg(d);              // desenho feito aqui só com números e ícones fixos
+      return s;
+    }));
+  }
+
+  // Só os que cabem: a direita da ilha fechada também tem o clima e a onda. Confere de novo quando eles aparecem/somem.
+  function fitMiniDevices() {
+    // Cabe se nada encosta na hora: a esquerda (capa, bateria, tarefas) e a direita (aparelhos, clima, onda)
+    // (comparado com a ilha sem aparelhos: o que já estava apertado à esquerda não é culpa deles)
+    const leftGap = () => $('clock').getBoundingClientRect().left - document.querySelector('.mini-left').getBoundingClientRect().right;
+    const fits = (base) => {
+      const c = $('clock').getBoundingClientRect(), r = document.querySelector('.mini-right'), rr = r.getBoundingClientRect();
+      return leftGap() >= base - 0.5 && rr.left >= c.right + 4 && r.scrollWidth <= r.clientWidth + 1;
+    };
+    miniDevMax = 0; showMiniDevices();
+    const base = leftGap();
+    for (let n = Math.min(2, devices.length); n > 0; n--) { miniDevMax = n; showMiniDevices(); if (fits(base)) return; }
+    miniDevMax = 0; showMiniDevices();
+  }
+  // Refaz quando algo da ilha fechada aparece/some (capa, tarefas, clima, onda). As mudanças que o próprio fit faz
+  // são descartadas (takeRecords), senão ele se chamaria sem parar.
+  let fitRaf = 0;
+  const fitObs = new MutationObserver((recs) => {
+    // A onda pulsando (classe "live") não muda o espaço; ela aparecer/sumir ("playing") muda
+    const same = (m) => m.target.closest && m.target.closest('.wave') && m.attributeName === 'class' &&
+      /\bplaying\b/.test(m.oldValue || '') === m.target.classList.contains('playing');
+    if (recs.every(same)) return;
+    if (!fitRaf) fitRaf = requestAnimationFrame(() => { fitRaf = 0; fitMiniDevices(); fitObs.takeRecords(); }); });
+  fitObs.observe(document.querySelector('.mini'), { attributes: true, subtree: true, attributeOldValue: true, attributeFilter: ['class', 'hidden'] });
+
+  function showDevices() {
+    fitMiniDevices();
+    $('devsIcon').innerHTML = DEV_ICONS.headphones;
+    $('devCount').textContent = devices.length === 1 ? t('devCount1') : t('devCountN').replace('{0}', devices.length);
+    $('devList').replaceChildren(...devices.map((d) => {
+      const li = document.createElement('li');
+      const ico = document.createElement('span');
+      ico.className = 'dev-ico';
+      ico.innerHTML = DEV_ICONS[d.kind] || DEV_ICONS.device;   // ícone daqui; o nome do aparelho entra só como texto
+      const name = document.createElement('span');
+      name.className = 'dev-name'; name.textContent = d.name; name.title = d.name;
+      const bar = document.createElement('span');
+      bar.className = 'dev-bar';
+      const fill = document.createElement('i');
+      const p = Math.max(0, Math.min(100, Number(d.battery) || 0));
+      fill.style.width = p + '%'; fill.style.background = battColor(p);
+      bar.append(fill);
+      const pct = document.createElement('b');
+      pct.className = 'dev-pct'; pct.textContent = p + '%';
+      if (p <= 20) li.classList.add('low');
+      li.append(ico, name, bar, pct);
+      return li;
+    }));
+  }
+
+  let todoOn = true, todos = [], todoSeen = new Set();
+  const todo = $('todo'), todoInput = $('todoInput');
+  const CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const DEL_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  function showTodo() {
+    const sorted = [...todos].sort((a, b) => (a.done - b.done) || (a.created - b.created));
+    const done = todos.filter((x) => x.done).length;
+    $('todoCount').textContent = todos.length ? t('todoCount').replace('{0}', done).replace('{1}', todos.length) : t('todoEmpty');
+    $('todoClear').hidden = !done;
+    const pending = todos.length - done;
+    $('miniTodo').hidden = !(todoOn && pending > 0);
+    $('miniTodoN').textContent = pending;
+    $('miniTodo').title = t('todoPending').replace('{0}', pending);
+    const first = todoSeen.size === 0;
+    $('todoList').replaceChildren(...sorted.map((item) => {
+      const li = document.createElement('li');
+      li.classList.toggle('done', !!item.done);
+      if (!first && !todoSeen.has(item.id)) li.classList.add('enter');   // tarefa nova: entra caindo, como gota
+      const check = document.createElement('button');
+      check.className = 'todo-check'; check.type = 'button'; check.innerHTML = CHECK_SVG;
+      check.title = t('todoCheck'); check.setAttribute('aria-label', t('todoCheck'));
+      check.setAttribute('aria-pressed', item.done ? 'true' : 'false');
+      check.addEventListener('click', () => {   // marca na hora (sem mexer no objeto recebido) e avisa o C#
+        todos = todos.map((x) => (x.id === item.id ? { ...x, done: !x.done } : x));
+        showTodo();
+        post({ type: 'todoToggle', id: item.id });
+      });
+      const txt = document.createElement('span');
+      txt.className = 'todo-txt'; txt.textContent = item.text; txt.title = item.text;
+      const del = document.createElement('button');
+      del.className = 'todo-del'; del.type = 'button'; del.innerHTML = DEL_SVG;
+      del.title = t('todoDelete'); del.setAttribute('aria-label', t('todoDelete'));
+      del.addEventListener('click', () => { todos = todos.filter((x) => x.id !== item.id); showTodo(); post({ type: 'todoRemove', id: item.id }); });
+      li.append(check, txt, del);
+      return li;
+    }));
+    todoSeen = new Set(todos.map((x) => x.id));
+  }
+  function todoAdding(on) {
+    todo.classList.toggle('adding', on);
+    if (on) todoInput.focus(); else { todoInput.value = ''; if (document.activeElement === todoInput) todoInput.blur(); }
+  }
+  $('todoPlus').addEventListener('click', () => todoAdding(!todo.classList.contains('adding')));
+  $('todoClear').addEventListener('click', () => { todos = todos.filter((x) => !x.done); showTodo(); post({ type: 'todoClear' }); });
+  $('todoForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = todoInput.value.trim();
+    if (!text) { todoAdding(false); return; }
+    post({ type: 'todoAdd', text });
+    todoInput.value = '';   // continua no campo para a próxima
+  });
+  todoInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') todoAdding(false); });
+  todoInput.addEventListener('focus', () => post({ type: 'todoFocus', on: true }));
+  // Perder o foco NÃO fecha o campo: ao pegar o teclado, o WebView às vezes tira e devolve o foco num instante, e o
+  // campo fechava logo depois de abrir (parecia que o "+" não funcionava). Fecha só no ✕, no Esc ou com a ilha fechando.
+  todoInput.addEventListener('blur', () => post({ type: 'todoFocus', on: false }));
+  todo.addEventListener('pointerdown', (e) => e.stopPropagation());   // dentro da lista não vira arrastar página nem segurar a ilha
+
   /* ---------------- Páginas (setas ‹ › e bolinhas) ---------------- */
   let page = 0;
   const pages = () => [...document.querySelectorAll('.page')].filter((p) =>
-    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn) && (p.dataset.page !== 'weather' || weatherOn));
+    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn) && (p.dataset.page !== 'weather' || weatherOn) && (p.dataset.page !== 'todo' || todoOn) && (p.dataset.page !== 'devices' || (devicesOn && devices.length > 0)));
   function goToPage(name) {
     const i = pages().findIndex((p) => p.dataset.page === name);
     if (i >= 0) { page = i; showPages(); }
@@ -653,6 +917,81 @@
     }) : []));
     showTabs(list);
     reportHeight();
+    showQuick();
+    dotsTo(many ? list.length : 0, page);
+    todoArm();
+  }
+
+  // Página Tarefas na tela com a ilha aberta: o C# deixa a ilha aceitar foco ao ser clicada (para digitar)
+  let todoArmed = false;
+  function todoArm() {
+    const list = pages();
+    const on = mode === 'open' && todoOn && list[Math.min(page, list.length - 1)]?.dataset.page === 'todo';
+    if (on === todoArmed) return;
+    todoArmed = on;
+    post({ type: 'todoArm', on });
+  }
+
+  /* ---------------- Gota das páginas ----------------
+     As bolinhas ficam paradas (apagadas) e a da página atual é uma gota desenhada por cima (SVG com filtro "goo").
+     Trocando de página, a frente da gota corre (mola dura) e a parte de trás vem depois (mola mole): ela estica.
+     Duas gotinhas vêm ainda mais atrás; longe, o filtro as mostra soltas; perto, elas se fundem de novo na gota.
+     requestAnimationFrame só enquanto mexe; sem animação no modo leve. (Sem onda/anel piscando: pedido do Esdras.) */
+  const dg = { svg: $('dotsGoo'), pill: $('dgPill'), d1: $('dgD1'), d2: $('dgD2'), rest: $('dotsGoo').querySelector('.dg-rest') };
+  const DG_W = 14, DG_GAP = 14;   // gota parada: 14 px de largura; distância entre as bolinhas
+  let dgCount = 0, dgP = null, dgV = null, dgGoal = 0, dgRaf = 0, dgT = 0;
+  function dotsTo(count, index) {
+    if (!count) { dg.svg.style.display = 'none'; dgCount = 0; return; }
+    const dots = $('dots');
+    dg.svg.style.display = '';
+    const w = (count - 1) * DG_GAP + DG_W + 16;
+    dg.svg.setAttribute('width', w); dg.svg.setAttribute('height', 22);
+    dg.svg.setAttribute('viewBox', `0 0 ${w} 22`);
+    dg.svg.style.left = (dots.offsetLeft + dots.offsetWidth / 2 - w / 2) + 'px';
+    dg.svg.style.top = dots.offsetTop + 'px';
+    const x0 = 8 + DG_W / 2;   // centro da primeira bolinha
+    if (count !== dgCount) {
+      dgCount = count;
+      dg.rest.replaceChildren(...Array.from({ length: count }, (_, i) => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', x0 + i * DG_GAP); c.setAttribute('cy', 11); c.setAttribute('r', 2.5);
+        return c;
+      }));
+      dgP = null;
+    }
+    dgGoal = x0 + index * DG_GAP;
+    const still = document.documentElement.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!dgP || still) { dgP = { h: dgGoal, t: dgGoal, a: dgGoal, b: dgGoal }; dgV = { h: 0, t: 0, a: 0, b: 0 }; dgDraw(); return; }
+    if (!dgRaf) { dgT = performance.now(); dgRaf = requestAnimationFrame(dgStep); }
+  }
+  // frente dura, trás mole, gotinhas mais moles ainda
+  const DG_SPRINGS = { h: [520, 34], t: [200, 22], a: [130, 15], b: [90, 12] };
+  function dgStep(now) {
+    const sec = Math.max(0, Math.min(0.05, (now - dgT) / 1000));
+    dgT = now;
+    for (let left = sec; left > 1e-6; left -= 1 / 480) {
+      const dt = Math.min(1 / 480, left);
+      for (const k in DG_SPRINGS) {
+        const [K, C] = DG_SPRINGS[k];
+        dgV[k] += (-K * (dgP[k] - dgGoal) - C * dgV[k]) * dt;
+        dgP[k] += dgV[k] * dt;
+      }
+    }
+    dgDraw();
+    const moving = Object.keys(dgP).some((k) => Math.abs(dgP[k] - dgGoal) > 0.2 || Math.abs(dgV[k]) > 2);
+    if (moving) dgRaf = requestAnimationFrame(dgStep); else { dgRaf = 0; dgP = { h: dgGoal, t: dgGoal, a: dgGoal, b: dgGoal }; dgDraw(); }
+  }
+  function dgDraw() {
+    const l = Math.min(dgP.h, dgP.t) - DG_W / 2, r = Math.max(dgP.h, dgP.t) + DG_W / 2;
+    const stretch = (r - l) - DG_W;
+    const hgt = Math.max(3.4, 5 - stretch * 0.04);   // esticada, fica mais fina
+    dg.pill.setAttribute('x', l.toFixed(2)); dg.pill.setAttribute('width', (r - l).toFixed(2));
+    dg.pill.setAttribute('y', (11 - hgt / 2).toFixed(2)); dg.pill.setAttribute('height', hgt.toFixed(2));
+    dg.pill.setAttribute('rx', (hgt / 2).toFixed(2)); dg.pill.setAttribute('ry', (hgt / 2).toFixed(2));
+    // gotinhas: só aparecem atrás da gota (paradas, ficam escondidas dentro dela)
+    const dir = Math.sign(dgGoal - dgP.t) || 1;
+    dg.d1.setAttribute('cx', (dgP.a - dir * 3).toFixed(2)); dg.d1.setAttribute('cy', 11);
+    dg.d2.setAttribute('cx', (dgP.b - dir * 5).toFixed(2)); dg.d2.setAttribute('cy', 11);
   }
 
   /* ---------------- Abas (tema Vidro) ----------------
@@ -666,8 +1005,10 @@
     water: '<svg viewBox="0 0 24 24"><path d="M12 2.6c3.8 4.5 6.6 8 6.6 11.4a6.6 6.6 0 0 1-13.2 0C5.4 10.6 8.2 7.1 12 2.6z" fill="currentColor"/></svg>',
     agenda: '<svg viewBox="0 0 24 24"><path d="M7 2.5a1 1 0 0 1 1 1V5h8V3.5a1 1 0 1 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.5a1 1 0 0 1 1-1z" fill="currentColor"/><path d="M3 9.5h18" stroke="var(--tab-cut, #000)" stroke-width="1.6"/></svg>',
     weather: '<svg viewBox="0 0 24 24"><path d="M7 19h10.6a4.4 4.4 0 0 0 .6-8.76A6.4 6.4 0 0 0 5.8 11.5 3.8 3.8 0 0 0 7 19z" fill="currentColor"/></svg>',
+    devices: '<svg viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="3" y="13" width="5" height="8" rx="2" fill="currentColor"/><rect x="16" y="13" width="5" height="8" rx="2" fill="currentColor"/></svg>',
   };
-  const TAB_LABELS = { media: 'tabMedia', focus: 'tabFocus', water: 'tabWater', agenda: 'tabAgenda', weather: 'tabWeather' };
+  TAB_ICONS.todo = '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="tdTa"><rect width="24" height="24" fill="#fff"/><path d="M5.4 12l3.3 3.3L19.8 4.2" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><rect x="2.5" y="6.5" width="15" height="15" rx="4.5" fill="currentColor" mask="url(#tdTa)"/></svg>';
+  const TAB_LABELS = { media: 'tabMedia', focus: 'tabFocus', water: 'tabWater', agenda: 'tabAgenda', weather: 'tabWeather', todo: 'tabTodo', devices: 'tabDevices' };
   let tabKey = '', tabPos = null, tabGoal = null, tabVel = { l: 0, r: 0 }, tabRaf = 0, tabT = 0, tabLead = 1;
   function showTabs(list) {
     const bar = $('tabbar');
@@ -751,6 +1092,8 @@
   let wheelAcc = 0, swipeAcc = 0, swipeLock = 0;
   document.addEventListener('wheel', (e) => {
     if (mode !== 'open') return;
+    const tl = e.target.closest && e.target.closest('.todo-list, .devs-list');
+    if (tl && tl.scrollHeight > tl.clientHeight + 1) return;   // lista comprida (tarefas, aparelhos): a rodinha rola ela
     e.preventDefault();
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {   // touchpad: dois dedos para o lado
       swipeAcc += e.deltaX;
@@ -850,6 +1193,7 @@
     lastNotice = n.icon || '';
     island.classList.toggle('greeting', n.icon === 'greet');   // "bom dia": do tamanho da ilha com o mascote
     island.classList.toggle('walking', n.icon === 'walk');     // levantar: ilha mais alta, com a cena do bonequinho
+    island.classList.toggle('pomo-alert', on && n.kind === 'pomo');   // fim do foco/pausa: aviso alto, com destaque
     if (n.icon === 'walk') requestAnimationFrame(playWalk);   // a cena começa do início (depois de o aviso aparecer)
     $('notice').hidden = !on;
     if (!on) return;
@@ -859,7 +1203,7 @@
     const bar = $('osdBar');   // volume: barrinha com o nível
     bar.hidden = !((n.kind === 'osd' || n.kind === 'act') && n.level >= 0);
     if (!bar.hidden) bar.firstElementChild.style.width = Math.round(n.level * 100) + '%';
-    $('noticeIcon').innerHTML = n.icon === 'greet' ? '' : NOTICE_ICONS[n.icon] || NOTICE_ICONS.bell;   // ícones fixos daqui; o "bom dia" é só a frase
+    $('noticeIcon').innerHTML = n.icon === 'greet' ? '' : NOTICE_ICONS[n.icon] || (String(n.icon).startsWith('dev-') ? '<span class="dev-notice-ico">' + (DEV_ICONS[n.icon.slice(4)] || DEV_ICONS.device) + '</span>' : NOTICE_ICONS.bell);   // ícones fixos daqui; o "bom dia" é só a frase
     if (n.img && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(n.img)) {   // notificação de outro app: o ícone dele (só imagem embutida)
       const img = document.createElement('img');
       img.src = n.img;
@@ -881,10 +1225,12 @@
   document.documentElement.addEventListener('mouseleave', () => post({ type: 'hover', on: false }));
 
   function setMode(m) {
+    if (m !== 'open' && todo.classList.contains('adding')) todoAdding(false);   // fechou a ilha: larga o campo
+    setTimeout(todoArm, 0);
     mode = m;
     island.classList.remove('tucked', 'closed', 'idle', 'alerting', 'open');
     island.classList.add(m === 'notice' ? 'alerting' : m);   // "notice" vira "alerting": a classe .notice já tem outro uso
-    if (m === 'open') { showProgress(); showFocusTime(); }
+    if (m === 'open') { showProgress(); showFocusTime(); aimBubble(); }
     if (m !== 'closed' && m !== 'idle') wake();   // abriu, recolheu ou chegou aviso: zera o tempo ocioso
     syncProgressTimer();
     syncFocusTimer();
@@ -905,6 +1251,142 @@
      página, formato), a mola leva a forma até lá; o requestAnimationFrame só roda enquanto ela se mexe.
      Rígida e pouco elástica, medida no Alcove: chega em ~250 ms e passa só ~2% do tamanho. Interrompida no meio
      (o mouse saiu), ela muda de direção sem tranco, porque continua da velocidade em que estava. */
+  /* ---------------- Bolha do Pomodoro: gota líquida ----------------
+     O corpo da bolha é uma gota desenhada na mesma camada (e cor) da ilha. Quando as duas chegam perto, nasce um
+     "pescoço" entre elas que estica e se rompe, como duas gotas se juntando (metaball). Uma mola mais mole que a da
+     ilha leva a gota (x, y, raio) ao lugar do estado: fechada = ao lado; aberta = o botão do player (ou o chip);
+     escondida = para dentro da ilha. O anel e o relógio andam junto; quando a gota chega, o botão aparece no lugar.
+     O requestAnimationFrame só roda enquanto ela se mexe. */
+  const BLOB_K = 170, BLOB_C = 14;   // mais mole que a ilha: a gota fica para trás e o pescoço estica
+  const BLOB_C_REST = 24;             // voltando para o lado: quase sem passar do ponto (amortecimento ~0,9)
+  const blobNeck = $('blobNeck'), blobBody = $('blobBody'), bubbleEl = $('pomoBubble');
+  let blob = null, blobGoal = null, blobVel = { x: 0, y: 0, r: 0 }, blobRaf = 0, blobT = 0;
+  let blobLinked = false;   // ligada à ilha pelo pescoço (tensão superficial: liga encostando, solta só bem esticada)
+  const shapeTop = (h) => (document.documentElement.classList.contains('at-bottom') ? island.offsetHeight - h : 0);
+  const restOf = () => ({ x: bubbleEl.offsetLeft + bubbleEl.offsetWidth / 2, y: bubbleEl.offsetTop + bubbleEl.offsetHeight / 2 });
+
+  function blobTarget() {
+    const on = island.classList.contains('pomo-on');
+    if (on && (mode === 'closed' || mode === 'idle')) return { ...restOf(), r: 25, show: true };
+    if (on && mode === 'open') {
+      const q = island.classList.contains('quick-pomo') && centerIn($('pomoQuick'));
+      if (q) return { ...q, r: 25, show: true, land: true };   // mesmo tamanho do botão: a troca não pula
+      const chip = $('pomoChip'), c = centerIn(chip);
+      if (c) return { x: c.x - chip.offsetWidth / 2 + 10, y: c.y, r: 15, show: true, land: true };
+    }
+    const g = readGoal();   // escondida: entra pela borda da direita e some lá dentro
+    // Escondida (recolhida em cima de um app, aviso, Pomodoro parado): a gota encolhe até sumir enquanto entra na ilha.
+    // Antes ela ficava com 22 px de raio e, com a ilha recolhida (6 px de altura), ficava pendurada embaixo do risquinho.
+    return { x: island.offsetWidth / 2 + g.w / 2 - 34, y: shapeTop(g.h) + Math.min(25, g.h / 2), r: 0, show: false };
+  }
+
+  function blobTo() {
+    if (!bubbleEl || !cur) return;
+    blobGoal = blobTarget();
+    const still = document.documentElement.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!blob || still) { blob = { x: blobGoal.x, y: blobGoal.y, r: blobGoal.r }; blobVel = { x: 0, y: 0, r: 0 }; blobPaint(); return; }
+    if (!blobRaf) { blobT = performance.now(); blobRaf = requestAnimationFrame(blobStep); }
+  }
+
+  function blobStep(now) {
+    const sec = Math.max(0, Math.min(0.05, (now - blobT) / 1000));
+    blobT = now;
+    if (springRaf) blobGoal = blobTarget();   // a ilha ainda está mudando de tamanho: o alvo anda junto
+    // Voltando para o lado da ilha fechada (ou sumindo): mola bem amortecida, sem passar do ponto. Mole, ela passava
+    // ~20 px do lugar, saía da área desenhável (borda da janela / topo da tela) e aparecia cortada.
+    integrate(blob, blobVel, blobGoal, ['x', 'y', 'r'], BLOB_K, blobGoal.land ? BLOB_C : BLOB_C_REST, sec);
+    let moving = false;
+    for (const k of ['x', 'y', 'r']) if (Math.abs(blobVel[k]) > 0.3 || Math.abs(blob[k] - blobGoal[k]) > 0.3) moving = true;
+    if (!moving && !springRaf) {
+      blobLinked = blobLinked && blobGoal.show;
+      blob = { x: blobGoal.x, y: blobGoal.y, r: blobGoal.r }; blobVel = { x: 0, y: 0, r: 0 }; blobRaf = 0;
+      blobPaint();
+      animDone();   // a gota chegou: se a ilha também já parou, a janela pode encolher
+      return;
+    }
+    blobPaint();
+    blobRaf = requestAnimationFrame(blobStep);
+  }
+
+  // Raio desenhado: nunca maior que o da bolha (25), senão passa da janela da ilha fechada e é cortado
+  const blobR = () => Math.max(0, Math.min(25, blob.r));
+
+  // A gota e o pescoço (coordenadas da forma)
+  function drawBlob() {
+    if (!blob || !cur) return;
+    const { w, h } = cur;
+    const ox = island.offsetWidth / 2 - w / 2, oy = shapeTop(h);
+    const cx = blob.x - ox, cy = blob.y - oy, br = blobR();
+    // ponto mais perto da ilha (retângulo de cantos redondos): distância do centro da gota e direção para fora
+    const hx = w / 2, hy = h / 2, rr = Math.max(0, Math.min(cur.r, hx, hy));
+    const px = cx - hx, py = cy - hy;
+    const qx = Math.abs(px) - (hx - rr), qy = Math.abs(py) - (hy - rr);
+    let dist, nx, ny;
+    if (qx > 0 && qy > 0) { const l = Math.hypot(qx, qy); dist = l - rr; nx = Math.sign(px) * qx / l; ny = Math.sign(py) * qy / l; }
+    else if (qx > qy) { dist = qx - rr; nx = Math.sign(px) || 1; ny = 0; }
+    else { dist = qy - rr; nx = 0; ny = Math.sign(py) || 1; }
+    const gap = dist - br;                 // espaço entre a gota e a ilha (negativo = já encostou)
+    if (dist <= -br + 0.5 || br < 1) {     // inteira dentro da ilha (ou sem tamanho): nada a desenhar
+      blobBody.setAttribute('d', ''); blobNeck.setAttribute('d', ''); return;
+    }
+    const f = (v) => v.toFixed(1);
+    // Corpo: estica no sentido em que a gota anda (e achata do outro lado), como um pingo
+    const speed = Math.hypot(blobVel.x, blobVel.y);
+    const st = Math.min(0.32, speed * 0.0009);
+    const rx = br * (1 + st), ry = br / Math.sqrt(1 + st);
+    const ang = speed > 1 ? Math.atan2(blobVel.y, blobVel.x) : 0;
+    const ex = Math.cos(ang) * rx, ey = Math.sin(ang) * rx, deg = ang * 180 / Math.PI;
+    blobBody.setAttribute('d', `M${f(cx - ex)},${f(cy - ey)} A${f(rx)},${f(ry)} ${f(deg)} 1,0 ${f(cx + ex)},${f(cy + ey)} A${f(rx)},${f(ry)} ${f(deg)} 1,0 ${f(cx - ex)},${f(cy - ey)}Z`);
+    // O pescoço aguenta mais esticado quando a gota está andando rápido (e se rompe quando ela freia)
+    // Liga quando encosta; depois de ligada, o pescoço aguenta esticar (mais ainda com a gota andando rápido)
+    // e só se rompe quando ela freia: aí a gota dá uma balançada
+    const reach = 5 + Math.min(46, speed * 0.1);
+    if (!blobLinked && gap < 3) blobLinked = true;
+    else if (blobLinked && gap >= reach) {
+      blobLinked = false;
+      // Balançada ao romper: só no meio do caminho (ilha aberta). Voltando para o lado da ilha fechada ela inchava
+      // ~5 px, passava dos 50 px da janela (cortada) e ficava tremendo no lugar (Esdras, 17/11).
+      if (blobGoal && blobGoal.land) blobVel.r += 60;
+      if (!blobRaf && blobGoal) { blobT = performance.now(); blobRaf = requestAnimationFrame(blobStep); }
+    }
+    if (!blobLinked) { blobNeck.setAttribute('d', ''); return; }
+    let k = gap <= 0 ? 1 : Math.max(0, 1 - gap / Math.max(reach, 12));
+    k = k * k * (3 - 2 * k);
+    const tx = -ny, ty = nx;                        // ao longo da parede
+    const g = Math.max(gap, 0);
+    const Wx = cx - nx * dist, Wy = cy - ny * dist;  // ponto da parede
+    const th = (0.28 + 0.58 * k) * Math.PI / 2;      // quanto da gota o pescoço abraça
+    const wy = br * (0.22 + 0.95 * k);                // largura do pescoço na parede (encostando: um "menisco" largo)
+    const sn = Math.sin(th), cs = Math.cos(th);
+    const side = (s) => {
+      const Ax = Wx - nx * 2 + tx * wy * s, Ay = Wy - ny * 2 + ty * wy * s;                  // na parede (um pouco para dentro)
+      const Px = cx + br * (-nx * cs + tx * sn * s), Py = cy + br * (-ny * cs + ty * sn * s); // na gota
+      const Tx = -(nx * sn + tx * cs * s), Ty = -(ny * sn + ty * cs * s);                     // tangente da gota, rumo à parede
+      // saindo da parede: encostado, quase deitado nela (menisco); esticado, para fora e para dentro (cintura fina)
+      const lean = 0.25 + 1.6 * (1 - k);
+      const dl = Math.hypot(lean, 1);
+      const h1 = g * 0.45 + wy * 0.55 + 1, h2 = g * 0.45 + br * 0.25 + 1;
+      return {
+        Ax, Ay, Px, Py,
+        c1x: Ax + (nx * lean - tx * s) / dl * h1, c1y: Ay + (ny * lean - ty * s) / dl * h1,
+        c2x: Px + Tx * h2, c2y: Py + Ty * h2,
+      };
+    };
+    const a = side(1), b = side(-1);
+    blobNeck.setAttribute('d', `M${f(a.Ax)},${f(a.Ay)} C${f(a.c1x)},${f(a.c1y)} ${f(a.c2x)},${f(a.c2y)} ${f(a.Px)},${f(a.Py)}` +
+      ` L${f(cx)},${f(cy)} L${f(b.Px)},${f(b.Py)} C${f(b.c2x)},${f(b.c2y)} ${f(b.c1x)},${f(b.c1y)} ${f(b.Ax)},${f(b.Ay)}Z`);
+  }
+
+  // Gota + anel e relógio por cima; quando chega no botão, ele aparece no lugar
+  function blobPaint() {
+    drawBlob();
+    const rest = restOf(), s = blobR() / 25;
+    bubbleEl.style.transform = `translate(${(blob.x - rest.x).toFixed(1)}px, ${(blob.y - rest.y).toFixed(1)}px) scale(${s.toFixed(3)})`;
+    const landed = !!blobGoal.land && Math.hypot(blob.x - blobGoal.x, blob.y - blobGoal.y) < 3;
+    if (landed !== island.classList.contains('landed')) island.classList.toggle('landed', landed);
+    bubbleEl.style.opacity = blobGoal.show && !landed ? '1' : '0';
+  }
+
   const SPRING_K = 380, SPRING_C = 28;   // rigidez e amortecimento (massa 1)
   const shapeBox = document.querySelector('.shape'), shapeSvg = document.querySelector('.shape-svg'), shapePath = $('shapePath');
   const KEYS = ['w', 'h', 'r', 'e'];
@@ -931,40 +1413,93 @@
     shapeBox.style.width = w + 'px';    // a caixa acompanha a mola (centralizada pelo CSS), o desenho vai junto
     shapeBox.style.height = h + 'px';
     const L = e, R = e + w;
+    // Líquido: enquanto a forma muda de tamanho, as bordas que andam embarrigam como uma gota (para fora crescendo,
+    // para dentro encolhendo) e voltam retas quando ela para. Para fora, nunca passa do tamanho final (a janela não corta).
+    const bottom = document.documentElement.classList.contains('at-bottom');
+    // Mais contido (o Esdras viu calombos ao abrir/fechar do risquinho): no máx. 5/6 px, e nada indo para o risquinho
+    // ou saindo dele (de 6 px para 160 px a velocidade é enorme e a forma ficava toda ondulada).
+    const tinyEnd = h < 16 || (goal && goal.h < 16);
+    let bx = tinyEnd ? 0 : Math.max(-5, Math.min(5, vel.w * 0.005));   // laterais
+    let by = tinyEnd ? 0 : Math.max(-6, Math.min(6, vel.h * 0.008));   // borda que cresce na altura (embaixo da tela: a de cima)
+    if (goal && bx > 0) bx = Math.min(bx, Math.max(0, (goal.w - w) / 2));
+    if (goal && by > 0) by = Math.min(by, Math.max(0, goal.h - h) + 8);
+    const bb = bottom ? 0 : by, tb = bottom ? -by : 0;
+    const f = (v) => +v.toFixed(2);
+    // reta de (x1,y1) a (x2,y2) que embarriga (ox, oy) no meio
+    const edge = (x1, y1, x2, y2, ox, oy) => (Math.abs(ox) < 0.05 && Math.abs(oy) < 0.05) ? ` L${f(x2)},${f(y2)}`
+      : ` C${f(x1 + (x2 - x1) / 3 + ox * 1.33)},${f(y1 + (y2 - y1) / 3 + oy * 1.33)} ${f(x1 + 2 * (x2 - x1) / 3 + ox * 1.33)},${f(y1 + 2 * (y2 - y1) / 3 + oy * 1.33)} ${f(x2)},${f(y2)}`;
     let d;
     if (floating) {   // pílula solta: quatro cantos contínuos
       const [p, c] = corner(r, Math.min(w, h) / 2);
-      d = `M${L + p},0 H${R - p} C${R - c},0 ${R},${c} ${R},${p} V${h - p} C${R},${h - c} ${R - c},${h} ${R - p},${h}` +
-          ` H${L + p} C${L + c},${h} ${L},${h - c} ${L},${h - p} V${p} C${L},${c} ${L + c},0 ${L + p},0 Z`;
+      d = `M${f(L + p)},0` + edge(L + p, 0, R - p, 0, 0, tb) + ` C${f(R - c)},0 ${f(R)},${f(c)} ${f(R)},${f(p)}` +
+          edge(R, p, R, h - p, bx, 0) + ` C${f(R)},${f(h - c)} ${f(R - c)},${f(h)} ${f(R - p)},${f(h)}` +
+          edge(R - p, h, L + p, h, 0, bb) + ` C${f(L + c)},${f(h)} ${f(L)},${f(h - c)} ${f(L)},${f(h - p)}` +
+          edge(L, h - p, L, p, -bx, 0) + ` C${f(L)},${f(c)} ${f(L + c)},0 ${f(L + p)},0 Z`;
     } else {          // grudada no topo: borda de cima reta, orelhas côncavas ligando à borda, cantos de baixo contínuos
       const [p, c] = corner(r, Math.min(w / 2, h));
-      d = `M0,0 H${R + e} Q${R},0 ${R},${e} V${h - p} C${R},${h - c} ${R - c},${h} ${R - p},${h}` +
-          ` H${L + p} C${L + c},${h} ${L},${h - c} ${L},${h - p} V${e} Q${L},0 0,0 Z`;
+      d = `M0,0 H${f(R + e)} Q${f(R)},0 ${f(R)},${f(e)}` + edge(R, e, R, h - p, bx, 0) +
+          ` C${f(R)},${f(h - c)} ${f(R - c)},${f(h)} ${f(R - p)},${f(h)}` + edge(R - p, h, L + p, h, 0, bb) +
+          ` C${f(L + c)},${f(h)} ${f(L)},${f(h - c)} ${f(L)},${f(h - p)}` + edge(L, h - p, L, e, -bx, 0) + ` Q${f(L)},0 0,0 Z`;
     }
     shapePath.setAttribute('d', d);
+    drawBlob();   // o pescoço da gota acompanha a borda da ilha
+  }
+
+  // O C# só deixa a janela do tamanho exato quando a forma E a gota do Pomodoro pararam. Antes ia só pela forma:
+  // a gota (mola mais mole) ainda estava voltando para o lado da ilha e a janela encolhia por cima dela, cortando
+  // e fazendo piscar (vídeo do Esdras, 17/11). A gota começa no setTimeout do springTo: espera um quadro antes de decidir.
+  function animDone() {
+    if (springRaf || blobRaf) return;
+    requestAnimationFrame(() => { if (!springRaf && !blobRaf) post({ type: 'animDone', seq: modeSeq }); });
   }
 
   function springTo() {
     goal = readGoal();
+    setTimeout(blobTo, 0);   // a gota do Pomodoro vai para o lugar do estado novo (depois do layout)
     const still = document.documentElement.classList.contains('lite') || matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!cur || still) { cur = { ...goal }; drawShape(); post({ type: 'animDone', seq: modeSeq }); return; }
     if (!springRaf) { springT = performance.now(); springRaf = requestAnimationFrame(springStep); }
   }
 
-  function springStep(now) {
-    const dt = Math.min(0.032, (now - springT) / 1000);   // aba escondida e volta: não dá um salto
-    springT = now;
-    let moving = false;
-    for (const k of KEYS) {
-      const a = -SPRING_K * (cur[k] - goal[k]) - SPRING_C * vel[k];
-      vel[k] += a * dt;
-      cur[k] += vel[k] * dt;
-      if (Math.abs(vel[k]) > 0.3 || Math.abs(cur[k] - goal[k]) > 0.3) moving = true;
+  // Passos fixos de 1/480 s: o movimento é o mesmo em 60, 144 ou 240 Hz (mais quadros = só mais liso),
+  // e um quadro atrasado não deixa a animação em câmera lenta (anda o tempo que passou, até 50 ms)
+  const PHYS_STEP = 1 / 480;
+
+  // Quantos quadros a ilha consegue de verdade (o requestAnimationFrame segue o monitor). No fim de cada animação,
+  // compara com a taxa do monitor (o C# manda "hz") e avisa o C#, que anota no log do --dev.
+  let monitorHz = 60, frameTimes = [], lastFpsSent = 0;
+  function frameStat(sec) { if (sec > 0 && frameTimes.length < 240) frameTimes.push(sec); }
+  function frameReport() {
+    const t = frameTimes; frameTimes = [];
+    if (t.length < 8) return;
+    t.sort((a, b) => a - b);
+    const fps = Math.round(1 / t[t.length >> 1]);
+    if (Math.abs(fps - lastFpsSent) < 4) return;
+    lastFpsSent = fps;
+    post({ type: 'fps', fps, hz: monitorHz });
+  }
+  function integrate(state, velo, target, keys, K, C, seconds) {
+    for (let left = seconds; left > 1e-6; left -= PHYS_STEP) {
+      const dt = Math.min(PHYS_STEP, left);
+      for (const k of keys) {
+        velo[k] += (-K * (state[k] - target[k]) - C * velo[k]) * dt;
+        state[k] += velo[k] * dt;
+      }
     }
+  }
+
+  function springStep(now) {
+    const sec = Math.max(0, Math.min(0.05, (now - springT) / 1000));   // aba escondida e volta: não dá um salto
+    springT = now;
+    frameStat(sec);
+    integrate(cur, vel, goal, KEYS, SPRING_K, SPRING_C, sec);
+    let moving = false;
+    for (const k of KEYS) if (Math.abs(vel[k]) > 0.3 || Math.abs(cur[k] - goal[k]) > 0.3) moving = true;
     if (!moving) {
       cur = { ...goal }; vel = { w: 0, h: 0, r: 0, e: 0 }; springRaf = 0;
+      frameReport();
       drawShape();
-      post({ type: 'animDone', seq: modeSeq });   // o C# já pode deixar a janela do tamanho exato
+      animDone();
       return;
     }
     drawShape();
@@ -991,6 +1526,7 @@
         tabPos = null; tabKey = ''; setTimeout(showPages, 0);                   // tema (Configurações → Temas)           // embaixo (acima da barra de tarefas): cresce para cima
         pomoOn = m.pomodoro !== false;
         V.applyI18n(lang);
+        showMonitors();
         tickClock();
         showMedia();
         showWater();
@@ -1001,14 +1537,15 @@
         break;
       case 'pomodoro': onPomodoro(m); break;
       case 'pet': if (m.on) rest(m.ms || 0); else wake(); break;   // mascote: PC parado ou passadinha
-      case 'mode':    modeSeq = m.seq || 0; setMode(m.mode); break;
+      case 'mode':    modeSeq = m.seq || 0; setMode(m.mode); if (m.mode !== 'open') closeVol(); break;
       case 'media': {
         const changed = media && m.media && media.title !== m.media.title;
         media = m.media; showMedia();
         if (changed && mode === 'open') { const t = document.querySelector('.track'); t.classList.remove('swap'); void t.offsetWidth; t.classList.add('swap'); }
         break;
       }
-      case 'volume':  showVolume(m); showMute(m.muted); break;
+      case 'volume':  if (volOpen) { vpShow(m.v, m.muted); vpIdle(); } else showVolume(m); showMute(m.muted); break;
+      case 'volLevel': vpShow(m.v, m.muted); showMute(m.muted); break;
       case 'mute':    showMute(m.muted); break;
       case 'level':   onLevel(m.v); break;
       case 'privacy': showPrivacy(m); break;
@@ -1022,6 +1559,10 @@
       case 'battery': battery = m; showBattery(); break;
       case 'sound':   soundOn = m.on; showWave(); break;
       case 'notice':  showNotice(m); break;
+      case 'todo':    todoOn = m.on !== false; todos = m.items || []; showTodo(); showPages(); break;
+      case 'devices': devicesOn = m.on !== false; devices = m.items || []; showDevices(); showPages(); break;
+      case 'monitors': showMonitors(m); break;
+      case 'hz':      monitorHz = m.hz || 60; lastFpsSent = 0; break;   // taxa do monitor onde a ilha está
     }
   });
 

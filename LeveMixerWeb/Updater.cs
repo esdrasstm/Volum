@@ -65,6 +65,7 @@ static class Updater
     /// <param name="beforeRestart">Esconde o ícone da bandeja antes de o app fechar.</param>
     public static void Start(Func<bool> canRestart, Action beforeRestart)
     {
+        s_beforeRestart = beforeRestart;
         if (!IsInstalled || Program.DevMode) return;
 
         var timer = new Timer { Interval = 60_000 };          // primeira busca: 1 min depois de abrir
@@ -86,6 +87,37 @@ static class Updater
             timer.Start();
         };
         timer.Start();
+    }
+
+    static Action? s_beforeRestart;
+
+    /// <summary>Configurações → Sobre → "Procurar atualização": confere agora e, se tiver, já baixa.
+    /// Devolve "latest", "ready" (com a versão), "error" ou "dev" (cópia que não foi instalada).</summary>
+    public static async Task<(string state, string? version)> CheckNowAsync()
+    {
+        if (!IsInstalled) return ("dev", null);
+        while (_busy) await Task.Delay(300);   // a busca automática está rodando: espera ela
+        if (_ready != null) return ("ready", _ready.TargetFullRelease.Version.ToString());
+        _busy = true;
+        try
+        {
+            var info = await Manager.CheckForUpdatesAsync();
+            if (info == null) return ("latest", null);
+            await Manager.DownloadUpdatesAsync(info);
+            _ready = info;
+            return ("ready", info.TargetFullRelease.Version.ToString());
+        }
+        catch { return ("error", null); }
+        finally { _busy = false; }
+    }
+
+    /// <summary>"Reiniciar e atualizar": fecha, troca os arquivos e abre a versão nova (como a atualização silenciosa).</summary>
+    public static void ApplyNow()
+    {
+        if (_ready == null) return;
+        s_beforeRestart?.Invoke();
+        Manager.WaitExitThenApplyUpdates(_ready, silent: true, restart: true);
+        Application.Exit();
     }
 
     static async Task CheckAsync()

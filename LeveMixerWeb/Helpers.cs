@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
@@ -133,6 +134,7 @@ static class Strings
         ["pomoDone"]      = new[] { "Pausa acabou", "Break's over", "Terminó el descanso" },
         ["pomoDoneText"]  = new[] { "Bora para mais um foco?", "Ready for another focus?", "¿Otro rato de enfoque?" },
         ["pomoGo"]        = new[] { "Focar", "Focus", "Enfocar" },
+        ["pomoOk"]        = new[] { "Beleza!", "Got it!", "¡Vale!" },
         ["standTitle"]    = new[] { "Hora de levantar", "Time to stand up", "Hora de levantarse" },
         ["standText"]     = new[] { "Sentado há {0}: dê uma volta", "Sitting for {0}: take a walk", "Sentado hace {0}: da una vuelta" },
         ["standOk"]       = new[] { "Levantei", "I'm up", "Ya me levanté" },
@@ -154,6 +156,8 @@ static class Strings
         ["actOnBattery"]  = new[] { "Na bateria", "On battery", "Con batería" },
         ["actHeadphones"] = new[] { "Fone conectado", "Headphones connected", "Auriculares conectados" },
         ["actOutput"]     = new[] { "Saída de áudio", "Audio output", "Salida de audio" },
+        ["devConnected"]  = new[] { "Conectado · {0}%", "Connected · {0}%", "Conectado · {0}%" },
+        ["devLow"]        = new[] { "Bateria fraca", "Low battery", "Batería baja" },
         ["actMicInUse"]   = new[] { "Microfone em uso", "Microphone in use", "Micrófono en uso" },
         ["actCamInUse"]   = new[] { "Câmera em uso", "Camera in use", "Cámara en uso" },
         ["calSoon"]       = new[] { "Em {0} min", "In {0} min", "En {0} min" },
@@ -369,6 +373,129 @@ static class DropSound
             double env = Math.Min(1, t / 0.002) * Math.Exp(-t / 0.04);   // 2 ms de subida (sem estalo)
             if (env < 0.0005 && t > 0.05) break;
             data[i] += gain * env * Math.Sin(phase);
+        }
+    }
+}
+
+/// <summary>
+/// Sons de confirmação dos cliques (água e tarefas) com pouca espera: saída WASAPI do Windows (NAudio) em vez do
+/// SoundPlayer (que demora ~100 ms ou mais para começar). A saída abre quando a ilha ou o mixer abrem (Warm) e fecha
+/// sozinha 15 s depois do último som, para não ficar com o áudio aberto à toa. Sons gerados por código, mais cheios
+/// e mais altos que o tique do slider (que continua no TickSound). Vários sons podem tocar juntos (mixer de amostras).
+/// </summary>
+static class UiSound
+{
+    public enum Kind { WaterAdd, WaterRemove, TaskDone, TaskUndo }
+
+    static readonly object s_lock = new();
+    static NAudio.Wave.WasapiOut? s_out;
+    static NAudio.Wave.SampleProviders.MixingSampleProvider? s_mix;
+    static System.Threading.Timer? s_idle;
+    static int s_rate, s_channels;
+    static readonly Dictionary<Kind, float[]> s_mono = new();   // som pronto (mono) na taxa da saída atual
+
+    /// <summary>Abre a saída de áudio antes do clique (a ilha ou o mixer abriram): o primeiro som já sai na hora.</summary>
+    public static void Warm() => System.Threading.ThreadPool.QueueUserWorkItem(_ => { lock (s_lock) { try { Ensure(); } catch { Close(); } } });
+
+    public static void Play(Kind kind)
+    {
+        System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+        {
+            lock (s_lock)
+            {
+                try
+                {
+                    Ensure();
+                    if (!s_mono.TryGetValue(kind, out var mono)) s_mono[kind] = mono = Make(kind, s_rate);
+                    s_mix!.AddMixerInput(new Clip(mono, s_channels, s_mix.WaveFormat));
+                }
+                catch { Close(); }   // sem dispositivo de áudio (ou trocou): fica em silêncio e tenta de novo no próximo
+            }
+        });
+    }
+
+    static void Ensure()
+    {
+        s_idle ??= new System.Threading.Timer(_ => { lock (s_lock) Close(); });
+        s_idle.Change(15000, System.Threading.Timeout.Infinite);
+        if (s_out != null && s_out.PlaybackState == NAudio.Wave.PlaybackState.Playing) return;
+        Close();
+        using (var en = new NAudio.CoreAudioApi.MMDeviceEnumerator())
+        using (var dev = en.GetDefaultAudioEndpoint(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.Role.Multimedia))
+        {
+            var mf = dev.AudioClient.MixFormat;   // formato do próprio Windows: sem conversão no meio
+            if (mf.SampleRate != s_rate) s_mono.Clear();
+            s_rate = mf.SampleRate; s_channels = Math.Clamp(mf.Channels, 1, 8);
+        }
+        s_mix = new NAudio.Wave.SampleProviders.MixingSampleProvider(NAudio.Wave.WaveFormat.CreateIeeeFloatWaveFormat(s_rate, s_channels)) { ReadFully = true };
+        s_out = new NAudio.Wave.WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, true, 20);   // 20 ms de buffer
+        s_out.Init(new NAudio.Wave.SampleProviders.SampleToWaveProvider(s_mix));
+        s_out.Play();
+    }
+
+    static void Close()
+    {
+        try { s_out?.Stop(); } catch { }
+        try { s_out?.Dispose(); } catch { }
+        s_out = null; s_mix = null;
+    }
+
+    // Toca um som mono em todos os canais da saída
+    sealed class Clip : NAudio.Wave.ISampleProvider
+    {
+        readonly float[] _mono; readonly int _ch; int _pos;
+        public Clip(float[] mono, int channels, NAudio.Wave.WaveFormat fmt) { _mono = mono; _ch = channels; WaveFormat = fmt; }
+        public NAudio.Wave.WaveFormat WaveFormat { get; }
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int frames = Math.Min(count / _ch, _mono.Length - _pos);
+            for (int f = 0; f < frames; f++)
+            {
+                float v = _mono[_pos++];
+                for (int c = 0; c < _ch; c++) buffer[offset + f * _ch + c] = v;
+            }
+            return frames * _ch;
+        }
+    }
+
+    // ---- os sons (picos de ~0,3–0,4: bem mais presentes que o tique do slider, sem assustar) ----
+    static float[] Make(Kind kind, int rate)
+    {
+        var d = new double[(int)(rate * (kind == Kind.TaskDone ? 0.42 : 0.22))];
+        switch (kind)
+        {
+            case Kind.WaterAdd:      // "blup": gota encorpada, sobe de altura rápido, com um corpo grave por baixo
+                Tone(d, rate, 0, 330, 1050, 0.010, 0.070, 0.42);
+                Tone(d, rate, 0, 165, 330, 0.010, 0.050, 0.18);
+                break;
+            case Kind.WaterRemove:   // "tuc" descendo, curtinho
+                Tone(d, rate, 0, 900, 520, 0.012, 0.030, 0.30);
+                break;
+            case Kind.TaskDone:      // "di-ding": duas notas subindo (Mi e Lá agudos), com brilho
+                Tone(d, rate, 0.000, 1318.5, 1318.5, 1, 0.090, 0.30, harmonic: 0.25);
+                Tone(d, rate, 0.070, 1760.0, 1760.0, 1, 0.160, 0.32, harmonic: 0.25);
+                break;
+            case Kind.TaskUndo:      // uma nota mais grave, curta
+                Tone(d, rate, 0, 740, 700, 0.02, 0.050, 0.26);
+                break;
+        }
+        var f = new float[d.Length];
+        for (int i = 0; i < d.Length; i++) f[i] = (float)Math.Clamp(d[i], -0.95, 0.95);
+        return f;
+    }
+
+    // Tom com a altura indo de fromHz a toHz (em "glide" s) e volume caindo em "decay" s; 1,5 ms de subida (sem estalo)
+    static void Tone(double[] d, int rate, double start, double fromHz, double toHz, double glide, double decay, double gain, double harmonic = 0)
+    {
+        double phase = 0;
+        for (int i = (int)(start * rate); i < d.Length; i++)
+        {
+            double t = i / (double)rate - start;
+            double freq = toHz + (fromHz - toHz) * Math.Exp(-t / glide);
+            phase += 2 * Math.PI * freq / rate;
+            double env = Math.Min(1, t / 0.0015) * Math.Exp(-t / decay);
+            if (env < 0.0003 && t > 0.02) break;
+            d[i] += gain * env * (Math.Sin(phase) + harmonic * Math.Sin(2 * phase));
         }
     }
 }

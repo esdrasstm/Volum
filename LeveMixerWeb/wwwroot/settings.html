@@ -194,6 +194,26 @@
         </div>
         <div class="setting-row">
           <span class="setting-text">
+            <span data-i18n="todoOn">Lista de tarefas</span>
+            <small data-i18n="todoOnHint">Uma página na ilha para anotar tarefas rápidas e riscar o que já fez</small>
+          </span>
+          <label class="switch">
+            <input id="todoOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-text">
+            <span data-i18n="devicesOn">Bateria dos aparelhos</span>
+            <small data-i18n="devicesOnHint">Fone, mouse, teclado e caixinha sem fio: a bateria numa página da ilha e um aviso quando estiver fraca</small>
+          </span>
+          <label class="switch">
+            <input id="devicesOn" type="checkbox" checked>
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <span class="setting-text">
             <span data-i18n="otherScreen">Outro monitor em tela cheia</span>
             <small data-i18n="otherScreenHint">Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor</small>
           </span>
@@ -445,6 +465,10 @@
             <div class="about-name">Volum</div>
             <div class="about-version" id="aboutVersion"></div>
           </div>
+        </div>
+        <div class="upd-row">
+          <button class="btn" id="updBtn" data-i18n="updCheck">Procurar atualização</button>
+          <span class="upd-status" id="updStatus" aria-live="polite"></span>
         </div>
         <p class="about-text" data-i18n="aboutText"></p>
         <div class="btn-row">

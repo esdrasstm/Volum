@@ -410,6 +410,7 @@ sealed class MixerForm : Form
 
     void BeginOpen()
     {
+        UiSound.Warm();   // som do + água sai na hora
         _wantOpen = false;
         _closing = false;
 

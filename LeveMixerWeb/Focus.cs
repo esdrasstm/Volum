@@ -27,9 +27,22 @@ static class Pomodoro
     static TimeSpan s_left;      // tempo que falta, quando pausado
     static int s_totalSec;
 
+    // Aviso do fim de uma fase sem resposta: toca o som de novo (uma vez) depois de 20 s
+    static readonly Timer s_nag = new() { Interval = 20_000 };
+
     static Pomodoro()
     {
         s_end.Tick += (_, _) => { s_end.Stop(); OnEnd(); };
+        s_nag.Tick += (_, _) => { s_nag.Stop(); if (IslandForm.Showing("pomo")) PomodoroSound.Play(S.PomodoroSound); };
+    }
+
+    // Avisos do Pomodoro: faixa com destaque ("pomo"), que espera a tela cheia acabar e fica até alguém clicar
+    static void Alert(string title, string text, string action, Action? onAction, int ms)
+    {
+        PomodoroSound.Play(S.PomodoroSound);
+        IslandForm.Notify("timer", title, text, action, onAction, ms, kind: "pomo", queue: true);
+        s_nag.Stop();
+        s_nag.Start();
     }
 
     static AppSettings S => AppSettings.Current;
@@ -71,6 +84,7 @@ static class Pomodoro
     public static void Stop()
     {
         s_end.Stop();
+        Quiet();
         Current = Phase.Idle;
         Paused = false;
         Done = 0;
@@ -80,8 +94,16 @@ static class Pomodoro
     /// <summary>Mudou algum tempo nas configurações: vale a partir da próxima fase.</summary>
     public static void Configure() => Changed?.Invoke();
 
+    // Mexeram no Pomodoro (iniciar, pular, parar): o aviso que estava na tela já não vale
+    static void Quiet()
+    {
+        s_nag.Stop();
+        IslandForm.Dismiss("pomo");
+    }
+
     static void Begin(Phase p)
     {
+        Quiet();
         Current = p;
         Paused = false;
         int min = p switch { Phase.Focus => S.FocusMin, Phase.Short => S.ShortBreakMin, _ => S.LongBreakMin };
@@ -106,10 +128,8 @@ static class Pomodoro
         Current = Phase.Idle;
         Paused = false;
         Changed?.Invoke();
-        PomodoroSound.Play(S.PomodoroSound);
         var lang = S.Language;
-        IslandForm.Notify("timer", Strings.Get(lang, "pomoDone"), Strings.Get(lang, "pomoDoneText"),
-            Strings.Get(lang, "pomoGo"), Start, 30_000);
+        Alert(Strings.Get(lang, "pomoDone"), Strings.Get(lang, "pomoDoneText"), Strings.Get(lang, "pomoGo"), Start, 5 * 60_000);
     }
 
     static void EndFocus(bool notify)
@@ -120,11 +140,12 @@ static class Pomodoro
         Begin(longBreak ? Phase.Long : Phase.Short);
         StandUp.BreakStarted();   // se o aviso de levantar estava esperando o foco acabar, sai agora
         if (!notify) return;
-        PomodoroSound.Play(S.PomodoroSound);
         var lang = S.Language;
         int min = longBreak ? S.LongBreakMin : S.ShortBreakMin;
-        IslandForm.Notify("timer", Strings.Get(lang, longBreak ? "pomoLong" : "pomoBreak"),
-            string.Format(Strings.Get(lang, longBreak ? "pomoLongText" : "pomoBreakText"), min), null, null, 15_000);
+        // Fica na tela até alguém clicar (no máximo a pausa inteira): antes eram 15 s sem botão e passava batido
+        Alert(Strings.Get(lang, longBreak ? "pomoLong" : "pomoBreak"),
+            string.Format(Strings.Get(lang, longBreak ? "pomoLongText" : "pomoBreakText"), min),
+            Strings.Get(lang, "pomoOk"), null, min * 60_000);
     }
 }
 

@@ -104,6 +104,23 @@ static class StoreUpdate
         }
     }
 
+    static IReadOnlyList<StorePackageUpdate>? s_found;
+
+    /// <summary>Configurações → Sobre → "Procurar atualização" (versão da Store): "latest", "ready", "error" ou "dev".</summary>
+    public static async Task<string> CheckNowAsync()
+    {
+        if (!Updater.IsStore) return "dev";
+        try
+        {
+            s_found = await Ctx().GetAppAndOptionalStorePackageUpdatesAsync();
+            return s_found != null && s_found.Count > 0 ? "ready" : "latest";
+        }
+        catch (Exception ex) { DevLog.Write("Store: " + ex.Message); return "error"; }
+    }
+
+    /// <summary>"Atualizar": pede para a Store baixar e instalar (ela mostra a confirmação e fecha o Volum).</summary>
+    public static void InstallNow() => _ = InstallAsync(s_found);
+
     static StoreContext Ctx()
     {
         if (s_ctx != null) return s_ctx;

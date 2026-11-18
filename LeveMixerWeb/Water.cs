@@ -70,11 +70,11 @@ static class Water
     /// <summary>Soma (ou tira, com número negativo) do contador de hoje.</summary>
     public static void Add(int ml)
     {
+        // Som de confirmação do clique, antes de gravar o arquivo (sai na hora): gota ao marcar um copo, "tuc" ao tirar
+        if (ml > 0) UiSound.Play(UiSound.Kind.WaterAdd); else if (ml < 0) UiSound.Play(UiSound.Kind.WaterRemove);
         RollDay();
         s_data.TodayMl = Math.Clamp(s_data.TodayMl + ml, 0, 20000);
         Save();
-        // Som de confirmação do clique: uma gotinha ao marcar um copo, o tique ao tirar
-        if (ml > 0) DropSound.PlayOne(); else if (ml < 0) TickSound.Play();
         if (ml > 0) Reschedule();   // bebeu agora: o próximo lembrete é no intervalo inteiro
         if (s_data.TodayMl >= s_data.GoalMl) s_notice?.Close();
         Changed?.Invoke();

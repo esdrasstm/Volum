@@ -469,7 +469,7 @@ button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; 
 .island.pressing { transform: scale(.965); transition-duration: .55s; }
 
 /* Trocar de página: a nova entra deslizando do lado certo; arrastar puxa a página junto com o mouse */
-.page { transition: transform .4s var(--bounce); }
+.page { transition: transform .3s cubic-bezier(.2, .8, .3, 1); }   /* volta do arrastar sem passar do ponto (sem "pulinho") */
 .page.dragging { transition: none; }
 .page.enter-next { animation: page-next .42s var(--soft-spring) both; }
 .page.enter-prev { animation: page-prev .42s var(--soft-spring) both; }
@@ -902,6 +902,275 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .cover:hover { transform: scale(1.04); }
 .cover:active { transform: scale(.96); }
 
+/* Seletor de volume: entra no lugar dos controles do player (o alto-falante abre) */
+.controls { position: relative; }
+.controls > :not(.volpanel) { transition: opacity .18s ease, transform .18s ease; }
+.controls.vol-open > :not(.volpanel) { opacity: 0; transform: scale(.9); pointer-events: none; }
+.volpanel { position: absolute; inset: 0; display: flex; align-items: center; gap: 10px; padding: 0 2px;
+  opacity: 0; transform: translateY(4px) scale(.97); pointer-events: none; transition: opacity .2s ease .05s, transform .28s cubic-bezier(.32, .72, 0, 1) .05s; }
+.controls.vol-open .volpanel { opacity: 1; transform: none; pointer-events: auto; }
+.volpanel .vp-mute, .volpanel .vp-close { flex: none; color: var(--text); }
+.volpanel .vp-close svg { width: 18px; height: 18px; opacity: .7; }
+.vp-mute .i-muted, .vp-mute.muted .i-sound { display: none; }
+.vp-mute.muted .i-muted { display: block; opacity: .55; }
+.vp-track { position: relative; flex: 1; height: 28px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.vp-rail { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .16); overflow: hidden; transition: height .15s ease; }
+.vp-rail i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; background: #fff; }
+.vp-track b { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .45); transform: scale(.85); transition: transform .15s ease; }
+.vp-track:hover .vp-rail, .vp-track.dragging .vp-rail { height: 8px; }
+.vp-track:hover b, .vp-track.dragging b { transform: scale(1); }
+.vp-pct { flex: none; min-width: 38px; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+:root.lite .volpanel, :root.lite .controls > * { transition: none !important; }
+
 /* Barra de abas: só no tema Vidro (skins.css); fora dele, as bolinhas de sempre */
 .tabbar { display: none; }
 .tabbar[hidden] { display: none !important; }
+
+/* ---------- Pomodoro: aviso com destaque (fim do foco e da pausa) ----------
+   O C# manda kind "pomo": o relógio balança de tempos em tempos, duas ondas saem dele
+   e o botão pulsa. O aviso fica até alguém clicar (e o som toca de novo em 20 s). */
+.noticebar[data-kind="pomo"] .notice-icon { position: relative; overflow: visible; }
+.noticebar[data-kind="pomo"] .notice-icon::before,
+.noticebar[data-kind="pomo"] .notice-icon::after {
+  content: ""; position: absolute; inset: -3px; border-radius: 50%;
+  border: 1.5px solid var(--text, #fff); opacity: 0; pointer-events: none;
+  animation: pomo-ring 1.8s cubic-bezier(.2, .6, .3, 1) infinite;
+}
+.noticebar[data-kind="pomo"] .notice-icon::after { animation-delay: .9s; }
+@keyframes pomo-ring { 0% { transform: scale(.55); opacity: .75; } 100% { transform: scale(1.7); opacity: 0; } }
+.noticebar[data-kind="pomo"] .notice-icon svg { transform-origin: 50% 58%; animation: pomo-shake 2.4s ease-in-out infinite; }
+@keyframes pomo-shake {
+  0%, 66%, 100% { transform: rotate(0); }
+  70% { transform: rotate(-16deg); } 74% { transform: rotate(14deg); } 78% { transform: rotate(-10deg); }
+  82% { transform: rotate(7deg); } 86% { transform: rotate(-3deg); } 90% { transform: rotate(0); }
+}
+.noticebar[data-kind="pomo"] .notice-action { animation: pomo-glow 1.8s ease-in-out infinite; }
+@keyframes pomo-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } 50% { box-shadow: 0 0 0 4px rgba(255, 255, 255, .2); } }
+.island.alerting.pomo-alert { --h: 76px; --r: 22px; }
+.noticebar[data-kind="pomo"] { height: 76px; padding: 0 14px 0 16px; gap: 14px; }
+.noticebar[data-kind="pomo"] .notice-icon { width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, .1); }
+.noticebar[data-kind="pomo"] .notice-icon svg { width: 26px; height: 26px; }
+.noticebar[data-kind="pomo"] .notice-text { display: grid; gap: 3px; white-space: nowrap; }
+.noticebar[data-kind="pomo"] .notice-text b { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.noticebar[data-kind="pomo"] .notice-text span { font-size: 13px; }
+.noticebar[data-kind="pomo"] .notice-action { padding: 9px 16px; border-radius: 11px; font-size: 13.5px; font-weight: 700; }
+
+/* ---------- Direita do player: funções ativas (16/11/2026) ----------
+   O ícone do clima saiu daqui. Com o Pomodoro rodando, ao abrir no player a bolha de fora voa até o botão
+   (--bq-x/--bq-y, medidos pelo island.js), e o botão aparece no lugar dela; nas outras páginas continua o chip. */
+.controls .side.pomo-quick { position: relative; display: grid; place-items: center; width: 40px; height: 40px; opacity: 0; }
+.controls .side.pomo-quick.gone { display: none; }   /* sem Pomodoro não ocupa lugar (o play fica no centro) */
+.pomo-quick .bubble-ring { position: absolute; width: 34px; height: 34px; }
+.pomo-quick.break .ring-fg { stroke: var(--battery); }
+/* Gota líquida (island.js, blobTo/drawBlob): o corpo da bolha é desenhado na camada da ilha (#blobBody/#blobNeck,
+   com a mesma cor dos temas, sem contorno). A caixa .pomo-bubble fica só com o anel e o relógio, que o JS move. */
+.blob-svg { left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.shape-svg.blob-svg path { stroke: none !important; }
+.pomo-bubble { background: transparent !important; box-shadow: none !important; border-radius: 50% !important;
+  transition: opacity .16s ease !important; will-change: transform; }
+.pomo-bubble::before, .pomo-bubble::after { display: none !important; }
+.island.open.quick-pomo.landed .pomo-quick { opacity: 1; transition: opacity .14s ease; }
+.island.pomo-on.open .pomo-chip { opacity: 0; transition: opacity .1s ease; }
+.island.pomo-on.open.landed .pomo-chip { opacity: 1; transition: opacity .14s ease; }
+.island.quick-pomo .pomo-chip { display: none; }
+
+/* ---------- Ilha aberta: configurações e trocar de monitor (embaixo à esquerda, discretos) ---------- */
+.full-tools { position: absolute; left: 14px; bottom: 10px; display: flex; gap: 2px; z-index: 3; }
+.full-tools button {
+  display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px;
+  background: none; color: var(--text); opacity: .38; cursor: pointer; transition: opacity .15s ease, background .15s ease;
+}
+.full-tools button:hover { opacity: 1; background: rgba(255, 255, 255, .08); }
+.full-tools button[hidden] { display: none; }
+.full-tools svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.full-tools #gearBtn:hover svg { transform: rotate(60deg); transition: transform .5s var(--soft-spring); }
+/* Tema Vidro: a barra de abas ocupa a largura toda; abre espaço à esquerda e alinha as ferramentas com ela */
+:root[data-skin="glass"] .full .tabbar { padding-left: 40px; }
+:root[data-skin="glass"] .full:has(#monBtn:not([hidden])) .tabbar { padding-left: 68px; }
+:root[data-skin="glass"] .full-tools { bottom: 18px; }
+
+/* ---------- Gota das páginas (indicador líquido; island.js, dotsTo) ---------- */
+.full { --dots-goo: 1; }
+.dots { gap: 9px; }
+.dots i, .dots i.on { width: 5px; opacity: 0; }   /* as bolinhas continuam para o clique; o desenho é o SVG */
+.dots-goo { position: absolute; overflow: visible; pointer-events: none; color: var(--text); }
+.dots-goo .dg-rest circle { fill: currentColor; opacity: .3; }
+.dots-goo .dg-drop { fill: currentColor; }
+:root[data-skin="glass"] .dots-goo { display: none !important; }   /* no Vidro, a barra de abas faz esse papel */
+
+/* =========================================================
+   Ilha inteira líquida (16/11/2026, referências de morphing / liquid motion)
+   Sem anel, contorno ou onda piscando em nada (pedido do Esdras).
+   ========================================================= */
+.island button:focus, .island button:focus-visible, .island [tabindex]:focus { outline: none; }
+
+/* Botões: apertando, amassam como gota (mais largos que altos); soltando, voltam com uma mola que passa um pouco.
+   Usa a propriedade "scale" (soma com o transform que cada botão já tem, como o das setas). */
+.island button { transition: scale .5s cubic-bezier(.3, 1.9, .45, 1), background .15s ease, opacity .15s ease, color .15s ease; }
+.island button:active { scale: .86 .78; transition-duration: .12s; transition-timing-function: ease-out; }
+.controls button:active, .water-buttons button:active, .focus-buttons button:active, .cover:active { transform: none; }
+
+/* Tocar/pausar: o triângulo se divide nas duas barras (e as barras viram o triângulo) */
+.pp { width: 100%; height: 100%; overflow: visible; }
+.pp path { fill: currentColor; stroke: currentColor; stroke-width: 2.4; stroke-linejoin: round;
+  transition: d .42s cubic-bezier(.34, 1.45, .55, 1); }
+.pp-a { d: path("M7 4.9 L13.8 8.4 L13.8 15.6 L7 19.1 Z"); }
+.pp-b { d: path("M13.8 8.4 L20.6 12 L20.6 12 L13.8 15.6 Z"); }
+.play.playing .pp-a, .main.running .pp-a { d: path("M6 4.2 L9 4.2 L9 19.8 L6 19.8 Z"); }
+.play.playing .pp-b, .main.running .pp-b { d: path("M15 4.2 L18 4.2 L18 19.8 L15 19.8 Z"); }
+
+/* Trocar de página: a nova só aparece (desfocada → nítida), sem andar nem balançar. O "pulinho" de antes
+   (gelatina, e antes dela o deslizar) incomodava o Esdras; quem mostra o movimento é a gota das bolinhas. */
+@keyframes page-next { from { opacity: 0; filter: blur(4px); } }
+@keyframes page-prev { from { opacity: 0; filter: blur(4px); } }
+.page.enter-next, .page.enter-prev { transform: none; animation: page-next .32s ease both; }
+
+/* Música nova: a capa e o nome caem e assentam como gota */
+@keyframes track-swap {
+  0%   { opacity: 0; transform: translateY(8px) scale(.94, 1.08); filter: blur(4px); }
+  55%  { opacity: 1; transform: translateY(-2px) scale(1.03, .97); filter: blur(0); }
+  100% { transform: none; }
+}
+.track.swap { animation: track-swap .55s cubic-bezier(.2, .8, .3, 1) both; }
+
+/* Avisos: o conteúdo entra esticado e assenta junto com a forma da ilha */
+@keyframes notice-in {
+  0%   { opacity: 0; transform: translateX(-50%) scale(.86, .7); filter: blur(5px); }
+  60%  { opacity: 1; transform: translateX(-50%) scale(1.03, .97); filter: blur(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Seletor de volume: a barra escorre de dentro do alto-falante para a direita, e os controles se encolhem para ele */
+.volpanel { clip-path: inset(0 100% 0 0 round 20px); transform: none !important;
+  transition: clip-path .5s cubic-bezier(.34, 1.25, .5, 1), opacity .2s ease !important; }
+.controls.vol-open .volpanel { clip-path: inset(0 0 0 0 round 20px); }
+.controls.vol-open > :not(.volpanel) { transform: scale(.6, .5) !important; filter: blur(3px); transform-origin: 0 50%; }
+.controls > * { transition: transform .4s cubic-bezier(.34, 1.4, .5, 1), opacity .2s ease, filter .2s ease; }
+
+/* Bolinhas dos sliders: esticam no sentido do arrasto (island.js, goo) e voltam redondas com mola */
+.vp-track b { transition: transform .15s ease, scale .45s cubic-bezier(.3, 1.9, .45, 1); }
+.progress .bar.seekable span::after { scale: var(--ksx, 1) var(--ksy, 1); transition: transform .15s ease, scale .45s cubic-bezier(.3, 1.9, .45, 1); }
+
+/* Modo leve e "reduzir movimento": sem nada disso */
+:root.lite .island button, :root.lite .pp path, :root.lite .volpanel, :root.lite .controls > * { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .island button, .pp path, .volpanel, .controls > * { transition: none !important; }
+  .page.enter-next, .page.enter-prev, .track.swap { animation: none; }
+}
+
+/* ---------- Tarefas (página da ilha) ----------
+   Cabeçalho como as outras páginas; o "+" vira ✕ e o campo escorre dele para a esquerda (clip-path), por cima do título.
+   Lista com no máximo ~3 linhas visíveis (rola com a rodinha), para a ilha aberta não crescer. */
+.todo { display: grid; gap: 8px; }   /* altura total <= a do player (a ilha aberta tem a altura da maior página) */
+.todo-head { position: relative; display: flex; align-items: center; gap: 10px; min-height: 34px; }
+.todo-icon { flex: none; width: 24px; height: 24px; color: var(--text); }
+.todo-title { flex: 1; min-width: 0; display: grid; }
+.todo-title b { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
+.todo-title span { font-size: 12px; color: var(--subtext); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.todo-clear { flex: none; border: 0; padding: 5px 10px; border-radius: 999px; background: var(--soft); color: var(--subtext);
+  font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.todo-clear:hover { color: var(--text); background: var(--soft-hover); }
+.todo-clear[hidden] { display: none; }
+.todo-plus { flex: none; position: relative; z-index: 2; display: grid; place-items: center; width: 34px; height: 34px; padding: 0;
+  border: 0; border-radius: 50%; background: var(--text); color: #090909; cursor: pointer; }
+.todo-plus svg { width: 18px; height: 18px; transition: rotate .45s cubic-bezier(.34, 1.6, .5, 1); }
+.todo.adding .todo-plus svg { rotate: 45deg; }
+.todo-new { position: absolute; inset: 0 44px 0 0; margin: 0; z-index: 1; opacity: 0; pointer-events: none;
+  clip-path: inset(0 0 0 100% round 17px); transition: clip-path .5s cubic-bezier(.34, 1.25, .5, 1), opacity .15s ease; }
+.todo.adding .todo-new { opacity: 1; pointer-events: auto; clip-path: inset(0 0 0 0 round 17px); }
+.todo-new input { width: 100%; height: 34px; box-sizing: border-box; padding: 0 14px; border: 0; border-radius: 17px;
+  background: #1f1f1f; color: var(--text); font: inherit; font-size: 13.5px; outline: none; }
+.todo-new input::placeholder { color: var(--subtext); }
+.todo-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 2px; max-height: 88px; overflow-y: auto;
+  overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+.todo-list:empty { display: none; }
+.todo-list li { display: flex; align-items: center; gap: 10px; min-height: 28px; min-width: 0; }
+.todo-check { flex: none; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border-radius: 50%;
+  border: 1.6px solid var(--subtext); background: transparent; color: #090909; cursor: pointer;
+  transition: background .25s ease, border-color .25s ease, scale .5s cubic-bezier(.3, 1.9, .45, 1); }
+.todo-check svg { width: 12px; height: 12px; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset .3s ease .08s; }
+.todo-list li.done .todo-check { background: var(--text); border-color: var(--text); }
+.todo-list li.done .todo-check svg { stroke-dashoffset: 0; }
+.todo-txt { flex: 0 1 auto; min-width: 0; font-size: 14px; font-weight: 600; letter-spacing: -.2px; overflow: hidden; white-space: nowrap;
+  text-overflow: ellipsis; background: linear-gradient(currentColor, currentColor) 0 55% / 0 1.5px no-repeat;
+  transition: background-size .35s ease, color .25s ease; }
+.todo-list li.done .todo-txt { color: var(--subtext); background-size: 100% 1.5px; }
+.todo-del { flex: none; margin-left: auto; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--subtext); opacity: 0; cursor: pointer; transition: opacity .15s ease; }
+.todo-del svg { width: 12px; height: 12px; }
+.todo-list li:hover .todo-del { opacity: .85; }
+.todo-list li.enter { animation: todo-in .5s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes todo-in { from { opacity: 0; transform: translateY(-8px) scale(.94, 1.1); filter: blur(3px); } }
+:root.lite .todo *, :root.lite .todo { transition: none !important; animation: none !important; }
+
+/* Tarefas pendentes na ilha fechada: quadradinho + número, apagadinho (não chama atenção, só lembra) */
+.mini-todo { display: inline-flex; align-items: center; gap: 3px; margin-left: 2px; color: var(--subtext); opacity: .75;
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mini-todo[hidden] { display: none; }
+.mini-todo svg { width: 13px; height: 13px; }
+.island.idle .mini-todo { display: none; }
+
+/* ---------- Ilha aberta mais baixa (16/11/2026, pedido do Esdras: "está muito grande") ----------
+   Menos respiro em cima/embaixo, controles e faixa das bolinhas mais justos (~30 px a menos). */
+.full { padding-top: 12px; padding-bottom: 8px; }
+.progress { margin-top: 8px; }
+.controls { margin-top: 4px; }
+.controls button { height: 38px; }
+.dots { height: 18px; margin-top: 4px; }
+.todo-list { max-height: 76px; }   /* a página Tarefas não pode passar da altura do player */
+
+/* ---------- Ícones da ilha padronizados (16/11/2026, pedido do Esdras) ----------
+   Cada página tem o ícone numa caixa de 44 px, branco e cheio, centralizado; o título começa sempre no mesmo lugar.
+   O relógio (Foco, bolha e botão do player) é o cronômetro cheio da aba Foco, branco puro, e o aro do progresso é fino.
+   Alturas: nenhuma página passa da do player (118 px), senão a ilha aberta cresce toda. */
+.focus-art { width: 44px; height: 44px; }
+.focus-art .focus-ring { width: 44px; height: 44px; }
+.focus-art .focus-ring circle { stroke-width: 2.4; }
+.focus-clock { width: 24px; height: 24px; }
+.water { gap: 12px; }
+.bottle { width: 44px; height: 34px; margin: 0; }
+.wx { gap: 10px; }
+.wx-icon { width: 44px; height: 44px; }
+.wx-icon .wx-svg, .wx-icon .wx-svg.wx-fill { width: 36px; height: 36px; }
+.agenda { gap: 6px; }
+.agenda-head { gap: 12px; min-height: 44px; }
+.agenda-icon { flex: none; width: 44px; height: 28px; color: var(--text); }
+.agenda-list { gap: 6px; }
+.agenda-when { width: 96px; white-space: nowrap; }
+.todo { gap: 4px; }
+.todo-head { gap: 12px; min-height: 44px; }
+.todo-icon { width: 44px; height: 28px; }
+.todo-list li { min-height: 22px; }
+.todo-list { max-height: 70px; }
+.bubble-clock { width: 18px; height: 18px; }
+
+/* ---------- Aparelhos sem fio (17/11/2026; protótipo, o Esdras vai desenhar no Figma) ----------
+   Cabeçalho no padrão das outras páginas (ícone na caixa de 44 px) e uma linha por aparelho: ícone, nome,
+   barra de bateria com a cor da carga e a porcentagem. No máx. 3 linhas visíveis (a página não passa do player). */
+.devs { display: grid; gap: 4px; }
+.devs-head { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.devs-icon { flex: none; width: 44px; height: 28px; display: grid; place-items: center; color: var(--text); }
+.devs-icon svg { width: 26px; height: 26px; }
+.devs-title { flex: 1; min-width: 0; display: grid; }
+.devs-title b { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
+.devs-title span { font-size: 12px; color: var(--subtext); }
+.devs-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 4px; max-height: 70px; overflow-y: auto;
+  overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
+.devs-list li { display: flex; align-items: center; gap: 10px; min-height: 22px; }
+.dev-ico { flex: none; width: 44px; display: grid; place-items: center; color: var(--text); }
+.dev-ico svg { width: 18px; height: 18px; }
+.dev-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dev-bar { flex: none; width: 64px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .16); overflow: hidden; }
+.dev-bar i { display: block; height: 100%; border-radius: 3px; transition: width .6s var(--spring), background-color .6s ease; }
+.dev-pct { flex: none; width: 38px; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.devs-list li.low .dev-pct { color: #ff6b6b; }
+.dev-notice-ico { display: grid; place-items: center; width: 100%; height: 100%; color: #fff; }
+.dev-notice-ico svg { width: 20px; height: 20px; }
+
+/* Ilha fechada: aparelhos sem fio entre a hora e o clima (ícone num anel com a carga, sem porcentagem) */
+.mini-devs { display: inline-flex; align-items: center; gap: 5px; }
+.mini-devs[hidden] { display: none; }
+.mini-dev { display: inline-grid; place-items: center; width: 22px; height: 22px; color: var(--text); }
+.mini-dev svg { width: 22px; height: 22px; }
+.island.idle .mini-devs { display: none; }

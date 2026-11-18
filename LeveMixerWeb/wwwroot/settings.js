@@ -239,12 +239,50 @@
     post({ type: 'setAppNotes', on: e.target.checked });
   });
 
+  /* ---------- Mudar de forma: carregando e botões ---------- */
+  // Texto de status com a forma que se transforma na frente (carregando)
+  function busyText(el, text) {
+    const sp = document.createElement('span');
+    sp.className = 'morph-spin';
+    el.replaceChildren(sp, document.createTextNode(text));
+  }
+  // Botão que vira círculo carregando (busy), depois ✓ (done) e volta a ser botão (idle). A largura é animada
+  // de um número para outro (auto não anima): mede antes, fixa, e solta quando volta.
+  function morphButton(btn) {
+    if (btn.classList.contains('morph')) return;
+    btn.classList.add('morph');
+    const label = document.createElement('span');
+    label.className = 'bm-label';
+    label.append(...btn.childNodes);
+    if (btn.dataset.i18n) { label.dataset.i18n = btn.dataset.i18n; delete btn.dataset.i18n; }   // a tradução vai para o texto de dentro
+    const spin = document.createElement('span'); spin.className = 'bm-icon bm-spin'; spin.innerHTML = '<span class="morph-spin"></span>';
+    const ok = document.createElement('span'); ok.className = 'bm-icon bm-ok'; ok.innerHTML = '<svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+    btn.append(label, spin, ok);
+  }
+  function setMorph(btn, state) {
+    morphButton(btn);
+    clearTimeout(btn._morphT);
+    const h = btn.offsetHeight;
+    if (state === 'idle') {
+      if (!btn.style.width) return;
+      btn.style.width = btn._fullW + 'px';
+      btn.classList.remove('busy', 'done');
+      btn._morphT = setTimeout(() => { btn.style.width = ''; }, 450);
+      return;
+    }
+    if (!btn.style.width) { btn._fullW = btn.offsetWidth; btn.style.width = btn._fullW + 'px'; void btn.offsetWidth; }
+    btn.style.width = h + 'px';
+    btn.classList.toggle('busy', state === 'busy');
+    btn.classList.toggle('done', state === 'done');
+    if (state === 'done') btn._morphT = setTimeout(() => setMorph(btn, 'idle'), 1300);
+  }
+
   /* Agenda: salva o endereço iCal e o C# baixa para conferir */
   $('calSave').addEventListener('click', () => {
     const url = $('calUrl').value.trim();
     $('calSave').disabled = true;
     $('calStatus').classList.remove('bad');
-    $('calStatus').textContent = url ? t('calLoading') : '';
+    if (url) { busyText($('calStatus'), t('calLoading')); setMorph($('calSave'), 'busy'); } else $('calStatus').textContent = '';
     post({ type: 'setCalendar', url });
   });
   $('calUrl').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('calSave').click(); });
@@ -254,7 +292,7 @@
     const city = $('wxCity').value.trim();
     $('wxSave').disabled = true;
     $('wxStatus').classList.remove('bad');
-    $('wxStatus').textContent = city ? t('wxLoading') : '';
+    if (city) { busyText($('wxStatus'), t('wxLoading')); setMorph($('wxSave'), 'busy'); } else $('wxStatus').textContent = '';
     post({ type: 'setWeather', city });
   });
   $('wxCity').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('wxSave').click(); });
@@ -331,7 +369,7 @@
     autoHideSec: [5, 10, 15, 30, 60, 120, 300],   // esconder a ilha depois de (segundos)
     pomoSound: ['chime', 'drops', 'bell', 'none'],   // som do fim do Pomodoro (nomes no PomodoroSound do C#)
   };
-  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, tuck: true, standUp: true, standMin: 60, autoHide: false, autoHideSec: 10, monitor: 'primary', monitors: [], posH: 'center', posV: 'top' };
+  let focus = { pomodoro: true, focusMin: 25, shortMin: 5, longMin: 15, every: 4, pomoSound: 'chime', osd: true, otherScreen: true, tuck: true, todo: true, standUp: true, standMin: 60, autoHide: false, autoHideSec: 10, monitor: 'primary', monitors: [], posH: 'center', posV: 'top' };
 
   const fmtFocus = (v, unit) => unit === 'sound' ? t('snd_' + v) : unit === 'cycles' ? `${v} ${t('pomoEveryUnit')}`
     : unit === 'time' ? V.fmtMin(v) : unit === 'sec' ? (v < 60 ? `${v} s` : V.fmtMin(v / 60)) : `${v} min`;
@@ -342,6 +380,8 @@
     $('osdOn').checked = focus.osd !== false;
     $('otherScreenOn').checked = focus.otherScreen !== false;
     $('tuckOn').checked = focus.tuck !== false;
+    $('todoOn').checked = focus.todo !== false;
+    $('devicesOn').checked = focus.devices !== false;
     $('autoHideOn').checked = !!focus.autoHide;
     $('autoHideOptions').hidden = !focus.autoHide;
     showMonitors();
@@ -369,6 +409,8 @@
   $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
   $('otherScreenOn').addEventListener('change', (e) => { focus.otherScreen = e.target.checked; saveFocus(); });
   $('tuckOn').addEventListener('change', (e) => { focus.tuck = e.target.checked; saveFocus(); });
+  $('todoOn').addEventListener('change', (e) => { focus.todo = e.target.checked; saveFocus(); });
+  $('devicesOn').addEventListener('change', (e) => { focus.devices = e.target.checked; saveFocus(); });
   $('autoHideOn').addEventListener('change', (e) => { focus.autoHide = e.target.checked; showFocus(); saveFocus(); });
   // Monitores: um botão para cada, da esquerda para a direita ("Principal", "Monitor 2", ...); o nome completo na dica
   let monitorSig = '';
@@ -420,6 +462,25 @@
     $('aboutNews').replaceChildren(...V.newsItems(lang, fromStore));
   }
 
+  // Sobre: procurar atualização (GitHub: confere, baixa e oferece "Reiniciar e atualizar"; Store: pede para a Store instalar)
+  let updState = '';
+  function showUpdate(m) {
+    updState = m.state;
+    const btn = $('updBtn'), st = $('updStatus');
+    btn.disabled = m.state === 'checking' || m.state === 'applying';
+    btn.textContent = m.state === 'ready' ? t(m.store ? 'updApplyStore' : 'updApply') : t('updCheck');
+    btn.classList.toggle('primary', m.state === 'ready');
+    const key = { checking: 'updChecking', latest: 'updLatest', error: 'updError', dev: 'updDev', applying: 'updApplying',
+      ready: m.store ? 'updReadyStore' : 'updReady' }[m.state];
+    const txt = key ? t(key).replace('{0}', m.version || '') : '';
+    if (m.state === 'checking' || m.state === 'applying') busyText(st, txt); else st.textContent = txt;
+    st.classList.toggle('ok', m.state === 'latest' || m.state === 'ready');
+  }
+  $('updBtn').addEventListener('click', () => {
+    if (updState === 'ready') { showUpdate({ state: 'applying' }); post({ type: 'applyUpdate' }); return; }
+    showUpdate({ state: 'checking' });
+    post({ type: 'checkUpdate' });
+  });
   $('siteBtn').addEventListener('click', () => post({ type: 'openSite' }));
   $('feedbackBtn').addEventListener('click', () => post({ type: 'openSite', section: 'feedback' }));
   $('githubBtn').addEventListener('click', () => post({ type: 'openSite', section: 'github' }));
@@ -472,6 +533,7 @@
     const m = e.data;
     switch (m.type) {
       case 'settings':    applySettings(m); break;
+      case 'update':      showUpdate(m); break;
       case 'page':        if (navItems.some((b) => b.dataset.page === m.page)) showPage(m.page); break;   // ex.: o coração do mixer abre "Apoiar"
       case 'systemTheme': systemDark = m.dark; applyScheme(); break;   // trocou o tema do Windows
       case 'hotkey':      hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey
@@ -485,12 +547,14 @@
         $('wxStatus').textContent = m.empty ? '' : m.place == null ? t(m.error === 'notFound' ? 'wxNotFound' : 'wxError')
           : t('wxOk').replace('{0}', m.place);
         $('wxStatus').classList.toggle('bad', !m.empty && m.place == null);
+        setMorph($('wxSave'), !m.empty && m.place != null ? 'done' : 'idle');
         break;
       case 'calendar':    // resposta do setCalendar: quantos compromissos hoje e amanhã, ou erro
         $('calSave').disabled = false;
         $('calStatus').textContent = m.empty ? '' : m.count < 0 ? t(m.error === 'notIcs' ? 'calNotIcs' : m.error === 'https' ? 'calHttps' : 'calError')
           : t('calOk').replace('{0}', m.count);
         $('calStatus').classList.toggle('bad', !m.empty && m.count < 0);
+        setMorph($('calSave'), !m.empty && m.count >= 0 ? 'done' : 'idle');
         break;
     }
   });
