@@ -251,7 +251,21 @@ sealed class IslandForm : Form
     {
         _shown = SizeOf(m);
         PlaceSize(_shown, 0);
-        if (m == Mode.Tucked && !_hiddenByTuck) { _hiddenByTuck = true; UpdateShown(); }
+        if (m == Mode.Tucked && !_hiddenByTuck && !TuckLine) { _hiddenByTuck = true; UpdateShown(); }
+    }
+
+    // Opção "Tracinho no lugar da ilha" (sugestão de usuário): em cima das abas a ilha não some, vira um risquinho no topo
+    // que só abre com clique (passar o mouse não abre nada). Desligada: some de vez e abre com o mouse parado no topo.
+    static bool TuckLine => AppSettings.Current.IslandTuckLine;
+
+    /// <summary>Ligou/desligou o tracinho nas configurações.</summary>
+    public static void ApplyTuckLine()
+    {
+        if (!IsOn) return;
+        var isl = s_island!;
+        isl.PostSettings();
+        if (TuckLine && isl._hiddenByTuck) { isl._hiddenByTuck = false; isl.UpdateShown(); }
+        isl.Place(isl._mode);
     }
 
     // A forma vai mudar de tamanho (o que está na tela → o novo estado): janela com folga até ela parar
@@ -396,6 +410,17 @@ sealed class IslandForm : Form
     void CheckScreen()
     {
         if (IsDisposed) return;
+        // O Windows às vezes não avisa que o mouse saiu (a janela muda de tamanho embaixo dele): a ilha achava que ainda
+        // estava com o mouse em cima, não fechava e não escondia em cima do navegador. Confere de verdade aqui.
+        if (_hover && !_typing && MouseButtons == MouseButtons.None)
+        {
+            var b = Bounds; b.Inflate(6, 6);
+            if (!Visible || !b.Contains(Cursor.Position))
+            {
+                _hover = false;
+                if (!_notice) { _collapse.Stop(); _collapse.Start(); }
+            }
+        }
         // "Sempre no outro monitor" (opção): a ilha fica no primeiro monitor que não é o principal e some se ele estiver em tela cheia
         var second = ChosenScreen();
         if (second != null)
@@ -495,7 +520,7 @@ sealed class IslandForm : Form
         bool still = Math.Abs(p.X - _dwellPt.X) <= 3 && Math.Abs(p.Y - _dwellPt.Y) <= 3;
         _dwellPt = p;
         if (!atTop || !still || MouseButtons != MouseButtons.None) { _dwellMs = 0; return; }
-        if ((_dwellMs += _dwell.Interval) < 600) return;
+        if ((_dwellMs += _dwell.Interval) < 900) return;   // 0,9 s (era 0,6 s: abria sem querer ao mirar nas abas)
         _dwellMs = 0;
         _dwellOpened = true;   // o timer continua, agora vigiando a saída do mouse
         _hover = true;
@@ -555,7 +580,9 @@ sealed class IslandForm : Form
     // Anti-pisca: cada resposta diferente da conferência (a cada 1,5 s) mudava a ilha na hora; uma janela que entra e sai
     // do lugar dela (ou uma conferência que oscila) fazia a ilha sumir e voltar sem parar. Agora:
     // - depois de mudar, só muda de volta na conferência seguinte que passar de 2,5 s;
-    // - se mudar mais de 4 vezes em 30 s, fica à vista (não recolhe) por 60 s.
+    // - oscilando (5 trocas seguidas com menos de 6 s entre elas), fica à vista por 15 s.
+    // Antes eram "4 trocas em 30 s → 60 s à vista": quem alternava entre o navegador e outras janelas caía nisso
+    // e a ilha ficava travada sem esconder (relato do Esdras, 18/11).
     sealed class FlipGuard { public DateTime At, Since, CalmUntil; public int Count; }
     readonly FlipGuard _tuckGuard = new();
     DateTime _fullAt;
@@ -565,11 +592,12 @@ sealed class IslandForm : Form
         var now = DateTime.UtcNow;
         if (now < g.CalmUntil) return !toHidden;                        // acalmando: só deixa aparecer
         if ((now - g.At).TotalMilliseconds < 2500) return false;        // acabou de mudar: espera
-        if ((now - g.Since).TotalSeconds > 30) { g.Since = now; g.Count = 0; }
+        if ((now - g.At).TotalSeconds > 6) g.Count = 0;                  // troca isolada (ex.: trocou de app): não conta
         if (++g.Count > 4)
         {
-            g.CalmUntil = now.AddSeconds(60);
-            DevLog.Write($"ilha: {what} trocando sem parar; fica à vista por 60 s");
+            g.Count = 0;
+            g.CalmUntil = now.AddSeconds(15);
+            DevLog.Write($"ilha: {what} trocando sem parar; fica à vista por 15 s");
             if (toHidden) return false;
         }
         g.At = now;
@@ -1568,7 +1596,7 @@ sealed class IslandForm : Form
     void PostSettings()
     {
         var s = AppSettings.Current;
-        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch", bottom = AtBottom, skin = s.Skin });
+        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch", bottom = AtBottom, skin = s.Skin, tuckLine = s.IslandTuckLine });
     }
 
     // Estado do Pomodoro: a ilha conta o tempo sozinha a partir de "leftMs" (nada vem do C# a cada segundo)
@@ -1646,9 +1674,17 @@ sealed class IslandForm : Form
 
                 case "hover":    // mouse entrou/saiu da ilha
                     _hover = root.GetProperty("on").GetBoolean();
+                    // Recolhida (em cima das abas) nunca abre só por passar o mouse: enquanto ela ainda encolhia, a janela continuava
+                    // grande e o mouse voltando para as abas caía em cima dela e reabria na hora (Esdras, 18/11). Abre pelo tracinho
+                    // (mouse parado 3 s, "tuckClick") ou, escondida de vez, pelo mouse parado no topo (CheckDwell).
+                    if (_hover && _mode == Mode.Tucked) { _collapse.Stop(); break; }
                     if (_hover && !_notice) { _collapse.Stop(); SetMode(Mode.Open); }   // com aviso na tela, fica a faixa (os botões não saem do lugar)
                     else if (!_notice) { _collapse.Stop(); _collapse.Start(); }
                     ArmAutoHide();
+                    break;
+
+                case "tuckClick":   // clicou no tracinho: abre (fecha de novo quando o mouse sair)
+                    if (_mode == Mode.Tucked) { _hover = true; _collapse.Stop(); SetMode(Mode.Open); }
                     break;
 
                 case "idle":     // a ilha ficou um tempo sem uso: cresce um pouco para baixo e o mascote aparece maior

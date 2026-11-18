@@ -1223,8 +1223,21 @@
   // O C# cresce a janela e manda "mode"; aqui a pílula anima (CSS) até o tamanho novo.
   document.documentElement.addEventListener('mouseenter', () => post({ type: 'hover', on: true }));
   document.documentElement.addEventListener('mouseleave', () => post({ type: 'hover', on: false }));
+  // Tracinho (opção): recolhida em cima das abas ela fica travada; só abre com o mouse parado em cima por 3 s
+  // (pedido do Esdras, 18/11). Clique e passadas rápidas não abrem. O traço vai crescendo até a borda enquanto espera.
+  const TUCK_HOLD_MS = 3000;
+  let tuckHold = 0;
+  const tuckLine = () => mode === 'tucked' && document.documentElement.classList.contains('tuck-line');
+  function tuckArm(on) {
+    clearTimeout(tuckHold); tuckHold = 0;
+    island.classList.toggle('arming', on);
+    if (on) tuckHold = setTimeout(() => { island.classList.remove('arming'); if (tuckLine()) post({ type: 'tuckClick' }); }, TUCK_HOLD_MS);
+  }
+  island.addEventListener('mouseenter', () => { if (tuckLine()) tuckArm(true); });
+  island.addEventListener('mouseleave', () => tuckArm(false));
 
   function setMode(m) {
+    if (m !== 'tucked' && tuckHold) tuckArm(false);
     if (m !== 'open' && todo.classList.contains('adding')) todoAdding(false);   // fechou a ilha: larga o campo
     setTimeout(todoArm, 0);
     mode = m;
@@ -1259,6 +1272,9 @@
      O requestAnimationFrame só roda enquanto ela se mexe. */
   const BLOB_K = 170, BLOB_C = 14;   // mais mole que a ilha: a gota fica para trás e o pescoço estica
   const BLOB_C_REST = 24;             // voltando para o lado: quase sem passar do ponto (amortecimento ~0,9)
+  // Escondendo (ilha recolhida em cima das abas, aviso, Pomodoro parado): mola dura e sem balanço, para a gota entrar
+  // junto com a ilha. Mole, ela ficava para trás e parecia uma peça separada sumindo depois (Esdras, 18/11).
+  const BLOB_K_HIDE = 900, BLOB_C_HIDE = 60;
   const blobNeck = $('blobNeck'), blobBody = $('blobBody'), bubbleEl = $('pomoBubble');
   let blob = null, blobGoal = null, blobVel = { x: 0, y: 0, r: 0 }, blobRaf = 0, blobT = 0;
   let blobLinked = false;   // ligada à ilha pelo pescoço (tensão superficial: liga encostando, solta só bem esticada)
@@ -1294,7 +1310,8 @@
     if (springRaf) blobGoal = blobTarget();   // a ilha ainda está mudando de tamanho: o alvo anda junto
     // Voltando para o lado da ilha fechada (ou sumindo): mola bem amortecida, sem passar do ponto. Mole, ela passava
     // ~20 px do lugar, saía da área desenhável (borda da janela / topo da tela) e aparecia cortada.
-    integrate(blob, blobVel, blobGoal, ['x', 'y', 'r'], BLOB_K, blobGoal.land ? BLOB_C : BLOB_C_REST, sec);
+    const hiding = !blobGoal.show;
+    integrate(blob, blobVel, blobGoal, ['x', 'y', 'r'], hiding ? BLOB_K_HIDE : BLOB_K, hiding ? BLOB_C_HIDE : blobGoal.land ? BLOB_C : BLOB_C_REST, sec);
     let moving = false;
     for (const k of ['x', 'y', 'r']) if (Math.abs(blobVel[k]) > 0.3 || Math.abs(blob[k] - blobGoal[k]) > 0.3) moving = true;
     if (!moving && !springRaf) {
@@ -1521,6 +1538,7 @@
         document.documentElement.classList.toggle('lite', !!m.lite);
         document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
         document.documentElement.classList.toggle('at-bottom', !!m.bottom);
+        document.documentElement.classList.toggle('tuck-line', !!m.tuckLine);   // em cima das abas: tracinho que abre com clique
         document.documentElement.dataset.skin = m.skin || 'default';
         if (V.useSkin) V.useSkin(m.skin);   // carrega só o arquivo desse tema
         tabPos = null; tabKey = ''; setTimeout(showPages, 0);                   // tema (Configurações → Temas)           // embaixo (acima da barra de tarefas): cresce para cima

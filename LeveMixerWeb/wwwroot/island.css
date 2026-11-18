@@ -1174,3 +1174,15 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .mini-dev { display: inline-grid; place-items: center; width: 22px; height: 22px; color: var(--text); }
 .mini-dev svg { width: 22px; height: 22px; }
 .island.idle .mini-devs { display: none; }
+
+/* ---------- Tracinho no lugar da ilha (opção, 18/11/2026) ----------
+   Em cima das abas a ilha vira um risquinho no topo que só abre com clique. Um traço claro no meio para dar para ver
+   em cima de qualquer barra de abas, e a mãozinha do mouse indicando que é clicável. */
+.tuck-line .island.tucked { cursor: default; }
+.tuck-line .island.tucked::after { content: ""; position: absolute; left: 50%; top: 1px; width: 46px; height: 3px; border-radius: 2px;
+  transform: translateX(-50%); background: rgba(255, 255, 255, .7); pointer-events: none; z-index: 5;
+  animation: tl-in .25s ease .35s both; }   /* aparece depois que a ilha termina de encolher */
+@keyframes tl-in { from { opacity: 0; } }
+.lite .tuck-line .island.tucked::after { animation: none; }
+/* Mouse parado em cima: o traço cresce até a borda em 3 s (o tempo que falta para abrir); saiu, volta na hora */
+.tuck-line .island.tucked.arming::after { width: 122px; background: #fff; transition: width 3s linear, background .3s ease; }

@@ -380,6 +380,8 @@
     $('osdOn').checked = focus.osd !== false;
     $('otherScreenOn').checked = focus.otherScreen !== false;
     $('tuckOn').checked = focus.tuck !== false;
+    $('tuckLineOn').checked = !!focus.tuckLine;
+    $('tuckLineRow').hidden = focus.tuck === false;   // só faz sentido com a ilha saindo da frente
     $('todoOn').checked = focus.todo !== false;
     $('devicesOn').checked = focus.devices !== false;
     $('autoHideOn').checked = !!focus.autoHide;
@@ -408,7 +410,8 @@
   $('standOn').addEventListener('change', (e) => { focus.standUp = e.target.checked; showFocus(); saveFocus(); });
   $('osdOn').addEventListener('change', (e) => { focus.osd = e.target.checked; saveFocus(); });
   $('otherScreenOn').addEventListener('change', (e) => { focus.otherScreen = e.target.checked; saveFocus(); });
-  $('tuckOn').addEventListener('change', (e) => { focus.tuck = e.target.checked; saveFocus(); });
+  $('tuckOn').addEventListener('change', (e) => { focus.tuck = e.target.checked; showFocus(); saveFocus(); });
+  $('tuckLineOn').addEventListener('change', (e) => { focus.tuckLine = e.target.checked; saveFocus(); });
   $('todoOn').addEventListener('change', (e) => { focus.todo = e.target.checked; saveFocus(); });
   $('devicesOn').addEventListener('change', (e) => { focus.devices = e.target.checked; saveFocus(); });
   $('autoHideOn').addEventListener('change', (e) => { focus.autoHide = e.target.checked; showFocus(); saveFocus(); });

@@ -198,6 +198,7 @@ sealed class SettingsForm : Form
                 tuck = _settings.IslandTuck,
                 todo = _settings.TodoEnabled,
                 devices = _settings.DevicesEnabled,
+                tuckLine = _settings.IslandTuckLine,
                 autoHide = _settings.IslandAutoHide,
                 autoHideSec = _settings.IslandAutoHideSec,
                 monitor = _settings.IslandMonitor ?? "primary",
@@ -362,6 +363,8 @@ sealed class SettingsForm : Form
                     if (root.TryGetProperty("todo", out var td)) _settings.TodoEnabled = td.GetBoolean();
                     bool devBefore = _settings.DevicesEnabled;
                     if (root.TryGetProperty("devices", out var dv)) _settings.DevicesEnabled = dv.GetBoolean();
+                    bool lineBefore = _settings.IslandTuckLine;
+                    if (root.TryGetProperty("tuckLine", out var tl)) _settings.IslandTuckLine = tl.GetBoolean();
                     if (root.TryGetProperty("autoHide", out var ah)) _settings.IslandAutoHide = ah.GetBoolean();
                     _settings.IslandAutoHideSec = Get("autoHideSec", 10, 5, 300);
                     if (root.TryGetProperty("monitor", out var mo) && mo.GetString() is { Length: > 0 } mon) _settings.IslandMonitor = mon;
@@ -374,6 +377,7 @@ sealed class SettingsForm : Form
                     StandUp.Apply();
                     IslandForm.ApplyOsd();
                     if (devBefore != _settings.DevicesEnabled) IslandForm.ApplyDevices();
+                    if (lineBefore != _settings.IslandTuckLine) IslandForm.ApplyTuckLine();
                     IslandForm.ApplyHideAndScreen();
                     IslandForm.ApplyTodo();
                     IslandForm.SettingsChanged();

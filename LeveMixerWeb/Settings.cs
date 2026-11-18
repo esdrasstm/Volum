@@ -55,6 +55,8 @@ sealed class AppSettings
     public bool TodoEnabled { get; set; } = true;
     /// <summary>Bateria dos aparelhos sem fio (fone, mouse, teclado...) na ilha.</summary>
     public bool DevicesEnabled { get; set; } = true;
+    /// <summary>Em cima das abas, deixar um tracinho no topo que abre a ilha com clique (em vez de sumir de vez).</summary>
+    public bool IslandTuckLine { get; set; }
 
     // Esconder a ilha quando não estiver em uso (pedido para telas OLED). Desligado por padrão: o Volum é para a ilha ficar à vista.
     // Some depois de IslandAutoHideSec segundos parada e volta quando o mouse passa no lugar dela; avisos continuam aparecendo.
