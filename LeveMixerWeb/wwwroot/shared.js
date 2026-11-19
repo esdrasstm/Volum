@@ -229,9 +229,9 @@ window.Volum = (() => {
         en: ['A Pomodoro you won\'t miss', 'The end of a focus session now shows up big in the island and waits for you, even if you are in a full-screen game.'],
         es: ['Un Pomodoro que no se te escapa', 'El fin del enfoque ahora aparece grande en la isla y te espera, incluso si estás en un juego a pantalla completa.'] },
       { icon: 'fix', art: 'fix',
-        pt: ['Correções e cuidados', 'Botão para procurar atualização, configurações direto na ilha, sons de clique mais rápidos e a ilha não pisca mais.'],
-        en: ['Fixes and polish', 'A button to check for updates, settings right from the island, snappier click sounds and no more island flicker.'],
-        es: ['Correcciones y detalles', 'Botón para buscar actualizaciones, ajustes desde la isla, sonidos de clic más rápidos y la isla ya no parpadea.'] },
+        pt: ['Correções e cuidados', 'Em cima das abas, a ilha pode virar um tracinho que só abre com o mouse parado nele (Configurações → Ilha). E mais: procurar atualização, sons mais rápidos e a ilha não pisca mais.'],
+        en: ['Fixes and polish', 'Over browser tabs, the island can become a small line that only opens when you rest the mouse on it (Settings → Island). Plus: check for updates, snappier sounds and no more flicker.'],
+        es: ['Correcciones y detalles', 'Sobre las pestañas, la isla puede volverse una rayita que solo se abre al dejar el ratón encima (Configuración → Isla). Además: buscar actualizaciones, sonidos más rápidos y la isla ya no parpadea.'] },
     ],
   };
   // Ícones de traço em caixa de 24 (os mesmos do mixer e das configurações; classe .ico no style.css)

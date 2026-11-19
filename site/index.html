@@ -23,6 +23,22 @@
 </head>
 <body>
 
+  <!-- Faixa de verão (protótipo): céu dos temas Miami/Pôr do sol, cidade e coqueiros em pixel, sol chapado.
+       Fecha com o ✕ e fica fechada (localStorage; ?summer=1 mostra de novo). Desenho montado no script do fim da página. -->
+  <aside class="summer" id="summer" hidden>
+    <div class="summer-sky" aria-hidden="true">
+      <div class="summer-sun"></div>
+      <div class="summer-city" id="summerCity"></div>
+    </div>
+    <a class="summer-pill" href="#temas" data-goatcounter-click="faixa-verao">
+      <span class="summer-mascot" id="summerMascot" aria-hidden="true"></span>
+      <b>Novos temas de verão</b>
+      <span class="summer-sub">Miami e Pôr do sol</span>
+      <span class="summer-go" aria-hidden="true">→</span>
+    </a>
+    <button class="summer-x" id="summerX" type="button" aria-label="Fechar">✕</button>
+  </aside>
+
   <div class="backdrop" aria-hidden="true">
     <div class="blob b1"></div>
     <div class="blob b2"></div>
@@ -40,6 +56,7 @@
       <nav class="nav-links" aria-label="Seções">
         <a href="#experimente">Experimente</a>
         <a href="#recursos">Recursos</a>
+        <a href="#temas">Temas</a>
         <a href="#como-funciona">Como funciona</a>
         <a href="#perguntas">Perguntas</a>
         <a href="#sugestoes">Sugestões</a>
@@ -177,6 +194,42 @@
     </section>
 
     <!-- ===================== Como funciona ===================== -->
+    <section id="temas">
+      <div class="eyebrow reveal">Temas</div>
+      <h2 class="reveal">Um visual para cada clima.</h2>
+      <p class="section-lead reveal">Os temas mudam a ilha e o mixer juntos. Todos grátis, e é só escolher em Configurações → Temas.</p>
+
+      <div class="themes reveal">
+        <div class="themes-pick">
+          <div class="theme-group">
+            <div class="theme-group-title">Verão Vice <span class="theme-new">Novo</span></div>
+            <button class="theme-chip" type="button" data-theme="miami" style="--sw: linear-gradient(160deg, #2a1a5e, #b8327f 60%, #ffb07a)"><i aria-hidden="true"></i><span>Miami</span></button>
+            <button class="theme-chip" type="button" data-theme="sunset" style="--sw: linear-gradient(180deg, #5a2a6e, #ff7a59 55%, #ffd166)"><i aria-hidden="true"></i><span>Pôr do sol</span></button>
+          </div>
+          <div class="theme-group">
+            <div class="theme-group-title">Clássicos</div>
+            <button class="theme-chip" type="button" data-theme="default" style="--sw: linear-gradient(160deg, #1a1a1a, #090909)"><i aria-hidden="true"></i><span>Padrão</span></button>
+            <button class="theme-chip" type="button" data-theme="glass" style="--sw: linear-gradient(160deg, #3a3a3a, #1c1c1c 60%, #c6f24e)"><i aria-hidden="true"></i><span>Vidro</span></button>
+          </div>
+          <div class="theme-group">
+            <div class="theme-group-title">Inverno</div>
+            <button class="theme-chip" type="button" data-theme="christmas" style="--sw: linear-gradient(160deg, #0f2a1c, #c8262f 70%, #e8c35a)"><i aria-hidden="true"></i><span>Natal</span></button>
+            <button class="theme-chip" type="button" data-theme="snowy" style="--sw: linear-gradient(160deg, #0b1838, #2b4d8a 70%, #e8f0ff)"><i aria-hidden="true"></i><span>Noite de neve</span></button>
+            <button class="theme-chip" type="button" data-theme="candy" style="--sw: repeating-linear-gradient(135deg, #e8344f 0 6px, #fff 6px 12px)"><i aria-hidden="true"></i><span>Bengala</span></button>
+            <button class="theme-chip" type="button" data-theme="sleigh" style="--sw: linear-gradient(160deg, #10162a, #3b4a6b 60%, #ffffff)"><i aria-hidden="true"></i><span>Trenó</span></button>
+          </div>
+          <p class="theme-note">Quer outro tema? <a href="temas.html" data-goatcounter-click="temas-pesquisa">Conte para a gente</a>.</p>
+        </div>
+        <div class="themes-view" id="themesView">
+          <div class="themes-stage" id="themesStage">
+            <iframe class="themes-island" id="themesIsland" title="Ilha do Volum com o tema escolhido" loading="lazy"></iframe>
+            <div class="themes-hint" id="themesHint">Passe o mouse na ilha</div>
+            <iframe class="themes-mixer" id="themesMixer" title="Mixer do Volum com o tema escolhido: mexa nos volumes" loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="como-funciona">
       <div class="eyebrow reveal">Como funciona</div>
       <h2 class="reveal">Pronto em três passos.</h2>
@@ -608,6 +661,98 @@
     };
     tickClock();
     setInterval(tickClock, 30000);
+
+    // ---------- Temas: a ilha e o mixer de verdade (as mesmas demos do topo), trocando de tema ao vivo ----------
+    (() => {
+      const stage = document.getElementById('themesStage'), view = document.getElementById('themesView');
+      const isl = document.getElementById('themesIsland'), mix = document.getElementById('themesMixer');
+      const chips = [...document.querySelectorAll('.theme-chip')];
+      if (!stage || !chips.length) return;
+      const lang = new URLSearchParams(location.search).get('lang');
+      let cur = 'miami', loaded = false;
+      const tell = (f, msg) => { try { f.contentWindow.postMessage(msg, '*'); } catch (e) { /* ainda carregando */ } };
+      // carrega as duas demos só quando a seção chega perto da tela (são pesadas)
+      const load = () => {
+        if (loaded) return; loaded = true;
+        const q = '?skin=' + cur + (lang ? '&lang=' + lang : '');
+        isl.src = 'island-demo.html' + q;
+        mix.src = 'demo.html' + q;
+      };
+      new IntersectionObserver((es, o) => { if (es.some((e) => e.isIntersecting)) { load(); o.disconnect(); } }, { rootMargin: '500px' }).observe(view);
+      // o palco é desenhado com 460 px de largura: encolhe junto com a página (zoom), sem cortar a ilha
+      const fit = () => { stage.style.zoom = Math.min(1, view.clientWidth / 460); };
+      new ResizeObserver(fit).observe(view); fit();
+
+      const show = (id) => {
+        chips.forEach((c) => c.classList.toggle('on', c.dataset.theme === id));
+        if (id === cur) return;
+        cur = id;
+        if (!loaded) return load();
+        tell(isl, { volumIsland: true, action: 'skin', skin: id });
+        tell(mix, { volumDemo: true, action: 'skin', skin: id });   // o mixer fecha e abre de novo, com a animação do tema
+        track('tema-' + id);
+      };
+      chips.forEach((c) => c.addEventListener('click', () => show(c.dataset.theme)));
+      chips.find((c) => c.dataset.theme === cur).classList.add('on');
+
+      window.addEventListener('message', (e) => {
+        const m = e.data || {};
+        if (m.volumDemo && e.source === mix.contentWindow) {
+          if (m.type === 'resize') mix.style.height = Math.ceil(m.height) + 'px';
+          if (m.type === 'hide') setTimeout(() => tell(mix, { volumDemo: true, action: 'open' }), 900);   // minimizou: volta sozinho
+          if (m.type === 'feedback') document.getElementById('sugestoes').scrollIntoView({ behavior: 'smooth' });
+        }
+        // segurar a ilha abre o mixer no app; aqui ele já está aberto
+      });
+      // dica some depois que a pessoa passa o mouse na ilha
+      isl.addEventListener('mouseenter', () => stage.classList.add('touched'));
+    })();
+
+    // ---------- Faixa de verão (protótipo) ----------
+    (() => {
+      const bar = document.getElementById('summer');
+      if (!bar) return;
+      let closed = false;
+      try { closed = localStorage.getItem('volum-summer') === '1'; } catch (e) {}
+      if (closed && !/[?&]summer=1/.test(location.search)) return;
+      bar.hidden = false;
+      document.getElementById('summerX').addEventListener('click', () => {
+        bar.classList.add('bye');
+        setTimeout(() => { bar.hidden = true; }, 320);
+        try { localStorage.setItem('volum-summer', '1'); } catch (e) {}
+      });
+      // Mascote de óculos escuros (o mesmo do tema Miami)
+      if (window.Volum && Volum.MASCOT_PX) document.getElementById('summerMascot').innerHTML = Volum.MASCOT_PX;
+      // Cidade em pixel: prédios com janelinhas acesas e coqueiros; sorteio fixo (igual a cada visita)
+      let seed = 7;
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      const W = 960, H = 32;
+      const r = (x, y, w, hh, c) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + hh + '" fill="' + c + '"/>';
+      let s = '', x = 0;
+      while (x < W) {
+        const w = 5 + Math.floor(rnd() * 9), bh = 3 + Math.floor(rnd() * (rnd() < .15 ? 15 : 9));
+        s += r(x, H - bh, w, bh, '#33134f');
+        for (let wy = H - bh + 2; wy < H - 2; wy += 3)
+          for (let wx = x + 1; wx < x + w - 1; wx += 2)
+            if (rnd() < .16) s += r(wx, wy, 1, 1, rnd() < .5 ? '#ff8fc0' : '#ffc27a');
+        x += w + (rnd() < .55 ? 3 + Math.floor(rnd() * 14) : 0);
+      }
+      // Coqueiro: tronco curvo e folhas caindo para os lados
+      const palm = (px, ph, flip) => {
+        const c = '#1d0b33';
+        let g = '';
+        for (let i = 0; i < ph; i++) g += r(Math.round(px + Math.sin(i / ph * 1.4) * 4 * flip), H - i - 1, 2, 1, c);
+        const tx = Math.round(px + Math.sin(1.4) * 4 * flip) + 1, ty = H - ph;
+        // copa desenhada pixel a pixel (17 de largura, centro no topo do tronco)
+        const CROWN = ['......XXXXX......', '...XXXXXXXXXXX...', '.XXX..XXXXX..XXX.', 'XX...XX.X.XX...XX', 'X...X...X...X...X', '...X.........X...'];
+        let f = '';
+        CROWN.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') f += r(tx - 8 + x, ty - 2 + y, 1, 1, c); }));
+        return g + '<g class="summer-leaf" style="transform-origin:' + tx + 'px ' + ty + 'px">' + f + '</g>';
+      };
+      for (const [p, ph, fl] of [[28, 24, 1], [44, 18, -1], [250, 26, 1], [610, 22, -1], [760, 25, 1], [778, 17, 1], [925, 23, -1]]) s += palm(p, ph, fl);
+      document.getElementById('summerCity').innerHTML =
+        '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMax slice" shape-rendering="crispEdges">' + s + '</svg>';
+    })();
 
     // ---------- Mascote do Volum (pixel art, o mesmo do app: desenho no shared.js) ----------
     // Topo e bandeja da demo: o mascote animado do app (mascot.css).

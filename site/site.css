@@ -781,3 +781,119 @@ h1 .grad, h1 .script, .stat b {
 .support-close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 10px; color: var(--subtext); background: transparent; cursor: pointer; }
 .support-close:hover { color: var(--text); background: var(--glass); }
 .support-close svg { width: 18px; height: 18px; }
+
+
+/* =========================================================
+   Faixa de verão (protótipo, 19/11/2026): céu dos temas Miami e Pôr do sol,
+   sol chapado com cortes, cidade e coqueiros em pixel, mascote de óculos.
+   ========================================================= */
+.summer {
+  position: relative; z-index: 11; height: 60px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #24123f 0%, #5b1f6e 38%, #c8367f 72%, #ff9a6b 100%);
+  border-bottom: 1px solid rgba(255, 190, 150, .25);
+  transition: height .32s ease, opacity .32s;
+  padding: 0 52px;   /* espaço do ✕: a pílula nunca fica por baixo dele */
+}
+.summer.bye { height: 0; opacity: 0; }
+.summer-sky { position: absolute; inset: 0; pointer-events: none; }
+/* Sol chapado: amarelo → laranja → magenta, borda nítida, 3 cortes embaixo */
+.summer-sun {
+  position: absolute; left: 12%; bottom: -30px; width: 92px; height: 92px; border-radius: 50%;
+  background: linear-gradient(180deg, #ffe066 0%, #ff9a3c 50%, #ff4f8b 100%);
+  -webkit-mask: linear-gradient(180deg, #000 0 38%, transparent 38% 41%, #000 41% 48%, transparent 48% 52%, #000 52% 58%, transparent 58% 63%, #000 63%);
+          mask: linear-gradient(180deg, #000 0 38%, transparent 38% 41%, #000 41% 48%, transparent 48% 52%, #000 52% 58%, transparent 58% 63%, #000 63%);
+  animation: summer-sun 1.6s cubic-bezier(.22, .9, .3, 1) both;
+}
+@keyframes summer-sun { from { transform: translateY(-34px); } }
+.summer-city { position: absolute; left: 0; right: 0; bottom: 0; height: 60px; }
+.summer-city svg { width: 100%; height: 100%; display: block; }
+.summer-leaf { animation: summer-sway 4.5s ease-in-out infinite alternate; }
+.summer-leaf:nth-of-type(2n) { animation-duration: 5.3s; animation-delay: -1.2s; }
+@keyframes summer-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+.summer-pill {
+  position: relative; max-width: 100%; white-space: nowrap; display: inline-flex; align-items: center; gap: 10px;
+  padding: 7px 8px 7px 10px; border-radius: 999px; text-decoration: none; color: #fff4e8;
+  background: rgba(20, 8, 32, .55); border: 1px solid rgba(255, 200, 160, .35);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 13.5px; transition: background .2s, transform .2s;
+}
+.summer-pill:hover { background: rgba(20, 8, 32, .72); transform: translateY(-1px); }
+.summer-pill b { font-weight: 600; letter-spacing: .02em; }
+.summer-sub { color: #ffc6a8; }
+.summer-mascot { width: 30px; height: 21px; display: inline-flex; }
+.summer-mascot .mascot { width: 100%; height: 100%; }
+.summer-mascot .mascot.px .px-shades { display: inline; }
+.summer-go {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: #ffc078; color: #2b1145; font-weight: 700; transition: transform .2s;
+}
+.summer-pill:hover .summer-go { transform: translateX(2px); }
+.summer-x {
+  position: absolute; right: 14px; top: 50%; translate: 0 -50%;
+  width: 28px; height: 28px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(20, 8, 32, .35); color: #fff4e8; font-size: 12px;
+}
+.summer-x:hover { background: rgba(20, 8, 32, .6); }
+@media (max-width: 560px) {
+  .summer-sub { display: none; }
+  .summer-sun { left: 4%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .summer-sun, .summer-leaf { animation: none; }
+}
+
+
+/* =========================================================
+   Seção Temas (19/11/2026): escolhas à esquerda, print da ilha + mixer à direita
+   ========================================================= */
+.themes {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 48px; align-items: center;
+}
+.themes-pick { display: grid; gap: 22px; align-content: start; }
+.theme-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.theme-group-title {
+  flex-basis: 100%; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #8a8a8a);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+}
+.theme-new {
+  text-transform: none; letter-spacing: 0; font-size: 11px; font-weight: 600; color: #2b1145;
+  background: linear-gradient(90deg, #ffc078, #ff8fc0); padding: 2px 8px; border-radius: 999px;
+}
+.theme-chip {
+  display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 8px 14px 8px 8px; border-radius: 999px; font: inherit; font-size: 14px; color: var(--subtext, #bbb);
+  background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08);
+  transition: background .2s, border-color .2s, color .2s, transform .2s;
+}
+.theme-chip i { width: 22px; height: 22px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
+.theme-chip:hover { color: var(--text, #fff); background: rgba(255, 255, 255, .07); }
+.theme-chip.on { color: var(--text, #fff); background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .35); }
+.theme-chip:active { transform: scale(.96); }
+.theme-note { margin: 4px 0 0; color: var(--subtext, #bbb); font-size: 14px; }
+.theme-note a { color: var(--text, #fff); }
+.themes-view { position: relative; display: grid; justify-items: center; min-width: 0; }
+.themes-view::before {   /* brilho suave atrás das demos */
+  content: ''; position: absolute; inset: 10% 0; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, .06), transparent); filter: blur(20px); pointer-events: none;
+}
+.themes-stage { position: relative; width: 460px; display: grid; justify-items: center; }
+.themes-island {
+  display: block; width: 460px; height: 230px; border: 0; background: transparent;
+  color-scheme: dark;   /* igual ao da ilha: com esquemas diferentes o navegador pinta o fundo do iframe */
+  position: relative; z-index: 2;   /* aberta, a ilha passa por cima do mixer, como na tela de verdade */
+}
+.themes-hint {
+  position: absolute; top: 72px; left: 50%; translate: -50% 0; z-index: 1;
+  font-size: 13px; color: var(--muted, #8a8a8a); white-space: nowrap; transition: opacity .3s;
+}
+.themes-stage.touched .themes-hint { opacity: 0; }
+.themes-mixer {
+  display: block; width: 360px; height: 560px; border: 0; border-radius: 14px; background: transparent;
+  margin-top: -130px;   /* ilha fechada é baixinha: o mixer sobe para perto dela */
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .5);
+}
+@media (max-width: 860px) {
+  .themes { grid-template-columns: 1fr; gap: 28px; }
+}

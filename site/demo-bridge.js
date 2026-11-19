@@ -162,6 +162,13 @@
     if (!m.volumDemo) return;
     if (m.action === 'open') open();
     if (m.action === 'close') close();
+    // Seção Temas do site: troca o tema e abre de novo (para tocar a animação de abrir de cada tema)
+    if (m.action === 'skin' && /^[a-z-]+$/.test(m.skin || '')) {
+      settings.skin = m.skin;
+      send(Object.assign({ type: 'settings' }, settings));
+      send({ type: 'close' });
+      setTimeout(open, 380);
+    }
     // A página pode começar a escutar depois da primeira medida: repete a última altura
     if (m.action === 'sync' && lastHeight) toPage({ type: 'resize', height: lastHeight });
   });

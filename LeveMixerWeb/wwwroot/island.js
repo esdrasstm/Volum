@@ -224,7 +224,9 @@
     if (!waveRaf) { waveT = performance.now(); waveRaf = requestAnimationFrame(waveStep); }
   }
   function waveStep(now) {
-    const dt = Math.min(0.05, (now - waveT) / 1000);
+    // nunca negativo: o 1º quadro pode trazer um carimbo de antes do performance.now() que ligou a onda,
+    // e com intervalo negativo as barras andavam para longe do alvo (davam um pulo)
+    const dt = Math.max(0, Math.min(0.05, (now - waveT) / 1000));
     waveT = now;
     let moving = false;
     for (let i = 0; i < waveCur.length; i++) {
@@ -1045,7 +1047,7 @@
     if (!tabRaf) { tabT = performance.now(); tabRaf = requestAnimationFrame(tabStep); }
   }
   function tabStep(now) {
-    const dt = Math.min(0.032, (now - tabT) / 1000);
+    const dt = Math.max(0, Math.min(0.032, (now - tabT) / 1000));   // nunca negativo (ver waveStep)
     tabT = now;
     let moving = false;
     for (const k of ['l', 'r']) {

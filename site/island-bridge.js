@@ -19,6 +19,7 @@
   })();
   const tr = (pt, en, es) => (L === 'en' ? en : L === 'es' ? es : pt);
   const SKIN = new URLSearchParams(location.search).get('skin') || 'default';   // tema (para testar: ?skin=neon)
+  let SKIN_NOW = SKIN;   // a seção Temas do site troca ao vivo
 
   const listeners = [];
   const send = (msg) => setTimeout(() => listeners.forEach((fn) => fn({ data: msg })), 0);
@@ -150,6 +151,12 @@
   addEventListener('message', (e) => {
     const m = e.data || {};
     if (!m.volumIsland || !m.action) return;
+    // Seção Temas do site: troca o tema da ilha ao vivo
+    if (m.action === 'skin' && /^[a-z-]+$/.test(m.skin || '')) {
+      SKIN_NOW = m.skin;
+      send({ type: 'settings', language: L, lite: false, pomodoro: true, style: 'float', skin: SKIN_NOW });
+      return;
+    }
     poke();
     ACTS[m.action]?.();
   });
@@ -174,7 +181,7 @@
     switch (m.type) {
       case 'ready': {
         const now = Date.now();
-        send({ type: 'settings', language: L, lite: false, pomodoro: true, style: 'float', skin: SKIN });
+        send({ type: 'settings', language: L, lite: false, pomodoro: true, style: 'float', skin: SKIN_NOW });
         send({ type: 'battery', present: true, percent: 82, charging: false });
         send({ type: 'water', water });
         send(mediaMsg());
