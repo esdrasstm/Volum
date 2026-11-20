@@ -9,3 +9,6 @@ Store/out/
 
 # Anotações locais do projeto (não vão para o GitHub)
 CLAUDE.md
+
+# Saída do build do equalizador nativo (gerada a cada compilação)
+native/build/

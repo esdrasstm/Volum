@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!-- Janela do equalizador (EqForm.cs). A curva desenhada usa a mesma conta do motor (native/eq_engine.cpp). -->
+<html lang="pt-BR" data-scheme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Volum</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="eq.css">
+</head>
+<body class="eq-page">
+
+  <header class="eq-head">
+    <div class="eq-brand">
+      <svg class="eq-brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15.5" fill="#090909" stroke="#fff" stroke-opacity=".27"/><g stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="9" y1="7" x2="9" y2="25"/><line x1="16" y1="7" x2="16" y2="25"/><line x1="23" y1="7" x2="23" y2="25"/></g><g fill="#fff"><circle cx="9" cy="20" r="3.5"/><circle cx="16" cy="11" r="3.5"/><circle cx="23" cy="17" r="3.5"/></g></svg>
+      <h1 data-i18n="title">Equalizador</h1>
+    </div>
+
+    <div class="device-wrap">
+      <button id="deviceBtn" class="device-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span id="deviceIco" class="dev-ico" aria-hidden="true"></span>
+        <span class="sr" data-i18n="device">Dispositivo</span>
+        <span id="deviceName" class="dev-name"></span>
+        <i id="deviceEq" class="dev-eq" hidden></i>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+      </button>
+      <div id="deviceMenu" class="menu device-menu" role="listbox" hidden></div>
+    </div>
+
+    <button id="liveChip" class="live-chip" type="button" data-state="off" aria-describedby="systemText">
+      <i class="dot" aria-hidden="true"></i><span id="liveText"></span>
+    </button>
+
+    <button id="power" class="eq-power" type="button" role="switch" aria-checked="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0"/></svg>
+      <span id="powerText"></span>
+    </button>
+  </header>
+
+  <nav class="toolbar" aria-label="Ferramentas" data-i18n-aria="tools">
+    <div class="preset-wrap">
+      <button id="presetBtn" class="preset-btn" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="preset-kicker" data-i18n="preset">Preset</span>
+        <span id="presetName" class="preset-name"></span>
+        <span id="presetEdited" class="preset-edited" data-i18n="edited" hidden>editado</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+      </button>
+      <div id="presetMenu" class="menu preset-menu" role="menu" hidden></div>
+    </div>
+
+    <div class="tool-group">
+      <button id="undo" class="tool" type="button" data-i18n-title="undo" title="Desfazer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      </button>
+      <button id="redo" class="tool" type="button" data-i18n-title="redo" title="Refazer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+      </button>
+    </div>
+
+    <div class="tool-group">
+      <button id="importBtn" class="tool wide" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 19h14"/></svg>
+        <span data-i18n="import">Importar</span>
+      </button>
+      <button id="exportBtn" class="tool wide" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M5 19h14"/></svg>
+        <span data-i18n="export">Exportar</span>
+      </button>
+      <input id="file" type="file" accept=".txt,text/plain" hidden>
+    </div>
+
+    <div class="toolbar-end">
+      <button id="spectrumBtn" class="tool wide" type="button" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 17V11M10 17V6M14 17v-8M18 17v-4"/></svg>
+        <span data-i18n="spectrum">Espectro</span>
+      </button>
+      <div class="seg" role="radiogroup" aria-label="Escala" data-i18n-aria="range">
+        <button type="button" role="radio" data-range="6">±6</button>
+        <button type="button" role="radio" data-range="12" aria-checked="true">±12</button>
+        <button type="button" role="radio" data-range="24">±24</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="stage">
+    <div class="display">
+      <canvas id="plot" tabindex="0" role="application"></canvas>
+      <div id="tip" class="tip" hidden></div>
+      <p id="readout" class="readout" aria-hidden="true"></p>
+      <p id="emptyHint" class="empty-hint" hidden data-i18n="emptyHint">Dê dois cliques no gráfico para criar uma banda</p>
+    </div>
+
+    <aside class="preamp" aria-label="Preamp">
+      <span class="preamp-title" data-i18n="preamp">Preamp</span>
+      <div id="preampTrack" class="preamp-track" tabindex="0" role="slider" aria-valuemin="-30" aria-valuemax="12">
+        <i class="preamp-zero"></i>
+        <i id="preampFill" class="preamp-fill"></i>
+        <i id="preampThumb" class="preamp-thumb"></i>
+      </div>
+      <output id="preampOut" class="preamp-out">0,0 dB</output>
+      <label class="auto">
+        <input id="autoPreamp" type="checkbox">
+        <span data-i18n="auto">Auto</span>
+      </label>
+      <div id="meter" class="eq-meter" hidden><i id="meterFill"></i></div>
+    </aside>
+  </main>
+
+  <section class="bands" aria-label="Bandas" data-i18n-aria="bands">
+    <div id="rail" class="rail" role="tablist"></div>
+    <button id="addBand" class="add-band" type="button" data-i18n-title="addBand" title="Nova banda">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </section>
+
+  <section id="inspector" class="inspector" aria-live="off">
+    <div class="field types">
+      <span class="field-label" data-i18n="type">Tipo</span>
+      <div id="types" class="type-row" role="radiogroup"></div>
+    </div>
+    <div id="slopeField" class="field slope-field">
+      <span class="field-label" data-i18n="slope">Inclinação</span>
+      <div id="slope" class="seg small" role="radiogroup">
+        <button type="button" role="radio" data-slope="1">12</button>
+        <button type="button" role="radio" data-slope="2">24</button>
+        <button type="button" role="radio" data-slope="3">36</button>
+        <button type="button" role="radio" data-slope="4">48</button>
+      </div>
+      <span class="unit" data-i18n="dbOct">dB/oit</span>
+    </div>
+    <div class="knobs">
+      <div class="knob" data-param="freq"></div>
+      <div class="knob" data-param="gain"></div>
+      <div class="knob" data-param="q"></div>
+    </div>
+    <div class="band-actions">
+      <label class="switch-row">
+        <input id="bandOn" type="checkbox" class="switch-input">
+        <span class="switch" aria-hidden="true"></span>
+        <span data-i18n="bandOn">Ligada</span>
+      </label>
+      <button id="deleteBand" class="ghost danger" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>
+        <span data-i18n="delete">Excluir</span>
+      </button>
+    </div>
+  </section>
+
+  <footer id="system" class="system" data-state="off">
+    <i class="system-dot" aria-hidden="true"></i>
+    <div class="system-copy">
+      <strong id="systemTitle"></strong>
+      <p id="systemText"></p>
+    </div>
+    <div class="system-actions">
+      <button id="testNoise" class="ghost" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>
+        <span data-i18n="testNoise">Ruído de teste</span>
+      </button>
+      <button id="systemSecondary" class="ghost" type="button" hidden></button>
+      <button id="systemPrimary" class="primary" type="button" hidden></button>
+    </div>
+  </footer>
+
+  <div id="busy" class="busy" hidden>
+    <div class="busy-box">
+      <span class="spinner" aria-hidden="true"></span>
+      <strong id="busyTitle"></strong>
+      <p data-i18n="busyText">O som some por alguns segundos enquanto o Windows reinicia o serviço de áudio.</p>
+    </div>
+  </div>
+
+  <dialog id="dialog" class="dialog">
+    <form method="dialog">
+      <h2 id="dialogTitle"></h2>
+      <div id="dialogBody" class="dialog-body"></div>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost" type="submit" data-i18n="cancel">Cancelar</button>
+        <button id="dialogOk" value="ok" class="primary" type="submit"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="ctx" class="menu ctx-menu" role="menu" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="eq.js"></script>
+</body>
+</html>
