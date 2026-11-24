@@ -205,6 +205,25 @@ body.settings-page { font-size: 12.5px; background: var(--bg); }
 
 /* Botão de teste dentro das opções (ex.: "Testar aviso de levantar" junto do lembrete) */
 .btn-row.inline { margin: 10px 0 2px; }
+/* Idiomas: grade de botões (17 com o "Automático", que ocupa a linha inteira).
+   Coluna mínima de 158 px: cabe o nome mais longo ("Bahasa Indonesia") sem reticências */
+.lang-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 6px; }
+.lang-grid button {
+  font: inherit; font-size: 12.5px; color: var(--ink-soft, #bbb); cursor: pointer; text-align: start;
+  padding: 8px 11px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .03);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background .15s, color .15s, border-color .15s;
+}
+.lang-grid button:hover { background: rgba(255, 255, 255, .07); color: var(--ink, #fff); }
+.lang-grid button[aria-checked="true"] { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .35); color: var(--ink, #fff); }
+.lang-grid .lang-auto { grid-column: 1 / -1; }
+/* Com 3 colunas (janela estreita), o "Automático" ocupa 2 e a grade fecha certinho (6 linhas, sem botão sozinho no fim) */
+:has(> .lang-grid) { container-type: inline-size; }
+@container (min-width: 486px) and (max-width: 649.9px) { .lang-grid .lang-auto { grid-column: span 2; } }
+[data-scheme="light"] .lang-grid button { border-color: rgba(0, 0, 0, .1); background: rgba(0, 0, 0, .03); color: #444; }
+[data-scheme="light"] .lang-grid button:hover { background: rgba(0, 0, 0, .06); color: #111; }
+[data-scheme="light"] .lang-grid button[aria-checked="true"] { background: rgba(0, 0, 0, .08); border-color: rgba(0, 0, 0, .35); color: #111; }
+.dev-diag .btn { flex-shrink: 0; }
+.dev-diag .upd-status:empty { display: none; }
 #pixHint[hidden] { display: none; }
 .skins { margin-top: 14px; }
 /* Convite para a pesquisa de temas (topo da página Temas) */

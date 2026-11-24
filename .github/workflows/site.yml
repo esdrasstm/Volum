@@ -58,6 +58,7 @@ jobs:
                     .replace('href="mascot.css"', 'href="app/mascot.css"')
                     .replace('id="skinBase" href="skins/base.css"', 'href="app/skins.css"')
                     .replace('<script src="shared.js"></script>', '<script src="island-bridge.js"></script>\n  <script src="app/shared.js"></script>')
+                    .replace('<script src="langs.js"></script>', '<script src="app/langs.js"></script>')
                     .replace('<script src="island.js"></script>', '<script src="app/island.js"></script>')
                     .replace('</head>', '  <style>html, body { background: transparent !important; }</style>\n</head>'))
           assert 'island-bridge.js' in isl and 'app/island.js' in isl

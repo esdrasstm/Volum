@@ -77,7 +77,8 @@ static class Weather
         }
         try
         {
-            string lang = Strings.Normalize(s.Language);
+            string lang = Strings.Resolve(s.Language);
+            lang = lang.StartsWith("zh") ? "zh" : lang;   // o Open-Meteo usa só as duas letras
             // "Ubá MG", "Ubá, MG" ou "Ubá, Minas Gerais": procura só o nome e usa o resto (estado/país) para escolher
             var (query, hint) = SplitPlace(city);
             string url = "https://geocoding-api.open-meteo.com/v1/search?count=100&format=json&language=" + lang +

@@ -77,11 +77,7 @@
 
         <!-- Os nomes dos idiomas ficam sempre no próprio idioma -->
         <div class="label label-gap" data-i18n="language">Idioma</div>
-        <div class="segmented" id="langSeg" role="radiogroup" aria-label="Idioma" data-i18n-aria="language">
-          <button data-value="pt" role="radio" aria-checked="true">Português</button>
-          <button data-value="en" role="radio" aria-checked="false">English</button>
-          <button data-value="es" role="radio" aria-checked="false">Español</button>
-        </div>
+        <div class="lang-grid" id="langSeg" role="radiogroup" aria-label="Idioma" data-i18n-aria="language"></div>
       </div>
 
       <div class="group">
@@ -195,7 +191,7 @@
         <div class="setting-row" id="tuckLineRow">
           <span class="setting-text">
             <span data-i18n="islandTuckLine">Deixar um tracinho no topo</span>
-            <small data-i18n="islandTuckLineHint">Em vez de sumir de vez, a ilha vira um tracinho que só abre com um clique. Passar o mouse nas abas não abre nada</small>
+            <small data-i18n="islandTuckLineHint">Em vez de sumir de vez, a ilha vira um tracinho que só abre com o mouse parado em cima dele por 3 segundos. Passar o mouse pelas abas não abre nada</small>
           </span>
           <label class="switch">
             <input id="tuckLineOn" type="checkbox">
@@ -221,6 +217,13 @@
             <input id="devicesOn" type="checkbox" checked>
             <span></span>
           </label>
+        </div>
+        <div class="setting-row dev-diag" id="devDiagRow">
+          <span class="setting-text">
+            <small data-i18n="devDiagHint">Seu aparelho sem fio não aparece? Copie o diagnóstico e mande pelo balão de sugestões: assim a gente adiciona a marca dele</small>
+            <span class="upd-status" id="devDiagStatus" aria-live="polite"></span>
+          </span>
+          <button class="btn" id="devDiag" data-i18n="devDiag">Copiar diagnóstico</button>
         </div>
         <div class="setting-row">
           <span class="setting-text">
@@ -496,6 +499,7 @@
   </main>
 
   <script src="shared.js"></script>
+  <script src="langs.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

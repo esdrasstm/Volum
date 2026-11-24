@@ -83,7 +83,7 @@ static class Water
     /// <summary>"2 L", "1,25 L" ou "250 ml", com a vírgula ou o ponto do idioma.</summary>
     public static string Format(int ml, string lang)
     {
-        var culture = CultureInfo.GetCultureInfo(lang == "en" ? "en-US" : lang == "es" ? "es-ES" : "pt-BR");
+        var culture = Strings.Culture(lang);
         return ml < 1000 ? $"{ml} ml" : string.Format(culture, "{0:0.##} L", ml / 1000.0);
     }
 
@@ -406,6 +406,14 @@ static class Sora
     /// <summary>Fonte em pixels.</summary>
     public static Font Get(FontStyle style, float px)
     {
+        // A Sora só tem o latim básico: nos outros idiomas, a fonte do Windows certa para a escrita
+        string? sys = Strings.Resolve(AppSettings.Current.Language) switch
+        {
+            "pt" or "en" or "es" or "de" or "fr" or "it" or "id" => null,
+            "ja" => "Yu Gothic UI", "ko" => "Malgun Gothic", "zh-CN" => "Microsoft YaHei UI", "zh-TW" => "Microsoft JhengHei UI",
+            _ => "Segoe UI",
+        };
+        if (sys != null) return new Font(sys, px, style, GraphicsUnit.Pixel);
         var fam = Family(style);
         return fam != null ? new Font(fam, px, style, GraphicsUnit.Pixel) : new Font("Segoe UI", px, style, GraphicsUnit.Pixel);
     }

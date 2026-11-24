@@ -366,7 +366,7 @@
 
   // Troca todos os textos do mixer para o idioma escolhido
   function setLanguage(value) {
-    lang = V.I18N[value] ? value : 'pt';
+    lang = V.I18N[value] ? value : 'en';
     root.lang = V.langTag(lang);
     V.applyI18n(lang);
     rows.forEach((r) => {
@@ -484,7 +484,10 @@
   // Botão dentro de uma novidade (ex.: "Ver na Microsoft Store"): o C# abre o endereço
   $('newsStage')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-site]');
-    if (b) post({ type: 'openSite', section: b.dataset.site });
+    if (!b) return;
+    // 'support' abre Configurações → Apoiar (Pix no Brasil, Ko-fi fora), como o coração do cabeçalho
+    if (b.dataset.site === 'support') post({ type: 'openSupport' });
+    else post({ type: 'openSite', section: b.dataset.site });
   });
 
   /* ---------------- Água bebida hoje ---------------- */

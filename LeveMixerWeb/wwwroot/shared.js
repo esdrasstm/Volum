@@ -45,7 +45,7 @@ window.Volum = (() => {
       appNotesStoreOnly: 'Só na versão da Microsoft Store: o Windows exige para deixar um app ler as notificações', appNotesAsking: 'Confirme a permissão na janela do Windows...', appNotesDenied: 'O Windows não deu a permissão. Libere em Configurações do Windows → Privacidade → Notificações',
       calTitle: 'Agenda', calHint: 'Cole o endereço iCal (.ics) da sua agenda. No Google Agenda: Configurações → sua agenda → "Endereço secreto no formato iCal". A ilha avisa 10 min antes de cada compromisso',
       calSave: 'Salvar', calLoading: 'Lendo a agenda...', calOk: 'Pronto! {0} compromisso(s) hoje e amanhã', calError: 'Não consegui abrir esse endereço. Confira se ele está completo', calNotIcs: 'Esse endereço não é de uma agenda iCal (.ics)', calHttps: 'Use um endereço que comece com https:// (o da agenda é secreto e precisa ir protegido)',
-      tabTodo: 'Tarefas', todoEmpty: 'Nada pendente. Anote algo!', todoCount: '{0} de {1} feitas', todoAdd: 'Nova tarefa', todoPlaceholder: 'Escreva e aperte Enter', todoClear: 'Limpar feitas', todoDelete: 'Apagar', todoCheck: 'Marcar como feita', todoPending: '{0} tarefas pendentes', todoOn: 'Lista de tarefas', todoOnHint: 'Uma página na ilha para anotar tarefas rápidas e riscar o que já fez', devicesOn: 'Bateria dos aparelhos', devicesOnHint: 'Fone, mouse, teclado e caixinha sem fio: a bateria numa página da ilha e um aviso quando estiver fraca', tabDevices: 'Aparelhos', devCount1: '1 conectado', devCountN: '{0} conectados', islandAgenda: 'Agenda', agendaEmpty: 'Nada na agenda hoje', agendaAllDay: 'Dia todo', agendaTomorrow: 'Amanhã', agendaNow: 'Agora',
+      tabTodo: 'Tarefas', todoEmpty: 'Nada pendente. Anote algo!', todoCount: '{0} de {1} feitas', todoAdd: 'Nova tarefa', todoPlaceholder: 'Escreva e aperte Enter', todoClear: 'Limpar feitas', todoDelete: 'Apagar', todoCheck: 'Marcar como feita', todoPending: '{0} tarefas pendentes', todoOn: 'Lista de tarefas', todoOnHint: 'Uma página na ilha para anotar tarefas rápidas e riscar o que já fez', newsSoon: 'Em breve', langAuto: 'Automático (idioma do Windows)', devDiag: 'Copiar diagnóstico', devDiagHint: 'Seu aparelho sem fio não aparece? Copie o diagnóstico e mande pelo balão de sugestões: assim a gente adiciona a marca dele', devDiagBusy: 'Procurando aparelhos…', devDiagDone: 'Copiado! Cole na mensagem de sugestão.', devDiagFail: 'Não deu para copiar. Tente de novo.', devicesOn: 'Bateria dos aparelhos', devicesOnHint: 'Fone, mouse, teclado e caixinha sem fio: a bateria numa página da ilha e um aviso quando estiver fraca', tabDevices: 'Aparelhos', devCount1: '1 conectado', devCountN: '{0} conectados', islandAgenda: 'Agenda', agendaEmpty: 'Nada na agenda hoje', agendaAllDay: 'Dia todo', agendaTomorrow: 'Amanhã', agendaNow: 'Agora',
       wxTitle: 'Clima', wxHint: 'Digite a sua cidade para ver o clima e as próximas horas na ilha. Se houver outra com o mesmo nome, coloque o estado (ex.: Ubá, MG). Deixe vazio para desligar', wxPlaceholder: 'Ex.: Ubá, MG',
       wxLoading: 'Procurando a cidade...', wxOk: 'Pronto! {0}', wxNotFound: 'Não achei essa cidade. Confira o nome', wxError: 'Não consegui buscar o clima agora. Confira a internet',
       islandWeather: 'Clima', wxMax: 'Máx.', wxMin: 'Mín.', wxNow: 'Agora', islandVolume: 'Volume', islandClose: 'Fechar', islandNextMon: 'Mudar de monitor ({0} de {1})', islandMute: 'Silenciar', islandUnmute: 'Ativar o som', tabMedia: 'Música', tabFocus: 'Foco', tabWater: 'Água', tabAgenda: 'Agenda', tabWeather: 'Clima',
@@ -67,7 +67,7 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Principal', monitorOther: 'Outro monitor', monitorN: 'Monitor {0}',
       islandPos: 'Posição', posLeft: 'Esquerda', posCenter: 'Centro', posRight: 'Direita', posTop: 'Em cima', posBottom: 'Embaixo',
       posBottomNote: 'Embaixo, a ilha fica logo acima da barra de tarefas e usa o formato flutuante',
-      islandTuckLine: 'Deixar um tracinho no topo', islandTuckLineHint: 'Em vez de sumir de vez, a ilha vira um tracinho que só abre com um clique. Passar o mouse nas abas não abre nada', islandTuck: 'Sair da frente dos apps', islandTuckHint: 'Quando uma janela chega no topo da tela (navegador, Figma...), a ilha some para não cobrir abas e menus. Desligado, ela fica sempre à vista',
+      islandTuckLine: 'Deixar um tracinho no topo', islandTuckLineHint: 'Em vez de sumir de vez, a ilha vira um tracinho que só abre com o mouse parado em cima dele por 3 segundos. Passar o mouse pelas abas não abre nada', islandTuck: 'Sair da frente dos apps', islandTuckHint: 'Quando uma janela chega no topo da tela (navegador, Figma...), a ilha some para não cobrir abas e menus. Desligado, ela fica sempre à vista',
       otherScreen: 'Outro monitor em tela cheia', otherScreenHint: 'Com um jogo ou vídeo em tela cheia no monitor principal, a ilha vai para o outro monitor',
       waterTest: 'Testar aviso', waterSound: 'Tocar som no aviso',
     },
@@ -106,7 +106,7 @@ window.Volum = (() => {
       appNotesStoreOnly: 'Microsoft Store version only: Windows requires it to let an app read notifications', appNotesAsking: 'Confirm the permission in the Windows window...', appNotesDenied: 'Windows did not grant the permission. Allow it in Windows Settings → Privacy → Notifications',
       calTitle: 'Calendar', calHint: 'Paste your calendar iCal (.ics) address. In Google Calendar: Settings → your calendar → "Secret address in iCal format". The island alerts you 10 min before each event',
       calSave: 'Save', calLoading: 'Reading the calendar...', calOk: 'Done! {0} event(s) today and tomorrow', calError: "Couldn't open that address. Check that it's complete", calNotIcs: "That address isn't an iCal (.ics) calendar", calHttps: 'Use an address that starts with https:// (calendar addresses are secret and must be sent securely)',
-      tabTodo: 'Tasks', todoEmpty: 'All clear. Jot something down!', todoCount: '{0} of {1} done', todoAdd: 'New task', todoPlaceholder: 'Type and press Enter', todoClear: 'Clear done', todoDelete: 'Delete', todoCheck: 'Mark as done', todoPending: '{0} pending tasks', todoOn: 'Task list', todoOnHint: 'A page in the island to jot down quick tasks and check them off', devicesOn: 'Device battery', devicesOnHint: 'Wireless headphones, mouse, keyboard and speaker: battery on an island page and a heads-up when it runs low', tabDevices: 'Devices', devCount1: '1 connected', devCountN: '{0} connected', islandAgenda: 'Calendar', agendaEmpty: 'Nothing on the calendar today', agendaAllDay: 'All day', agendaTomorrow: 'Tomorrow', agendaNow: 'Now',
+      tabTodo: 'Tasks', todoEmpty: 'All clear. Jot something down!', todoCount: '{0} of {1} done', todoAdd: 'New task', todoPlaceholder: 'Type and press Enter', todoClear: 'Clear done', todoDelete: 'Delete', todoCheck: 'Mark as done', todoPending: '{0} pending tasks', todoOn: 'Task list', todoOnHint: 'A page in the island to jot down quick tasks and check them off', newsSoon: 'Coming soon', langAuto: 'Automatic (Windows language)', devDiag: 'Copy diagnostics', devDiagHint: 'Wireless device not showing up? Copy the diagnostics and send them through the feedback bubble so we can add its brand', devDiagBusy: 'Looking for devices…', devDiagDone: 'Copied! Paste it into your feedback message.', devDiagFail: 'Could not copy. Try again.', devicesOn: 'Device battery', devicesOnHint: 'Wireless headphones, mouse, keyboard and speaker: battery on an island page and a heads-up when it runs low', tabDevices: 'Devices', devCount1: '1 connected', devCountN: '{0} connected', islandAgenda: 'Calendar', agendaEmpty: 'Nothing on the calendar today', agendaAllDay: 'All day', agendaTomorrow: 'Tomorrow', agendaNow: 'Now',
       wxTitle: 'Weather', wxHint: 'Type your city to see the weather and the next hours on the island. If there are others with the same name, add the state or country (e.g.: Springfield, Illinois). Leave it empty to turn it off', wxPlaceholder: 'E.g.: London',
       wxLoading: 'Looking up the city...', wxOk: 'Done! {0}', wxNotFound: "Couldn't find that city. Check the name", wxError: "Couldn't get the weather right now. Check your internet",
       islandWeather: 'Weather', wxMax: 'H', wxMin: 'L', wxNow: 'Now', islandVolume: 'Volume', islandClose: 'Close', islandNextMon: 'Move to the next screen ({0} of {1})', islandMute: 'Mute', islandUnmute: 'Unmute', tabMedia: 'Music', tabFocus: 'Focus', tabWater: 'Water', tabAgenda: 'Agenda', tabWeather: 'Weather',
@@ -128,7 +128,7 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Main', monitorOther: 'Other monitor', monitorN: 'Monitor {0}',
       islandPos: 'Position', posLeft: 'Left', posCenter: 'Center', posRight: 'Right', posTop: 'Top', posBottom: 'Bottom',
       posBottomNote: 'At the bottom, the island sits just above the taskbar and uses the floating shape',
-      islandTuckLine: 'Leave a small line at the top', islandTuckLineHint: 'Instead of hiding completely, the island becomes a small line that only opens with a click. Hovering over tabs opens nothing', islandTuck: 'Get out of the way of apps', islandTuckHint: 'When a window reaches the top of the screen (browser, Figma...), the island hides so it does not cover tabs and menus. Off, it always stays visible',
+      islandTuckLine: 'Leave a small line at the top', islandTuckLineHint: 'Instead of hiding completely, the island becomes a small line that only opens when you rest the mouse on it for 3 seconds. Moving across tabs opens nothing', islandTuck: 'Get out of the way of apps', islandTuckHint: 'When a window reaches the top of the screen (browser, Figma...), the island hides so it does not cover tabs and menus. Off, it always stays visible',
       otherScreen: 'Other monitor in full screen', otherScreenHint: 'With a game or video in full screen on the main monitor, the island moves to the other monitor',
       waterTest: 'Test reminder', waterSound: 'Play a sound',
     },
@@ -167,7 +167,7 @@ window.Volum = (() => {
       appNotesStoreOnly: 'Solo en la versión de Microsoft Store: Windows lo exige para dejar que una app lea las notificaciones', appNotesAsking: 'Confirma el permiso en la ventana de Windows...', appNotesDenied: 'Windows no dio el permiso. Actívalo en Configuración de Windows → Privacidad → Notificaciones',
       calTitle: 'Agenda', calHint: 'Pega la dirección iCal (.ics) de tu agenda. En Google Calendar: Configuración → tu calendario → "Dirección secreta en formato iCal". La isla avisa 10 min antes de cada evento',
       calSave: 'Guardar', calLoading: 'Leyendo la agenda...', calOk: '¡Listo! {0} evento(s) hoy y mañana', calError: 'No pude abrir esa dirección. Revisa que esté completa', calNotIcs: 'Esa dirección no es de una agenda iCal (.ics)', calHttps: 'Usa una dirección que empiece con https:// (la de la agenda es secreta y debe ir protegida)',
-      tabTodo: 'Tareas', todoEmpty: 'Nada pendiente. ¡Anota algo!', todoCount: '{0} de {1} hechas', todoAdd: 'Nueva tarea', todoPlaceholder: 'Escribe y pulsa Enter', todoClear: 'Borrar hechas', todoDelete: 'Borrar', todoCheck: 'Marcar como hecha', todoPending: '{0} tareas pendientes', todoOn: 'Lista de tareas', todoOnHint: 'Una página en la isla para anotar tareas rápidas y tacharlas', devicesOn: 'Batería de los dispositivos', devicesOnHint: 'Auriculares, ratón, teclado y altavoz inalámbricos: la batería en una página de la isla y un aviso cuando esté baja', tabDevices: 'Dispositivos', devCount1: '1 conectado', devCountN: '{0} conectados', islandAgenda: 'Agenda', agendaEmpty: 'Nada en la agenda hoy', agendaAllDay: 'Todo el día', agendaTomorrow: 'Mañana', agendaNow: 'Ahora',
+      tabTodo: 'Tareas', todoEmpty: 'Nada pendiente. ¡Anota algo!', todoCount: '{0} de {1} hechas', todoAdd: 'Nueva tarea', todoPlaceholder: 'Escribe y pulsa Enter', todoClear: 'Borrar hechas', todoDelete: 'Borrar', todoCheck: 'Marcar como hecha', todoPending: '{0} tareas pendientes', todoOn: 'Lista de tareas', todoOnHint: 'Una página en la isla para anotar tareas rápidas y tacharlas', newsSoon: 'Próximamente', langAuto: 'Automático (idioma de Windows)', devDiag: 'Copiar diagnóstico', devDiagHint: '¿Tu dispositivo inalámbrico no aparece? Copia el diagnóstico y envíalo por el globo de sugerencias para que agreguemos su marca', devDiagBusy: 'Buscando dispositivos…', devDiagDone: '¡Copiado! Pégalo en tu mensaje de sugerencia.', devDiagFail: 'No se pudo copiar. Inténtalo de nuevo.', devicesOn: 'Batería de los dispositivos', devicesOnHint: 'Auriculares, ratón, teclado y altavoz inalámbricos: la batería en una página de la isla y un aviso cuando esté baja', tabDevices: 'Dispositivos', devCount1: '1 conectado', devCountN: '{0} conectados', islandAgenda: 'Agenda', agendaEmpty: 'Nada en la agenda hoy', agendaAllDay: 'Todo el día', agendaTomorrow: 'Mañana', agendaNow: 'Ahora',
       wxTitle: 'Clima', wxHint: 'Escribe tu ciudad para ver el clima y las próximas horas en la isla. Si hay otra con el mismo nombre, agrega la provincia o el país (ej.: Córdoba, Argentina). Déjalo vacío para desactivarlo', wxPlaceholder: 'Ej.: Madrid',
       wxLoading: 'Buscando la ciudad...', wxOk: '¡Listo! {0}', wxNotFound: 'No encontré esa ciudad. Revisa el nombre', wxError: 'No pude obtener el clima ahora. Revisa la conexión',
       islandWeather: 'Clima', wxMax: 'Máx.', wxMin: 'Mín.', wxNow: 'Ahora', islandVolume: 'Volumen', islandClose: 'Cerrar', islandNextMon: 'Cambiar de monitor ({0} de {1})', islandMute: 'Silenciar', islandUnmute: 'Activar sonido', tabMedia: 'Música', tabFocus: 'Foco', tabWater: 'Agua', tabAgenda: 'Agenda', tabWeather: 'Clima',
@@ -189,17 +189,41 @@ window.Volum = (() => {
       islandMonitor: 'Monitor', monitorPrimary: 'Principal', monitorOther: 'Otro monitor', monitorN: 'Monitor {0}',
       islandPos: 'Posición', posLeft: 'Izquierda', posCenter: 'Centro', posRight: 'Derecha', posTop: 'Arriba', posBottom: 'Abajo',
       posBottomNote: 'Abajo, la isla queda justo encima de la barra de tareas y usa la forma flotante',
-      islandTuckLine: 'Dejar una rayita arriba', islandTuckLineHint: 'En lugar de desaparecer del todo, la isla se vuelve una rayita que solo se abre con un clic. Pasar el ratón por las pestañas no abre nada', islandTuck: 'Apartarse de las apps', islandTuckHint: 'Cuando una ventana llega a la parte superior de la pantalla (navegador, Figma...), la isla se oculta para no tapar pestañas y menús. Desactivado, siempre queda visible',
+      islandTuckLine: 'Dejar una rayita arriba', islandTuckLineHint: 'En lugar de desaparecer del todo, la isla se vuelve una rayita que solo se abre al dejar el ratón encima 3 segundos. Pasar el ratón por las pestañas no abre nada', islandTuck: 'Apartarse de las apps', islandTuckHint: 'Cuando una ventana llega a la parte superior de la pantalla (navegador, Figma...), la isla se oculta para no tapar pestañas y menús. Desactivado, siempre queda visible',
       otherScreen: 'Otro monitor en pantalla completa', otherScreenHint: 'Con un juego o video en pantalla completa en el monitor principal, la isla pasa al otro monitor',
       waterTest: 'Probar aviso', waterSound: 'Reproducir sonido',
     },
   };
 
-  const t = (lang, key) => (I18N[lang] && I18N[lang][key]) || I18N.pt[key] || key;
-  const langTag = (lang) => ({ pt: 'pt-BR', en: 'en', es: 'es' }[lang] || 'pt-BR');
+  /* Idiomas do app. pt, en e es ficam aqui; os outros vêm do langs.js (carregado depois deste arquivo).
+     Texto que faltar num idioma sai em inglês (o português só vale para o próprio português).
+     Os nomes ficam sempre no próprio idioma. "auto" = o idioma do Windows (quem decide é o C#). */
+  const LANGS = [
+    ['pt', 'Português'], ['en', 'English'], ['es', 'Español'], ['de', 'Deutsch'], ['fr', 'Français'],
+    ['it', 'Italiano'], ['tr', 'Türkçe'], ['pl', 'Polski'], ['id', 'Bahasa Indonesia'], ['vi', 'Tiếng Việt'],
+    ['ru', 'Русский'], ['ar', 'العربية'], ['ja', '日本語'], ['ko', '한국어'], ['zh-CN', '简体中文'], ['zh-TW', '繁體中文'],
+  ];
+  const RTL = new Set(['ar']);
+  // A Sora só tem o latim básico: nos outros idiomas o texto sai na fonte do Windows (classe no <html>)
+  const SORA_LANGS = new Set(['pt', 'en', 'es', 'de', 'fr', 'it', 'id']);
+  const t = (lang, key) => (I18N[lang] && I18N[lang][key]) || (lang === 'pt' ? null : I18N.en[key]) || I18N.pt[key] || key;
+  const langTag = (lang) => ({ pt: 'pt-BR' }[lang] || (I18N[lang] ? lang : 'pt-BR'));
+  // Junta idiomas (langs.js): { de: { chave: 'texto', ... }, ... }
+  function addLangs(map) { for (const [k, v] of Object.entries(map)) I18N[k] = Object.assign(I18N[k] || {}, v); }
+  // Novidades traduzidas: { versão, de: [[título, texto], ...] } na ordem do NEWS.items. Versão diferente = ignora (sai em inglês)
+  const NEWS_TR = {};
+  function addNews(version, map) { if (version === NEWS.version) Object.assign(NEWS_TR, map); }
+  const newsText = (item, i, lang) => item[lang] || (NEWS_TR[lang] && NEWS_TR[lang][i]) || item.en || item.pt;
 
   // Troca os textos marcados com data-i18n / data-i18n-title / data-i18n-aria
   function applyI18n(lang) {
+    const root = document.documentElement;
+    root.lang = langTag(lang);
+    // Árabe: o layout continua o mesmo (a janela, os sliders e a ilha foram pensados assim); cada texto corre da
+    // direita para a esquerda e se alinha pelo próprio sentido (unicode-bidi: plaintext, classe rtl-text no CSS)
+    root.dir = 'ltr';
+    root.classList.toggle('rtl-text', RTL.has(lang));
+    root.classList.toggle('sys-font', !SORA_LANGS.has(lang));
     document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(lang, el.dataset.i18n); });
     document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(lang, el.dataset.i18nTitle); });
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(lang, el.dataset.i18nPlaceholder); });
@@ -210,30 +234,32 @@ window.Volum = (() => {
      Aparecem no popup do mixer (uma vez, depois de atualizar) e na página "Sobre" das configurações.
      Para a próxima versão: troque "version" e os itens (nos 3 idiomas). O ícone é uma chave de NEWS_ICONS. */
   const NEWS = {
-    version: '0.9.0',
+    version: '0.10.0',
     items: [
-      { icon: 'check', art: 'todo',
-        pt: ['Lista de tarefas na ilha', 'Anote tarefas rápidas e risque o que já fez, direto na ilha. Um numerozinho na ilha fechada lembra o que falta.'],
-        en: ['Task list in the island', 'Jot down quick tasks and check them off right in the island. A tiny number on the closed island shows what is left.'],
-        es: ['Lista de tareas en la isla', 'Anota tareas rápidas y tacha lo que ya hiciste, directo en la isla. Un numerito en la isla cerrada recuerda lo que falta.'] },
+      { icon: 'globe', art: 'hello',
+        pt: ['O Volum fala a sua língua', 'Agora são 16 idiomas, e o Volum já abre no idioma do Windows. Dá para trocar em Configurações → Geral.'],
+        en: ['Volum speaks your language', 'Now in 16 languages, and Volum opens in your Windows language. You can change it in Settings → General.'],
+        es: ['Volum habla tu idioma', 'Ahora en 16 idiomas, y Volum abre en el idioma de tu Windows. Puedes cambiarlo en Configuración → General.'] },
       { icon: 'headphones', art: 'devices',
-        pt: ['Bateria dos seus aparelhos', 'Fone, mouse, teclado e caixinha Bluetooth: a carga aparece na ilha, e ela avisa quando a bateria estiver fraca.'],
-        en: ['Your devices\' battery', 'Bluetooth headphones, mouse, keyboard and speaker: their charge shows in the island, with a heads-up when it runs low.'],
-        es: ['Batería de tus dispositivos', 'Auriculares, ratón, teclado y altavoz Bluetooth: la carga aparece en la isla, y te avisa cuando la batería esté baja.'] },
-      { icon: 'speaker', art: 'island',
-        pt: ['Volume e ilha mais fluida', 'Toque no alto-falante do player para mudar o volume ali mesmo. E a ilha inteira ficou com movimentos de gota, macios em qualquer monitor.'],
-        en: ['Volume and a smoother island', 'Tap the speaker in the player to change the volume right there. The whole island now moves like a droplet, smooth on any monitor.'],
-        es: ['Volumen e isla más fluida', 'Toca el altavoz del reproductor para cambiar el volumen ahí mismo. Y toda la isla ahora se mueve como una gota, suave en cualquier monitor.'] },
-      { icon: 'timer', art: 'pomo',
-        pt: ['Pomodoro que não passa batido', 'O fim do foco agora aparece grande na ilha e espera você ver, mesmo se estiver num jogo em tela cheia.'],
-        en: ['A Pomodoro you won\'t miss', 'The end of a focus session now shows up big in the island and waits for you, even if you are in a full-screen game.'],
-        es: ['Un Pomodoro que no se te escapa', 'El fin del enfoque ahora aparece grande en la isla y te espera, incluso si estás en un juego a pantalla completa.'] },
+        pt: ['Bateria dos receptores sem fio', 'Mouses e teclados Logitech com receptor USB agora mostram a bateria na ilha. Outra marca não aparece? Configurações → Ilha → Copiar diagnóstico.'],
+        en: ['Battery for wireless receivers', 'Logitech mice and keyboards with a USB receiver now show their battery on the island. Another brand missing? Settings → Island → Copy diagnostics.'],
+        es: ['Batería de receptores inalámbricos', 'Los ratones y teclados Logitech con receptor USB ahora muestran su batería en la isla. ¿Falta otra marca? Configuración → Isla → Copiar diagnóstico.'] },
       { icon: 'fix', art: 'fix',
-        pt: ['Correções e cuidados', 'Em cima das abas, a ilha pode virar um tracinho que só abre com o mouse parado nele (Configurações → Ilha). E mais: procurar atualização, sons mais rápidos e a ilha não pisca mais.'],
-        en: ['Fixes and polish', 'Over browser tabs, the island can become a small line that only opens when you rest the mouse on it (Settings → Island). Plus: check for updates, snappier sounds and no more flicker.'],
-        es: ['Correcciones y detalles', 'Sobre las pestañas, la isla puede volverse una rayita que solo se abre al dejar el ratón encima (Configuración → Isla). Además: buscar actualizaciones, sonidos más rápidos y la isla ya no parpadea.'] },
+        pt: ['Correções e cuidados', 'Pequenos ajustes na ilha e no mixer para tudo ficar mais redondo.'],
+        en: ['Fixes and polish', 'Small tweaks to the island and the mixer so everything runs smoother.'],
+        es: ['Correcciones y detalles', 'Pequeños ajustes en la isla y el mezclador para que todo vaya más fino.'] },
+      // Opinião e apoio: fecham as novidades (link "support" abre Configurações → Apoiar, ver app.js)
+      { icon: 'chat', art: 'voice', link: 'feedback',
+        pt: ['Sua opinião faz o Volum', 'Muita coisa daqui veio de sugestões de quem usa: a saída de áudio, a posição da ilha, o tracinho em cima das abas, a bateria dos aparelhos. Conta o que você quer ver.', 'Mandar sugestão'],
+        en: ['Your ideas shape Volum', 'A lot of Volum came from people who use it: audio output, island position, the little line above your tabs, device battery. Tell us what you want to see.', 'Send a suggestion'],
+        es: ['Tu opinión hace Volum', 'Mucho de Volum vino de sugerencias de quien lo usa: la salida de audio, la posición de la isla, la rayita sobre las pestañas, la batería de los dispositivos. Cuéntanos qué quieres ver.', 'Enviar sugerencia'] },
+      { icon: 'heart', art: 'support', link: 'support',
+        pt: ['Apoiar o Volum', 'O Volum é grátis, sem anúncio e feito por uma pessoa só. Se ele te ajuda no dia a dia, qualquer apoio ajuda a continuar. Sem pressão: usar e indicar já vale muito.', 'Apoiar o Volum'],
+        en: ['Support Volum', 'Volum is free, has no ads and is made by just one person. If it helps you every day, any support helps keep it going. No pressure: using it and sharing it already means a lot.', 'Support Volum'],
+        es: ['Apoya a Volum', 'Volum es gratis, sin anuncios y lo hace una sola persona. Si te ayuda en el día a día, cualquier apoyo ayuda a seguir. Sin presión: usarlo y recomendarlo ya vale mucho.', 'Apoyar a Volum'] },
     ],
   };
+
   // Ícones de traço em caixa de 24 (os mesmos do mixer e das configurações; classe .ico no style.css)
   const NEWS_ICONS = {
     monitor: '<rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M9 20h6M12 16.5V20"/><path d="M8.5 7.5h7" stroke-width="2"/>',
@@ -254,6 +280,7 @@ window.Volum = (() => {
     island: '<rect x="3" y="8" width="18" height="8" rx="4"/>',
     calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
     timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5M12 2.5V6"/>',
+    globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5s1.2-6.1 3.6-8.5z"/>',
     check: '<rect x="4" y="4" width="16" height="16" rx="5"/><path d="M8.5 12.2l2.4 2.4 4.8-5"/>',
     headphones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3.5" y="13.5" width="4.5" height="7" rx="1.8"/><rect x="16" y="13.5" width="4.5" height="7" rx="1.8"/>',
     gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
@@ -262,8 +289,8 @@ window.Volum = (() => {
   // Itens da lista de novidades (<li> com ícone, título e texto), no idioma pedido
   // store: a cópia veio da Microsoft Store (aí os itens "githubOnly" não aparecem)
   function newsItems(lang, store = false) {
-    return NEWS.items.filter((item) => !(item.githubOnly && store) && !(item.storeOnly && !store)).map((item) => {
-      const [head, text, linkLabel] = item[lang] || item.pt;
+    return NEWS.items.map((item, i) => [item, i]).filter(([item]) => !(item.githubOnly && store) && !(item.storeOnly && !store)).map(([item, i]) => {
+      const [head, text, linkLabel] = newsText(item, i, lang);
       const li = document.createElement('li');
       li.innerHTML = '<div class="news-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS[item.icon] +
         '</svg></div><div><b></b><span></span></div>';
@@ -271,7 +298,7 @@ window.Volum = (() => {
       if (item.soon) {
         const tag = document.createElement('em');
         tag.className = 'news-soon';
-        tag.textContent = { pt: 'Em breve', en: 'Coming soon', es: 'Próximamente' }[lang] || 'Em breve';
+        tag.textContent = t(lang, 'newsSoon');
         li.querySelector('b').append(' ', tag);
       }
       li.querySelector('span').textContent = text;
@@ -288,7 +315,18 @@ window.Volum = (() => {
 
   // Ilustrações animadas das novidades (miniaturas em HTML/CSS; estilos no bloco "Novidades" do style.css)
   const WAVE6 = '<i></i><i></i><i></i><i></i><i></i><i></i>';
+  const HELLO = { pt: 'Olá', en: 'Hello', es: 'Hola', de: 'Hallo', fr: 'Bonjour', it: 'Ciao', tr: 'Merhaba', pl: 'Cześć', id: 'Halo',
+    vi: 'Xin chào', ru: 'Привет', ar: 'مرحبًا', ja: 'こんにちは', ko: '안녕하세요', 'zh-CN': '你好', 'zh-TW': '您好' };
   const NEWS_ARTS = {
+    hello: (lang) => {
+      const order = LANGS.map(([c]) => c);
+      const start = Math.max(0, order.indexOf(lang));
+      const list = order.slice(start).concat(order.slice(0, start));
+      const names = Object.fromEntries(LANGS);
+      return '<div class="na-hello" style="--n:' + list.length + '">' + list.map((c, i) =>
+        '<span class="na-hi" style="--i:' + i + '" lang="' + langTag(c) + '"' + (RTL.has(c) ? ' dir="rtl"' : '') + '><b>' + HELLO[c] +
+        '</b><small>' + names[c] + '</small></span>').join('') + '</div>';
+    },
     island: '<div class="na-island"><i class="na-cover"></i><b>14:30</b><span class="na-wave">' + WAVE6 + '</span></div>',
     pomo: '<div class="na-pomo"><div class="na-island na-small"><i class="na-cover"></i><b>14:30</b></div>' +
       '<div class="na-bubble"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="13" class="na-ring-bg"/><circle cx="18" cy="18" r="13" class="na-ring"/></svg>' +
@@ -310,14 +348,27 @@ window.Volum = (() => {
       .map(([p, path, shapes]) => '<span style="--p:' + p + '"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" class="na-dev-bg"/><circle cx="18" cy="18" r="15" class="na-dev-fg"/></svg>' +
         '<svg class="na-dev-ico" viewBox="0 0 24 24">' + (path ? '<path d="' + path + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' : '') + shapes.replace(/\/>/g, ' fill="currentColor"/>') + '</svg><em>' + p + '%</em></span>').join('') + '</div>',
     fix: '<div class="na-fix"><span class="na-fix-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS.fix + '</svg></span><i></i><i></i><i></i></div>',
+    // Sua opinião: conversa entrando balão por balão (barrinhas no lugar do texto: vale para todos os idiomas); o último "digitando"
+    voice: '<div class="na-voice"><p class="l"><b style="width:74px"></b></p><p class="r"><b style="width:48px"></b><b style="width:22px"></b></p>' +
+      '<p class="l na-typing"><i></i><i></i><i></i></p></div>',
+    // Apoiar: coração em pixel batendo (duas batidas) e coraçõezinhos subindo
+    support: (() => {
+      const pal = { R: '#ff5a7a', W: '#ffd6df', D: '#d63e60' };
+      const big = ['.RRR.RRR.', 'RWWRRRRRR', 'RWRRRRRRD', 'RRRRRRRRD', '.RRRRRRD.', '..RRRRD..', '...RRD...', '....D....'];
+      const small = ['RR.RR', 'RRRRR', '.RRR.', '..R..'];
+      const mini = (x, d) => '<svg class="na-up" style="left:' + x + 'px;animation-delay:' + d + 's" viewBox="0 0 5 4">' + pixels(small, pal) + '</svg>';
+      return '<div class="na-support"><svg class="na-heart" viewBox="0 0 9 8">' + pixels(big, pal) + '</svg>' +
+        mini(30, 0) + mini(118, -.9) + mini(48, -1.8) + mini(100, -2.6) + '</div>';
+    })(),
   };
   // Novidades em "slides" para o pop-up do mixer: ilustração + título + texto (+ botão, se tiver)
   function newsSlides(lang, store = false) {
-    return NEWS.items.filter((item) => !(item.githubOnly && store) && !(item.storeOnly && !store)).map((item) => {
-      const [head, text, linkLabel] = item[lang] || item.pt;
+    return NEWS.items.map((item, i) => [item, i]).filter(([item]) => !(item.githubOnly && store) && !(item.storeOnly && !store)).map(([item, i]) => {
+      const [head, text, linkLabel] = newsText(item, i, lang);
       const s = document.createElement('section');
       s.className = 'news-slide';
-      s.innerHTML = '<div class="news-art">' + (NEWS_ARTS[item.art] || '<span class="na-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS[item.icon] + '</svg></span>') +
+      const art = typeof NEWS_ARTS[item.art] === 'function' ? NEWS_ARTS[item.art](lang) : NEWS_ARTS[item.art];
+      s.innerHTML = '<div class="news-art">' + (art || '<span class="na-icon"><svg class="ico" viewBox="0 0 24 24">' + NEWS_ICONS[item.icon] + '</svg></span>') +
         '</div><b class="news-head"></b><p class="news-text"></p>';
       s.querySelector('.news-head').textContent = head;
       s.querySelector('.news-text').textContent = text;
@@ -430,6 +481,6 @@ window.Volum = (() => {
     if (link.getAttribute('href') !== href) link.setAttribute('href', href);
   }
 
-  return { I18N, t, langTag, applyI18n, NEWS, newsItems, newsSlides, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX, useSkin,
+  return { I18N, LANGS, RTL, addLangs, addNews, t, langTag, applyI18n, NEWS, newsItems, newsSlides, compareVersions, fmtMl, fmtMin, pixels, MASCOT_PX, useSkin,
     MASCOT_PARTS: { pal: M_PAL, face: M_FACE, eyes: M_EYES } };   // o site monta o mascote interativo com estas peças
 })();

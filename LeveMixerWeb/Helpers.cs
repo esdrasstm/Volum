@@ -106,7 +106,10 @@ static class MemoryTrim
 /// </summary>
 static class Strings
 {
+    /// <summary>Os idiomas com textos aqui (pt, en, es); os outros 13 ficam no StringsMore (Strings.More.cs).
+    /// "auto" (padrão de quem instala) = o idioma do Windows.</summary>
     public static readonly string[] Languages = { "pt", "en", "es" };
+    public static readonly string[] All = { "pt", "en", "es", "de", "fr", "it", "tr", "pl", "id", "vi", "ru", "ar", "ja", "ko", "zh-CN", "zh-TW" };
 
     static readonly System.Collections.Generic.Dictionary<string, string[]> Texts = new()
     {
@@ -182,11 +185,39 @@ static class Strings
         },
     };
 
+    /// <summary>Preferência válida para guardar: "auto" ou um dos 16.</summary>
     public static string Normalize(string? lang) =>
-        Array.IndexOf(Languages, lang) >= 0 ? lang! : "pt";
+        lang == "auto" || Array.IndexOf(All, lang) >= 0 ? lang! : "auto";
 
-    public static string Get(string? lang, string key) =>
-        Texts[key][Array.IndexOf(Languages, Normalize(lang))];
+    /// <summary>O idioma de verdade (o "auto" vira o idioma do Windows).</summary>
+    public static string Resolve(string? lang) =>
+        lang != "auto" && Array.IndexOf(All, lang) >= 0 ? lang! : WindowsLanguage();
+
+    /// <summary>Idioma do Windows entre os do Volum; qualquer outro vira inglês. Chinês: Taiwan, Hong Kong e Macau = tradicional.</summary>
+    public static string WindowsLanguage()
+    {
+        var c = System.Globalization.CultureInfo.CurrentUICulture;
+        if (c.TwoLetterISOLanguageName == "zh")
+            return c.Name.Contains("Hant") || c.Name.EndsWith("TW") || c.Name.EndsWith("HK") || c.Name.EndsWith("MO") ? "zh-TW" : "zh-CN";
+        var two = c.TwoLetterISOLanguageName;
+        return Array.IndexOf(All, two) >= 0 ? two : "en";
+    }
+
+    /// <summary>Cultura do .NET para datas e números no idioma.</summary>
+    public static System.Globalization.CultureInfo Culture(string? lang)
+    {
+        var l = Resolve(lang);
+        try { return System.Globalization.CultureInfo.GetCultureInfo(l switch { "pt" => "pt-BR", "en" => "en-US", "es" => "es-ES", _ => l }); }
+        catch { return System.Globalization.CultureInfo.InvariantCulture; }
+    }
+
+    public static string Get(string? lang, string key)
+    {
+        var l = Resolve(lang);
+        int i = Array.IndexOf(Languages, l);
+        if (i >= 0) return Texts[key][i];
+        return StringsMore.Get(l, key) ?? Texts[key][1];   // falta a tradução: inglês
+    }
 }
 
 /// <summary>

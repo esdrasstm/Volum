@@ -1596,7 +1596,7 @@ sealed class IslandForm : Form
     void PostSettings()
     {
         var s = AppSettings.Current;
-        Post(new { type = "settings", language = Strings.Normalize(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch", bottom = AtBottom, skin = s.Skin, tuckLine = s.IslandTuckLine });
+        Post(new { type = "settings", language = Strings.Resolve(s.Language), lite = s.LightMode, pomodoro = s.PomodoroEnabled, style = Floating ? "float" : "notch", bottom = AtBottom, skin = s.Skin, tuckLine = s.IslandTuckLine });
     }
 
     // Estado do Pomodoro: a ilha conta o tempo sozinha a partir de "leftMs" (nada vem do C# a cada segundo)

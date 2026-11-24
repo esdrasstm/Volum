@@ -56,10 +56,24 @@
     applyScheme();
   }
 
-  function setLanguage(value) {
-    lang = V.I18N[value] ? value : 'pt';
+  // Botões de idioma: "Automático" + os 16 (nomes no próprio idioma; o C# resolve o "auto" e manda o idioma de verdade)
+  let langPref = 'auto';
+  $('langSeg').innerHTML = '';
+  for (const [code, name] of [['auto', '']].concat(V.LANGS)) {
+    const b = document.createElement('button');
+    b.dataset.value = code;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', 'false');
+    if (code === 'auto') { b.className = 'lang-auto'; b.dataset.i18n = 'langAuto'; }
+    else { b.textContent = name; b.lang = V.langTag(code); }
+    $('langSeg').append(b);
+  }
+
+  function setLanguage(value, pref) {
+    lang = V.I18N[value] ? value : 'en';
+    if (pref) langPref = pref;
     root.lang = V.langTag(lang);
-    selectSegment($('langSeg'), lang);
+    selectSegment($('langSeg'), langPref === 'auto' ? 'auto' : lang);
     V.applyI18n(lang);
     document.title = `Volum — ${t('settings')}`;
     showHotkey();
@@ -74,7 +88,8 @@
   }));
 
   $('langSeg').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-    setLanguage(b.dataset.value);
+    // um idioma: troca na hora; "Automático": o C# responde com o idioma do Windows (mensagem language)
+    if (b.dataset.value === 'auto') selectSegment($('langSeg'), 'auto'); else setLanguage(b.dataset.value, b.dataset.value);
     post({ type: 'setLanguage', lang: b.dataset.value });
   }));
 
@@ -384,6 +399,7 @@
     $('tuckLineRow').hidden = focus.tuck === false;   // só faz sentido com a ilha saindo da frente
     $('todoOn').checked = focus.todo !== false;
     $('devicesOn').checked = focus.devices !== false;
+    $('devDiagRow').hidden = focus.devices === false;
     $('autoHideOn').checked = !!focus.autoHide;
     $('autoHideOptions').hidden = !focus.autoHide;
     showMonitors();
@@ -413,7 +429,13 @@
   $('tuckOn').addEventListener('change', (e) => { focus.tuck = e.target.checked; showFocus(); saveFocus(); });
   $('tuckLineOn').addEventListener('change', (e) => { focus.tuckLine = e.target.checked; saveFocus(); });
   $('todoOn').addEventListener('change', (e) => { focus.todo = e.target.checked; saveFocus(); });
-  $('devicesOn').addEventListener('change', (e) => { focus.devices = e.target.checked; saveFocus(); });
+  $('devicesOn').addEventListener('change', (e) => { focus.devices = e.target.checked; saveFocus(); showFocus(); });
+  // Diagnóstico dos aparelhos (receptores USB conectados): o C# monta o texto e copia
+  $('devDiag').addEventListener('click', () => {
+    $('devDiag').disabled = true;
+    $('devDiagStatus').textContent = t('devDiagBusy');
+    post({ type: 'devDiag' });
+  });
   $('autoHideOn').addEventListener('change', (e) => { focus.autoHide = e.target.checked; showFocus(); saveFocus(); });
   // Monitores: um botão para cada, da esquerda para a direita ("Principal", "Monitor 2", ...); o nome completo na dica
   let monitorSig = '';
@@ -497,7 +519,10 @@
   });
   $('aboutNews').addEventListener('click', (e) => {   // botão dentro de uma novidade (ex.: Microsoft Store)
     const b = e.target.closest('[data-site]');
-    if (b) post({ type: 'openSite', section: b.dataset.site });
+    if (!b) return;
+    // 'support': já estamos nas configurações, é só ir para a página Apoiar (o SettingsForm não trata openSupport)
+    if (b.dataset.site === 'support') showPage('support');
+    else post({ type: 'openSite', section: b.dataset.site });
   });
 
   /* ---------------- Mensagens do C# ---------------- */
@@ -529,7 +554,7 @@
     showAppNotes('');
     if (s.focus) focus = s.focus;
     setTheme(s.theme || 'system');
-    setLanguage(s.language || 'pt');                // também redesenha atalho, água e "Sobre"
+    setLanguage(s.language || 'en', s.languagePref || s.language);                // também redesenha atalho, água e "Sobre"
   }
 
   window.chrome.webview.addEventListener('message', (e) => {
@@ -537,6 +562,13 @@
     switch (m.type) {
       case 'settings':    applySettings(m); break;
       case 'update':      showUpdate(m); break;
+      case 'language':    setLanguage(m.language, m.languagePref); break;   // resposta do setLanguage (resolve o "Automático")
+      case 'devDiag':     // diagnóstico copiado (ou não)
+        $('devDiag').disabled = false;
+        $('devDiagStatus').textContent = t(m.ok ? 'devDiagDone' : 'devDiagFail');
+        clearTimeout($('devDiagStatus')._t);
+        $('devDiagStatus')._t = setTimeout(() => { $('devDiagStatus').textContent = ''; }, 6000);
+        break;
       case 'page':        if (navItems.some((b) => b.dataset.page === m.page)) showPage(m.page); break;   // ex.: o coração do mixer abre "Apoiar"
       case 'systemTheme': systemDark = m.dark; applyScheme(); break;   // trocou o tema do Windows
       case 'hotkey':      hotkey = m; showHotkey(m.ok ? '' : t('hotkeyBusy')); break;   // resposta do setHotkey

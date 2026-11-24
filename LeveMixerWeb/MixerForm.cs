@@ -36,7 +36,7 @@ sealed class MixerForm : Form
             "store" => "ms-windows-store://pdp/?productid=9PKPDGQ211L4",   // abre o app da Microsoft Store na página do Volum
             "kofi" => "https://ko-fi.com/volum",                            // apoiar o Volum (quem está fora do Brasil)
             // pesquisa sobre os temas (novidades e Configurações → Temas): leva a versão, o tema em uso e o idioma
-            "survey" => $"{SiteUrl}temas.html?v={Uri.EscapeDataString(Updater.Version)}&skin={Uri.EscapeDataString(AppSettings.Current.Skin)}&lang={Uri.EscapeDataString(AppSettings.Current.Language)}",
+            "survey" => $"{SiteUrl}temas.html?v={Uri.EscapeDataString(Updater.Version)}&skin={Uri.EscapeDataString(AppSettings.Current.Skin)}&lang={Uri.EscapeDataString(Strings.Resolve(AppSettings.Current.Language))}",
             _ => SiteUrl,
         };
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
@@ -546,7 +546,7 @@ sealed class MixerForm : Form
             acrylic = UseGlass,   // tema Vidro com o acrílico do Windows atrás (sem ele, o CSS usa um vidro mais opaco)
             lite = _settings.LightMode,
             skin = _settings.Skin,
-            language = Strings.Normalize(_settings.Language),
+            language = Strings.Resolve(_settings.Language),
             systemDark = WindowsIsDark(),
             hotkey = new { mods = _settings.HotkeyMods, key = _settings.HotkeyKey },
             version = Updater.Version,                 // a interface mostra as novidades se esta versão

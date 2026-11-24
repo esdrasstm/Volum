@@ -1186,3 +1186,23 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .lite .tuck-line .island.tucked::after { animation: none; }
 /* Mouse parado em cima: o traço cresce até a borda em 3 s (o tempo que falta para abrir); saiu, volta na hora */
 .tuck-line .island.tucked.arming::after { width: 122px; background: #fff; transition: width 3s linear, background .3s ease; }
+
+/* ---------- Idiomas sem Sora (turco, polonês, vietnamita, russo, árabe, japonês, coreano, chinês):
+   fonte do Windows. A classe vem do Volum.applyI18n; o lang do <html> escolhe a fonte certa de cada escrita. ---------- */
+html.sys-font body, html.sys-font button, html.sys-font input, html.sys-font .island, html.sys-font .brand, html.sys-font .news-title {
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+html.sys-font:lang(ja) body, html.sys-font:lang(ja) button, html.sys-font:lang(ja) input, html.sys-font:lang(ja) .island { font-family: "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif; }
+html.sys-font:lang(ko) body, html.sys-font:lang(ko) button, html.sys-font:lang(ko) input, html.sys-font:lang(ko) .island { font-family: "Malgun Gothic", "Segoe UI", sans-serif; }
+html.sys-font:lang(zh-CN) body, html.sys-font:lang(zh-CN) button, html.sys-font:lang(zh-CN) input, html.sys-font:lang(zh-CN) .island { font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif; }
+html.sys-font:lang(zh-TW) body, html.sys-font:lang(zh-TW) button, html.sys-font:lang(zh-TW) input, html.sys-font:lang(zh-TW) .island { font-family: "Microsoft JhengHei UI", "Segoe UI", sans-serif; }
+/* A fonte do Windows tem entrelinha maior que a Sora: fixa a altura das linhas pequenas
+   para Player, Agenda e Clima não passarem de 118 px (senão a ilha aberta cresce) */
+html.sys-font .island :is(.progress, .wx-hour, .wx-range, .agenda-when) { line-height: 15px; }
+html.sys-font .island :is(.agenda-title, .wx-htemp) { line-height: 18px; }
+
+/* Árabe: só o texto corre da direita para a esquerda (o layout não espelha) */
+html.rtl-text :is(p, span, b, small, label, h1, h2, h3, li, button, output, .label, .setting-text, .name, .news-head, .news-text) { unicode-bidi: plaintext; }
+/* na ilha o texto fica colado no ícone, à esquerda, como o resto do layout */
+html.rtl-text .island :is(p, span, b, small, label, li, div) { text-align: left; }
+html.rtl-text input[type="text"], html.rtl-text input:not([type]) { unicode-bidi: plaintext; text-align: start; }

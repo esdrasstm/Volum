@@ -168,6 +168,8 @@ sealed class MediaService : IDisposable
         var name = id.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Path.GetFileNameWithoutExtension(id) : id;
         name = name[(name.LastIndexOf('!') + 1)..];
         name = name[(name.LastIndexOf('.') + 1)..];
+        // Alguns apps (Firefox, apps da web como o Instagram) se apresentam só com um código de 16 letras/números: não mostra
+        if (System.Text.RegularExpressions.Regex.IsMatch(name, "^[0-9A-Fa-f]{12,}$")) return "";
         return name.Length > 0 ? char.ToUpper(name[0]) + name[1..] : name;
     }
 

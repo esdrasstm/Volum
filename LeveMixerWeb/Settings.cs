@@ -23,7 +23,11 @@ sealed class AppSettings
     public string Skin { get; set; } = "default";
 
     // Idioma da interface: "pt" (padrão), "en" ou "es"
-    public string Language { get; set; } = "pt";
+    /// <summary>"auto" = o idioma do Windows (padrão de quem instala) ou um dos 16 (Strings.All).</summary>
+    public string Language { get; set; } = "auto";
+    /// <summary>Já passou pela troca de 23/11/2026 (16 idiomas): quem estava no idioma que o Volum tinha escolhido
+    /// sozinho pelo Windows vira "auto"; quem escolheu outro à mão continua nele.</summary>
+    public bool LanguageAutoDone { get; set; }
 
     // Atalho global para abrir o mixer (ex.: no meio de um jogo). Padrão: Ctrl+Alt+V.
     // Mods = soma de GlobalHotkey.Alt/Ctrl/Shift; Key = código da tecla do Windows (VK); Key 0 = desligado.
@@ -129,14 +133,22 @@ sealed class AppSettings
         {
             var path = File.Exists(FilePath) ? FilePath : OldFilePath;
             if (File.Exists(path))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new AppSettings();
+            {
+                var s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path)) ?? new AppSettings();
+                if (!s.LanguageAutoDone)
+                {
+                    s.LanguageAutoDone = true;
+                    if (s.Language == OldWindowsLanguage()) s.Language = "auto";
+                }
+                return s;
+            }
         }
         catch { }
-        return new AppSettings { Language = WindowsLanguage() };   // primeira vez: o idioma do Windows
+        return new AppSettings { Language = "auto", LanguageAutoDone = true };   // primeira vez: o idioma do Windows
     }
 
-    /// <summary>Idioma do Windows entre os do Volum: português, espanhol ou, para qualquer outro, inglês.</summary>
-    static string WindowsLanguage() =>
+    /// <summary>O idioma que o Volum escolhia sozinho antes dos 16 idiomas (português, espanhol ou inglês).</summary>
+    static string OldWindowsLanguage() =>
         System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName switch { "pt" => "pt", "es" => "es", _ => "en" };
 
     public void Save()

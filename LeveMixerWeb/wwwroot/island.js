@@ -389,7 +389,9 @@
       const li = document.createElement('li');
       const hr = document.createElement('span');
       hr.className = 'wx-hour';
-      hr.textContent = lang === 'en' ? ((+h.hour % 12) || 12) + (+h.hour < 12 ? ' AM' : ' PM') : h.hour + 'h';
+      hr.textContent = lang === 'en' ? ((+h.hour % 12) || 12) + (+h.hour < 12 ? ' AM' : ' PM')
+        : ['pt', 'es', 'fr', 'it'].includes(lang) ? h.hour + 'h'
+        : new Intl.DateTimeFormat(V.langTag(lang), { hour: 'numeric' }).format(new Date(2000, 0, 1, +h.hour));
       const ic = document.createElement('span');
       ic.className = 'wx-hicon';
       ic.innerHTML = wxIconFill(h.code, h.day);
@@ -403,7 +405,9 @@
   }
 
   /* ---------------- Microfone e câmera em uso ---------------- */
+  let lastPrivacy = null;   // para refazer as dicas ao trocar de idioma
   function showPrivacy(m) {
+    lastPrivacy = m;
     const mic = (m.mic || []).length > 0, cam = (m.cam || []).length > 0;
     const tip = [...(m.cam || []).map((a) => t('privCam') + ': ' + a), ...(m.mic || []).map((a) => t('privMic') + ': ' + a)].join('\n');
     for (const el of [$('privacy'), $('miniPrivacy')]) {
@@ -1535,7 +1539,7 @@
     const m = e.data;
     switch (m.type) {
       case 'settings':
-        lang = V.I18N[m.language] ? m.language : 'pt';
+        lang = V.I18N[m.language] ? m.language : 'en';
         document.documentElement.lang = V.langTag(lang);
         document.documentElement.classList.toggle('lite', !!m.lite);
         document.documentElement.classList.toggle('floating', m.style === 'float');   // formato: pílula solta
@@ -1554,6 +1558,13 @@
         showAgenda();          // textos montados pelo JS (Agora, Amanhã, Dia todo...) no idioma novo
         showWeather();
         showMiniWeather();
+        showDevices();         // "1 conectado", nomes e títulos montados pelo JS
+        showMiniDevices();
+        showTodo();
+        showBattery();
+        showFocusTime();
+        showMute($('muteBtn').classList.contains('muted'));
+        if (lastPrivacy) showPrivacy(lastPrivacy);
         break;
       case 'pomodoro': onPomodoro(m); break;
       case 'pet': if (m.on) rest(m.ms || 0); else wake(); break;   // mascote: PC parado ou passadinha

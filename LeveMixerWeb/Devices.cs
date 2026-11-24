@@ -13,8 +13,8 @@ sealed record WirelessDevice(string Id, string Name, int Battery, string Kind);
 /// Configurações → Bluetooth: a propriedade de bateria do aparelho ({104EA319-...} 2) e se ele está conectado
 /// (o "contêiner" do aparelho, System.Devices.Connected). Tudo por observadores do Windows (DeviceWatcher):
 /// nada fica consultando; quando a bateria muda ou um aparelho conecta, o Windows avisa.
-/// Só roda com a ilha ligada. Receptores USB próprios (Logitech Lightspeed, Razer...) ainda não entram:
-/// cada marca tem o seu protocolo.
+/// Só roda com a ilha ligada. Receptores USB (2.4 GHz) vêm do UsbBattery (padrão HID e Logitech HID++)
+/// e entram na mesma lista.
 /// </summary>
 static class Devices
 {
@@ -69,9 +69,9 @@ static class Devices
             s_ready = false; s_doneCount = 0;
             // Aparelhos (nós PnP): bateria, contêiner e classe. A lista inicial chega toda de uma vez (~0,4 s).
             s_pnp = DeviceInformation.CreateWatcher("", new[] { Batt, ContainerKey, ClassKey }, DeviceInformationKind.Device);
-            s_pnp.Added += (_, d) => { lock (s_lock) { s_nodeInfo[d.Id] = d; Read(d); } Kick(); };
+            s_pnp.Added += (_, d) => { lock (s_lock) { s_nodeInfo[d.Id] = d; Read(d); } PokeUsb(d.Id); Kick(); };
             s_pnp.Updated += (_, u) => { lock (s_lock) { if (s_nodeInfo.TryGetValue(u.Id, out var d)) { d.Update(u); Read(d); } } Kick(); };
-            s_pnp.Removed += (_, u) => { lock (s_lock) { s_nodeInfo.Remove(u.Id); s_nodes.Remove(u.Id); } Kick(); };
+            s_pnp.Removed += (_, u) => { lock (s_lock) { s_nodeInfo.Remove(u.Id); s_nodes.Remove(u.Id); } PokeUsb(u.Id); Kick(); };
             s_pnp.EnumerationCompleted += (_, _) => Done();
             // Contêineres (o aparelho inteiro): conectado ou não. Não procura aparelhos novos (não liga a busca do Bluetooth).
             s_cont = DeviceInformation.CreateWatcher("", new[] { ConnectedKey }, DeviceInformationKind.DeviceContainer);
@@ -86,19 +86,30 @@ static class Devices
             s_cont.EnumerationCompleted += (_, _) => Done();
             s_pnp.Start();
             s_cont.Start();
+            UsbBattery.Changed += Kick;
+            UsbBattery.Start();
         }
         catch (Exception e) { DevLog.Write("Devices: " + e.Message); Stop(); }
     }
 
     static void Stop()
     {
+        UsbBattery.Changed -= Kick;
+        UsbBattery.Stop();
         foreach (var w in new[] { s_pnp, s_cont })
             try { if (w != null && w.Status is DeviceWatcherStatus.Started or DeviceWatcherStatus.EnumerationCompleted) w.Stop(); } catch { }
         s_pnp = s_cont = null;
         s_debounce?.Dispose(); s_debounce = null;
         lock (s_lock) { s_nodeInfo.Clear(); s_nodes.Clear(); s_boxes.Clear(); s_lowWarned.Clear(); s_connectedBefore.Clear(); }
-        s_sawFirst = false;
+        s_sawFirst = false; s_ready = false; s_usbScansBefore = 0;
+        lock (s_rebuildLock) s_usbSeen.Clear();
         List = Array.Empty<WirelessDevice>();
+    }
+
+    // Receptor USB entrou ou saiu (ou um aparelho Logitech ligou): o UsbBattery confere de novo
+    static void PokeUsb(string id)
+    {
+        if (s_ready && id.Contains("VID_", StringComparison.OrdinalIgnoreCase) && id.StartsWith("HID", StringComparison.OrdinalIgnoreCase)) UsbBattery.Poke();
     }
 
     static string Norm(string id) => id.Trim('{', '}').ToLowerInvariant();
@@ -132,6 +143,16 @@ static class Devices
 
     static void Rebuild()
     {
+        // o timer pode chamar duas vezes ao mesmo tempo (Change no meio de uma volta): uma por vez
+        lock (s_rebuildLock) RebuildLocked();
+    }
+
+    static readonly object s_rebuildLock = new();
+    static int s_usbScansBefore;   // conferências do UsbBattery na volta anterior (0 = a lista USB ainda não tinha vindo)
+    static readonly Dictionary<string, DateTime> s_usbSeen = new();   // última vez que cada receptor estava na lista
+
+    static void RebuildLocked()
+    {
         List<WirelessDevice> list;
         lock (s_lock)
         {
@@ -145,18 +166,33 @@ static class Devices
                     var classes = s_nodes.Values.Where(n => n.Container == g.Key).Select(n => n.Class).ToHashSet();
                     return new WirelessDevice(g.Key, box.Name, g.Max(n => n.Battery!.Value), KindOf(box.Name, classes));
                 })
-                .OrderBy(d => d.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
+        // receptores USB (2.4 GHz): padrão HID e Logitech HID++
+        list.AddRange(UsbBattery.List.Where(u => !list.Any(b => b.Name.Equals(u.Name, StringComparison.OrdinalIgnoreCase))));
+        list = list.OrderBy(d => d.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
         var before = s_connectedBefore;
         s_connectedBefore = list.Select(d => d.Id).ToHashSet();
         List = list;
         Changed?.Invoke();
         bool first = before.Count == 0 && !s_sawFirst;
         s_sawFirst = true;
+        // Receptores USB: a primeira lista chega uns segundos depois da do Bluetooth e não é "conectou";
+        // e um mouse que dormiu e acordou (some da conferência do HID++) não avisa de novo por 30 min.
+        var now = DateTime.Now;
+        int usbScans = UsbBattery.Scans;
+        bool usbFirst = s_usbScansBefore == 0;
+        s_usbScansBefore = usbScans;
+        foreach (var id in before) if (id.StartsWith("usb:")) s_usbSeen[id] = now;
         foreach (var d in list)
         {
-            if (!first && !before.Contains(d.Id)) { LastConnectAt = DateTime.Now; Connected?.Invoke(d); }
+            bool isNew = !first && !before.Contains(d.Id);
+            if (d.Id.StartsWith("usb:"))
+            {
+                if (usbFirst || s_usbSeen.TryGetValue(d.Id, out var seen) && (now - seen).TotalMinutes < 30) isNew = false;
+                s_usbSeen[d.Id] = now;
+            }
+            if (isNew) { LastConnectAt = now; Connected?.Invoke(d); }
             if (d.Battery <= LowAt) { if (s_lowWarned.Add(d.Id)) Low?.Invoke(d); }
             else if (d.Battery > 30) s_lowWarned.Remove(d.Id);
         }

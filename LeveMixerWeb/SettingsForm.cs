@@ -167,7 +167,8 @@ sealed class SettingsForm : Form
         {
             type = "settings",
             theme = _settings.Theme.ToString().ToLowerInvariant(),
-            language = Strings.Normalize(_settings.Language),
+            language = Strings.Resolve(_settings.Language),
+            languagePref = Strings.Normalize(_settings.Language),
             autostart = AutoStart.IsEnabled,
             lite = _settings.LightMode,
             skin = _settings.Skin,
@@ -257,6 +258,7 @@ sealed class SettingsForm : Form
                     _settings.Language = Strings.Normalize(root.GetProperty("lang").GetString());
                     _settings.Save();
                     Text = $"Volum — {Strings.Get(_settings.Language, "settings")}";
+                    Post(new { type = "language", language = Strings.Resolve(_settings.Language), languagePref = _settings.Language });
                     IslandForm.ApplyStyle();
                     break;
 
@@ -393,6 +395,20 @@ sealed class SettingsForm : Form
 
                 case "copyPix":   // "Apoiar o Volum": copia o Pix copia e cola para colar no app do banco
                     try { Clipboard.SetText(Support.Pix); } catch (Exception ex) { Debug.WriteLine(ex); }
+                    break;
+
+                case "devDiag":   // Ilha → "Copiar diagnóstico" dos aparelhos sem fio (lê os receptores numa thread de fundo)
+                    _ = Task.Run(() =>
+                    {
+                        string text;
+                        try { text = UsbBattery.Diagnose(); } catch (Exception ex) { text = "erro: " + ex.Message; }
+                        BeginInvoke(() =>
+                        {
+                            bool ok = true;
+                            try { Clipboard.SetText(text); } catch (Exception ex) { Debug.WriteLine(ex); ok = false; }
+                            Post(new { type = "devDiag", ok });
+                        });
+                    });
                     break;
 
                 case "checkUpdate":   // Sobre → "Procurar atualização"

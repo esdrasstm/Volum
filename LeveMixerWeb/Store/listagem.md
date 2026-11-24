@@ -25,14 +25,16 @@ O que o Volum faz:
 • Aviso para levantar depois de um tempo sentado
 • Travar o teclado por alguns minutos para limpar
 • Tema escuro, claro ou igual ao do Windows
-• Português, inglês e espanhol
+• 16 idiomas, no idioma do Windows automaticamente
 
 Leve de verdade: parado na bandeja, praticamente não usa processador. Para PCs mais simples, o Modo leve desliga os efeitos e economiza ainda mais memória.
 
 Sem cadastro, sem anúncios e sem coleta de dados. O código é aberto e está no GitHub.
 
 ### Novidades desta versão
-Lista de tarefas na ilha: anote e risque tarefas rápidas, com um numerozinho na ilha fechada mostrando o que falta. Bateria dos fones, mouses, teclados e caixinhas Bluetooth na ilha, com aviso de bateria fraca. Mude o volume direto no player da ilha. A ilha inteira ganhou movimentos de gota, macios em qualquer monitor. O fim do foco do Pomodoro aparece grande e espera você, mesmo depois de um jogo em tela cheia. Botão para procurar atualização e atalho para as configurações direto na ilha. Sons de clique mais rápidos. Nova opção: em cima das abas do navegador, a ilha vira um tracinho que só abre com o mouse parado nele. Correções: a ilha não pisca nem fica travada em cima dos apps.
+O Volum agora fala 16 idiomas: português, inglês, espanhol, alemão, francês, italiano, turco, polonês, indonésio, vietnamita, russo, árabe, japonês, coreano e chinês (simplificado e tradicional). No automático, ele segue o idioma do Windows. Bateria dos mouses e teclados com receptor USB 2.4 GHz da Logitech (Unifying, Bolt e Lightspeed) na ilha, junto com os aparelhos Bluetooth; outro receptor não aparece? Configurações → Ilha → "Copiar diagnóstico" e mande para a gente. Correções: a onda da ilha não dispara mais e nomes estranhos de apps não aparecem no player. E, no fim das novidades do app, um atalho para mandar sua sugestão e outro para apoiar o Volum (Pix no Brasil, Ko-fi no resto do mundo).
+
+<!-- 0.9.0: Lista de tarefas na ilha: anote e risque tarefas rápidas, com um numerozinho na ilha fechada mostrando o que falta. Bateria dos fones, mouses, teclados e caixinhas Bluetooth na ilha, com aviso de bateria fraca. Mude o volume direto no player da ilha. A ilha inteira ganhou movimentos de gota, macios em qualquer monitor. O fim do foco do Pomodoro aparece grande e espera você, mesmo depois de um jogo em tela cheia. Botão para procurar atualização e atalho para as configurações direto na ilha. Sons de clique mais rápidos. Nova opção: em cima das abas do navegador, a ilha vira um tracinho que só abre com o mouse parado nele. Correções: a ilha não pisca nem fica travada em cima dos apps. -->
 
 <!-- 0.8.0: Temas Verão Vice: Miami (coqueiros, flamingo e o mascote de óculos) e Pôr do sol (o sol se põe no mar toda vez que o mixer abre). A página Temas agora tem seções. O Volum abre no idioma do Windows, e trocar o idioma muda a ilha na hora. Nova opção para a ilha ficar sempre à vista em cima dos apps. Correção: ícone do clima sem contorno nos temas. Mais segurança na agenda (só endereços https, guardados protegidos pelo Windows) e a ilha gasta menos quando está escondida. -->
 
@@ -47,14 +49,14 @@ Abre no meio do jogo com Ctrl+Alt+V
 Ilha no topo da tela com a música tocando e os controles
 Pomodoro com tempos ajustáveis
 Lista de tarefas rápidas na ilha
-Bateria dos fones, mouses e teclados Bluetooth
+Bateria dos fones, mouses e teclados sem fio
 Lembrete de água com meta do dia
 Aviso para levantar e esticar as pernas
 Indicadores de volume, microfone, Caps Lock e Num Lock
 Travar o teclado para limpar
 Leve: quase não usa processador parado na bandeja
 Tema escuro, claro ou do sistema
-Português, inglês e espanhol
+16 idiomas, no idioma do Windows
 
 ### Termos de pesquisa (até 7)
 mixer de volume
@@ -87,14 +89,16 @@ What Volum does:
 • Stand-up reminder after sitting for a while
 • Lock the keyboard for a few minutes to clean it
 • Dark, light or system theme
-• English, Portuguese and Spanish
+• 16 languages, automatically in your Windows language
 
 Truly lightweight: sitting in the tray, it uses almost no CPU. For simpler PCs, Lite mode turns off effects and saves even more memory.
 
 No sign-up, no ads and no data collection. The code is open source on GitHub.
 
 ### What's new in this version
-Task list in the island: jot down and check off quick tasks, with a tiny number on the closed island showing what is left. Battery of your Bluetooth headphones, mice, keyboards and speakers in the island, with a low battery heads-up. Change the volume right in the island player. The whole island now moves like a droplet, smooth on any monitor. The end of a Pomodoro focus session shows up big and waits for you, even after a full-screen game. A button to check for updates and a shortcut to settings right from the island. Snappier click sounds. New option: over browser tabs, the island becomes a small line that only opens when you rest the mouse on it. Fixes: the island no longer flickers or gets stuck over apps.
+Volum now speaks 16 languages: English, Portuguese, Spanish, German, French, Italian, Turkish, Polish, Indonesian, Vietnamese, Russian, Arabic, Japanese, Korean and Chinese (Simplified and Traditional). On automatic, it follows your Windows language. Battery of Logitech mice and keyboards with a 2.4 GHz USB receiver (Unifying, Bolt and Lightspeed) in the island, next to your Bluetooth devices; another receiver not showing up? Settings → Island → "Copy diagnostics" and send it to us. Fixes: the island wave no longer goes wild and odd app names no longer show up in the player. And at the end of the in-app news, a shortcut to send us your feedback and another to support Volum on Ko-fi.
+
+<!-- 0.9.0: Task list in the island: jot down and check off quick tasks, with a tiny number on the closed island showing what is left. Battery of your Bluetooth headphones, mice, keyboards and speakers in the island, with a low battery heads-up. Change the volume right in the island player. The whole island now moves like a droplet, smooth on any monitor. The end of a Pomodoro focus session shows up big and waits for you, even after a full-screen game. A button to check for updates and a shortcut to settings right from the island. Snappier click sounds. New option: over browser tabs, the island becomes a small line that only opens when you rest the mouse on it. Fixes: the island no longer flickers or gets stuck over apps. -->
 
 <!-- 0.8.0: Vice summer themes: Miami (palm trees, a flamingo and the mascot in sunglasses) and Sunset (the sun sets into the sea every time the mixer opens). The Themes page now has sections. Volum opens in your Windows language, and changing the language updates the island right away. New option to keep the island visible over apps. Fix: weather icon without an outline in themes. Safer calendar (https addresses only, stored protected by Windows) and the island uses less when hidden. -->
 
@@ -109,14 +113,14 @@ Opens mid-game with Ctrl+Alt+V
 Island at the top of the screen with music and controls
 Pomodoro with adjustable times
 Quick task list in the island
-Battery of Bluetooth headphones, mice and keyboards
+Battery of wireless headphones, mice and keyboards
 Water reminder with a daily goal
 Stand-up and stretch reminder
 Volume, microphone, Caps Lock and Num Lock indicators
 Lock the keyboard to clean it
 Lightweight: almost no CPU while idle in the tray
 Dark, light or system theme
-English, Portuguese and Spanish
+16 languages, in your Windows language
 
 ### Search terms (up to 7)
 volume mixer
@@ -149,14 +153,16 @@ Lo que hace Volum:
 • Aviso para levantarte después de un rato sentado
 • Bloquear el teclado unos minutos para limpiarlo
 • Tema oscuro, claro o igual al de Windows
-• Español, inglés y portugués
+• 16 idiomas, en el idioma de Windows automáticamente
 
 Liviano de verdad: quieto en la bandeja, casi no usa el procesador. Para PCs más simples, el Modo ligero apaga los efectos y ahorra aún más memoria.
 
 Sin registro, sin anuncios y sin recolección de datos. El código es abierto y está en GitHub.
 
 ### Novedades de esta versión
-Lista de tareas en la isla: anota y tacha tareas rápidas, con un numerito en la isla cerrada que muestra lo que falta. Batería de tus auriculares, ratones, teclados y altavoces Bluetooth en la isla, con aviso de batería baja. Cambia el volumen directo en el reproductor de la isla. Toda la isla ahora se mueve como una gota, suave en cualquier monitor. El fin del enfoque del Pomodoro aparece grande y te espera, incluso después de un juego a pantalla completa. Botón para buscar actualizaciones y acceso a los ajustes desde la isla. Sonidos de clic más rápidos. Nueva opción: sobre las pestañas del navegador, la isla se vuelve una rayita que solo se abre al dejar el ratón encima. Correcciones: la isla ya no parpadea ni se queda trabada sobre las apps.
+Volum ahora habla 16 idiomas: español, inglés, portugués, alemán, francés, italiano, turco, polaco, indonesio, vietnamita, ruso, árabe, japonés, coreano y chino (simplificado y tradicional). En automático, sigue el idioma de Windows. Batería de ratones y teclados Logitech con receptor USB de 2,4 GHz (Unifying, Bolt y Lightspeed) en la isla, junto a tus aparatos Bluetooth; ¿otro receptor no aparece? Configuración → Isla → "Copiar diagnóstico" y envíanoslo. Correcciones: la onda de la isla ya no se descontrola y los nombres raros de apps ya no aparecen en el reproductor. Y, al final de las novedades de la app, un acceso para enviarnos tu opinión y otro para apoyar a Volum en Ko-fi.
+
+<!-- 0.9.0: Lista de tareas en la isla: anota y tacha tareas rápidas, con un numerito en la isla cerrada que muestra lo que falta. Batería de tus auriculares, ratones, teclados y altavoces Bluetooth en la isla, con aviso de batería baja. Cambia el volumen directo en el reproductor de la isla. Toda la isla ahora se mueve como una gota, suave en cualquier monitor. El fin del enfoque del Pomodoro aparece grande y te espera, incluso después de un juego a pantalla completa. Botón para buscar actualizaciones y acceso a los ajustes desde la isla. Sonidos de clic más rápidos. Nueva opción: sobre las pestañas del navegador, la isla se vuelve una rayita que solo se abre al dejar el ratón encima. Correcciones: la isla ya no parpadea ni se queda trabada sobre las apps. -->
 
 <!-- 0.8.0: Temas Verano Vice: Miami (palmeras, un flamenco y la mascota con gafas de sol) y Atardecer (el sol se pone en el mar cada vez que se abre el mezclador). La página de Temas ahora tiene secciones. Volum se abre en el idioma de Windows, y cambiar el idioma actualiza la isla al instante. Nueva opción para que la isla quede siempre visible sobre las apps. Corrección: icono del clima sin contorno en los temas. Agenda más segura (solo direcciones https, guardadas protegidas por Windows) y la isla consume menos cuando está oculta. -->
 
@@ -171,14 +177,14 @@ Se abre en medio del juego con Ctrl+Alt+V
 Isla arriba de la pantalla con la música y los controles
 Pomodoro con tiempos ajustables
 Lista de tareas rápidas en la isla
-Batería de auriculares, ratones y teclados Bluetooth
+Batería de auriculares, ratones y teclados inalámbricos
 Recordatorio de agua con meta diaria
 Aviso para levantarte y estirar las piernas
 Indicadores de volumen, micrófono, Bloq Mayús y Bloq Num
 Bloquear el teclado para limpiarlo
 Liviano: casi no usa el procesador en la bandeja
 Tema oscuro, claro o del sistema
-Español, inglés y portugués
+16 idiomas, en el idioma de Windows
 
 ### Términos de búsqueda (hasta 7)
 mezclador de volumen
@@ -201,7 +207,7 @@ sonido
 **Requisitos adicionais:** Windows 10 versão 1809 ou mais novo, 64 bits.
 
 ### Notas para a certificação (campo "Notas para certificação", em inglês; curto: o campo é pequeno)
-Volum is a tray volume mixer (.NET + WebView2). runFullTrust: Core Audio to change per-app and mic volume. Keyboard hook only for "Lock keyboard to clean" (user action, auto-unlocks) and volume/media keys. Notifications (optional, user permission) are shown locally. Bluetooth device battery is read locally from Windows (no pairing, no scanning). Optional network: iCal URL and Open-Meteo weather. Test: click the tray icon; options in Settings.
+Volum is a tray volume mixer (.NET + WebView2). runFullTrust: Core Audio for per-app and mic volume. Keyboard hook only for "Lock keyboard to clean" (user action, auto-unlocks) and volume/media keys. Notifications (optional, user permission) shown locally. Device battery read locally: Bluetooth from Windows, USB receivers via HID queries (no network, no data sent). Optional network: iCal URL, Open-Meteo weather. Test: click the tray icon.
 
 ### Capturas de tela
 Mínimo 1, em 1366×768 ou maior (recomendado 1920×1080), PNG. Sugestões:
