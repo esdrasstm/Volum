@@ -3467,6 +3467,11 @@ Volum.addNews('0.10.1', {
     [
       "Fehlerbehebungen",
       "Die Insel-Tasten werden nicht mehr verdeckt, Volum verträgt sich besser mit PowerToys, die Insel kommt nach dem Ruhezustand auf dem richtigen Monitor zurück und die Helligkeitsanzeige klappt unter Windows 10."
+    ],
+    [
+      "Volum unterstützen",
+      "Volum ist kostenlos, ohne Werbung und wird von einer einzigen Person gemacht. Wenn es dir im Alltag hilft, hilft jede Unterstützung beim Weitermachen. Kein Druck: Nutzen und Weiterempfehlen bedeutet schon viel.",
+      "Volum unterstützen"
     ]
   ],
   "fr": [
@@ -3478,6 +3483,11 @@ Volum.addNews('0.10.1', {
     [
       "Corrections de bugs",
       "Les boutons de l’île ne sont plus cachés, Volum s’entend mieux avec PowerToys, l’île revient sur le bon écran après la veille et l’indicateur de luminosité marche sous Windows 10."
+    ],
+    [
+      "Soutenir Volum",
+      "Volum est gratuit, sans pub et fait par une seule personne. S’il vous aide au quotidien, tout soutien aide à continuer. Sans pression : l’utiliser et en parler compte déjà beaucoup.",
+      "Soutenir Volum"
     ]
   ],
   "it": [
@@ -3489,6 +3499,11 @@ Volum.addNews('0.10.1', {
     [
       "Correzioni di bug",
       "I pulsanti dell’isola non restano più coperti, Volum va d’accordo con PowerToys, l’isola torna sul monitor giusto dopo la sospensione e l’indicatore di luminosità funziona su Windows 10."
+    ],
+    [
+      "Sostieni Volum",
+      "Volum è gratis, senza pubblicità e fatto da una persona sola. Se ti aiuta ogni giorno, qualsiasi supporto aiuta ad andare avanti. Nessuna pressione: usarlo e consigliarlo vale già tanto.",
+      "Sostieni Volum"
     ]
   ],
   "tr": [
@@ -3500,6 +3515,11 @@ Volum.addNews('0.10.1', {
     [
       "Hata düzeltmeleri",
       "Adanın düğmeleri artık örtülmüyor, Volum PowerToys ile daha iyi anlaşıyor, ada uykudan sonra doğru monitöre dönüyor ve parlaklık göstergesi Windows 10'da çalışıyor."
+    ],
+    [
+      "Volum’u destekle",
+      "Volum ücretsiz, reklamsız ve tek bir kişi tarafından yapılıyor. Günlük işlerinde sana yardımcı oluyorsa, her destek devam etmesine yardım eder. Baskı yok: kullanman ve önermen bile çok değerli.",
+      "Volum’u destekle"
     ]
   ],
   "pl": [
@@ -3511,6 +3531,11 @@ Volum.addNews('0.10.1', {
     [
       "Poprawki błędów",
       "Przyciski wyspy nie są już zasłonięte, Volum lepiej współpracuje z PowerToys, wyspa wraca na właściwy monitor po uśpieniu, a wskaźnik jasności działa w Windows 10."
+    ],
+    [
+      "Wesprzyj Volum",
+      "Volum jest darmowy, bez reklam i tworzy go jedna osoba. Jeśli pomaga ci na co dzień, każde wsparcie pomaga go rozwijać. Bez presji: samo używanie i polecanie już wiele znaczy.",
+      "Wesprzyj Volum"
     ]
   ],
   "id": [
@@ -3522,6 +3547,11 @@ Volum.addNews('0.10.1', {
     [
       "Perbaikan bug",
       "Tombol pulau tidak tertutup lagi, Volum lebih akur dengan PowerToys, pulau kembali ke monitor yang benar setelah tidur, dan indikator kecerahan berfungsi di Windows 10."
+    ],
+    [
+      "Dukung Volum",
+      "Volum gratis, tanpa iklan, dan dibuat oleh satu orang. Kalau Volum membantumu sehari-hari, dukungan apa pun membantunya terus berjalan. Tanpa paksaan: memakai dan merekomendasikannya saja sudah berarti.",
+      "Dukung Volum"
     ]
   ],
   "vi": [
@@ -3533,6 +3563,11 @@ Volum.addNews('0.10.1', {
     [
       "Sửa lỗi",
       "Các nút của đảo không còn bị che, Volum chạy ổn hơn với PowerToys, đảo quay về đúng màn hình sau khi ngủ và chỉ báo độ sáng hoạt động trên Windows 10."
+    ],
+    [
+      "Ủng hộ Volum",
+      "Volum miễn phí, không quảng cáo và do một người làm. Nếu nó giúp ích cho bạn mỗi ngày, mọi sự ủng hộ đều giúp Volum tiếp tục. Không áp lực: dùng và giới thiệu cho người khác cũng đã rất quý.",
+      "Ủng hộ Volum"
     ]
   ],
   "ru": [
@@ -3544,6 +3579,11 @@ Volum.addNews('0.10.1', {
     [
       "Исправления ошибок",
       "Кнопки острова больше не перекрываются, Volum лучше ладит с PowerToys, остров возвращается на нужный монитор после сна, а индикатор яркости работает в Windows 10."
+    ],
+    [
+      "Поддержать Volum",
+      "Volum бесплатный, без рекламы, и его делает один человек. Если он помогает вам каждый день, любая поддержка помогает продолжать. Без давления: пользоваться и советовать друзьям — уже очень ценно.",
+      "Поддержать Volum"
     ]
   ],
   "ar": [
@@ -3555,6 +3595,11 @@ Volum.addNews('0.10.1', {
     [
       "إصلاح الأخطاء",
       "لم تعد أزرار الجزيرة مغطاة، ويعمل Volum بشكل أفضل مع PowerToys، وتعود الجزيرة إلى الشاشة الصحيحة بعد السكون، ومؤشر السطوع يعمل في Windows 10."
+    ],
+    [
+      "ادعم Volum",
+      "\u200FVolum مجاني وبلا إعلانات ويصنعه شخص واحد. إن كان يساعدك في يومك، فأي دعم يساعده على الاستمرار. بلا ضغط: استخدامه والتوصية به يعنيان الكثير.",
+      "ادعم Volum"
     ]
   ],
   "ja": [
@@ -3566,6 +3611,11 @@ Volum.addNews('0.10.1', {
     [
       "バグ修正",
       "アイランドのボタンが隠れなくなり、PowerToys との相性が良くなり、スリープ後も正しいモニターに戻り、Windows 10 で明るさ表示が動くようになりました。"
+    ],
+    [
+      "Volum を応援",
+      "Volum は無料・広告なしで、ひとりで作っています。毎日の役に立っているなら、どんな応援も続ける力になります。無理なく：使って、誰かにすすめてくれるだけでも大きな支えです。",
+      "Volum を応援"
     ]
   ],
   "ko": [
@@ -3577,6 +3627,11 @@ Volum.addNews('0.10.1', {
     [
       "버그 수정",
       "아일랜드 버튼이 더 이상 가려지지 않고, PowerToys와 더 잘 어울리며, 절전 후에도 올바른 모니터로 돌아오고, Windows 10에서 밝기 표시가 작동해요."
+    ],
+    [
+      "Volum 후원하기",
+      "Volum은 무료이고 광고가 없으며 한 사람이 만들어요. 매일 도움이 된다면 어떤 후원이든 계속 만드는 힘이 됩니다. 부담 없이: 사용하고 추천해 주는 것만으로도 큰 힘이에요.",
+      "Volum 후원하기"
     ]
   ],
   "zh-CN": [
@@ -3588,6 +3643,11 @@ Volum.addNews('0.10.1', {
     [
       "问题修复",
       "灵动岛按钮不再被遮挡，与 PowerToys 相处更好，睡眠后灵动岛回到正确的显示器，Windows 10 上的亮度提示也能正常显示。"
+    ],
+    [
+      "支持 Volum",
+      "Volum 免费、无广告，由一个人开发。如果它在日常中帮到了你，任何支持都能让它继续下去。没有压力：使用并推荐给别人就已经很有意义。",
+      "支持 Volum"
     ]
   ],
   "zh-TW": [
@@ -3599,6 +3659,11 @@ Volum.addNews('0.10.1', {
     [
       "錯誤修正",
       "動態島按鈕不再被遮住，與 PowerToys 相處更好，睡眠後動態島回到正確的螢幕，Windows 10 的亮度提示也能正常顯示。"
+    ],
+    [
+      "支持 Volum",
+      "Volum 免費、沒有廣告，由一個人開發。如果它在日常中幫到了你，任何支持都能讓它繼續下去。沒有壓力：使用並推薦給別人就已經很有意義。",
+      "支持 Volum"
     ]
   ]
 });

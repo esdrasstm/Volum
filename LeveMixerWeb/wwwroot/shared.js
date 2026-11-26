@@ -246,6 +246,11 @@ window.Volum = (() => {
         pt: ['Correções de bugs', 'Os botões da ilha não ficam mais cobertos, o Volum convive melhor com o PowerToys, a ilha volta no monitor certo depois do sono e o aviso de brilho funciona no Windows 10.'],
         en: ['Bug fixes', 'The island buttons are no longer covered, Volum plays nicer with PowerToys, the island comes back on the right monitor after sleep and the brightness indicator works on Windows 10.'],
         es: ['Corrección de errores', 'Los botones de la isla ya no quedan tapados, Volum convive mejor con PowerToys, la isla vuelve al monitor correcto tras la suspensión y el aviso de brillo funciona en Windows 10.'] },
+      // Toda versão (inclusive de correção) termina com o apoio (link 'support' abre Configurações → Apoiar)
+      { icon: 'heart', art: 'support', link: 'support',
+        pt: ['Apoiar o Volum', 'O Volum é grátis, sem anúncio e feito por uma pessoa só. Se ele te ajuda no dia a dia, qualquer apoio ajuda a continuar. Sem pressão: usar e indicar já vale muito.', 'Apoiar o Volum'],
+        en: ['Support Volum', 'Volum is free, has no ads and is made by just one person. If it helps you every day, any support helps keep it going. No pressure: using it and sharing it already means a lot.', 'Support Volum'],
+        es: ['Apoya a Volum', 'Volum es gratis, sin anuncios y lo hace una sola persona. Si te ayuda en el día a día, cualquier apoyo ayuda a seguir. Sin presión: usarlo y recomendarlo ya vale mucho.', 'Apoyar a Volum'] },
     ],
   };
 
