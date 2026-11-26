@@ -63,7 +63,10 @@ sealed class IslandForm : Form
     string _noticeKind = "";   // "greet" (bom dia) e "walk" (levantar, com a cena animada) usam a ilha mais alta
     int _openH = 160, _watchTicks;
     bool _bubble;   // bolha do Pomodoro na tela: a janela alarga para a direita até ela
-    IntPtr _winEventHook;
+    IntPtr _winEventHook, _moveHook, _minHook;
+    bool _checkQueued;   // vários avisos de janela juntos viram uma conferência só
+    readonly Timer _displayRecheck = new() { Interval = 2000 };   // monitores mudaram ou o PC acordou: confere de novo (eles demoram a voltar)
+    int _displayRechecks;
     WinEventProc? _winEventProc;   // guardado: o Windows chama este delegate enquanto o gancho existir
     Action? _noticeAction;
 
@@ -171,7 +174,48 @@ sealed class IslandForm : Form
         Todo.Changed += PostTodo;
         Pomodoro.Changed += PostPomodoro;
         Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerChanged;
+        Microsoft.Win32.SystemEvents.DisplaySettingsChanged += OnDisplayChanged;
+        Microsoft.Win32.SystemEvents.SessionSwitch += OnSessionSwitch;
+        _displayRecheck.Tick += (_, _) => DisplayRecheck();
         _ = InitAsync();
+    }
+
+    // Monitor ligado/desligado, resolução ou ordem mudou: o nome \\.\DISPLAYn pode ter trocado de monitor.
+    // Confere em 2 s e de novo em 6 s (depois do sono os monitores voltam aos poucos).
+    void OnDisplayChanged(object? sender, EventArgs e)
+    {
+        try { BeginInvoke(new Action(ScheduleDisplayRecheck)); } catch { }
+    }
+
+    void ScheduleDisplayRecheck()
+    {
+        if (IsDisposed) return;
+        _displayRechecks = 0;
+        _displayRecheck.Stop();
+        _displayRecheck.Interval = 2000;
+        _displayRecheck.Start();
+    }
+
+    void DisplayRecheck()
+    {
+        if (IsDisposed) return;
+        if (++_displayRechecks >= 2) _displayRecheck.Stop(); else _displayRecheck.Interval = 4000;   // 2 s e depois 6 s
+        RefreshMonitorIds(force: true);
+        var chosen = ChosenScreen();
+        DevLog.Write($"monitores: {string.Join(", ", Screen.AllScreens.Select(s => $"{s.DeviceName}{(s.Primary ? "*" : "")} {s.Bounds}"))} → ilha em {chosen?.DeviceName ?? "principal"}");
+        _otherScreen = null;   // força refazer o lugar (o objeto Screen guardado pode ser de antes da mudança)
+        _fullWnd = IntPtr.Zero;
+        CheckScreen();
+        Place(_mode);
+        BeginInvoke(() => { if (!IsDisposed) Place(_mode); });   // de novo depois do Windows ajustar a escala (DPI)
+        PostMonitors();
+    }
+
+    // Desbloqueou a sessão: o Windows pode ter tirado o gancho das teclas (demorou a responder) e o monitor pode ter mudado
+    void OnSessionSwitch(object? sender, Microsoft.Win32.SessionSwitchEventArgs e)
+    {
+        if (e.Reason != Microsoft.Win32.SessionSwitchReason.SessionUnlock) return;
+        try { BeginInvoke(new Action(() => { if (_osdOn) MediaKeys.Restart(); ScheduleDisplayRecheck(); })); } catch { }
     }
 
     Mode Resting => _tuck ? Mode.Tucked : _idle ? Mode.Idle : Mode.Closed;
@@ -221,8 +265,17 @@ sealed class IslandForm : Form
         }
         catch { }
         // App da frente mudou: confere tela cheia e se alguém encosta na ilha (o Windows avisa, sem ficar checando)
-        _winEventProc = (_, _, _, _, _, _, _) => BeginInvoke(new Action(CheckScreen));
+        // Também quando uma janela termina de ser arrastada/redimensionada ou é minimizada/restaurada: "sair da frente"
+        // vale para qualquer janela por cima do lugar da ilha, não só a da frente (relato do Franklin, 21/11).
+        _winEventProc = (_, ev, hwnd, obj, _, _, _) =>
+        {
+            if (obj != 0 || _checkQueued || IsDisposed) return;   // só a janela inteira (não cursor, barras etc.)
+            _checkQueued = true;
+            try { BeginInvoke(new Action(() => { _checkQueued = false; if (ev == 3) KeepOnTop(raise: true); CheckScreen(); })); } catch { _checkQueued = false; }
+        };
         _winEventHook = SetWinEventHook(3 /* EVENT_SYSTEM_FOREGROUND */, 3, IntPtr.Zero, _winEventProc, 0, 0, 0);
+        _moveHook = SetWinEventHook(0x000B /* EVENT_SYSTEM_MOVESIZEEND */, 0x000B, IntPtr.Zero, _winEventProc, 0, 0, 0);
+        _minHook = SetWinEventHook(0x0016 /* EVENT_SYSTEM_MINIMIZESTART */, 0x0017 /* MINIMIZEEND */, IntPtr.Zero, _winEventProc, 0, 0, 0);
         _watch.Start();
         _soundTimer.Start();
         _petTimer.Start();
@@ -402,14 +455,15 @@ sealed class IslandForm : Form
     }
 
     // Monitor onde a ilha está: o principal; com ele em tela cheia, outro monitor (opção, ligada por padrão)
-    Screen IslandScreen => _otherScreen != null && Screen.AllScreens.Any(s => s.DeviceName == _otherScreen.DeviceName)
-        ? _otherScreen : Screen.PrimaryScreen!;
+    Screen IslandScreen => (_otherScreen != null ? Screen.AllScreens.FirstOrDefault(s => s.DeviceName == _otherScreen.DeviceName) : null)
+        ?? Screen.PrimaryScreen!;   // relido: o objeto guardado pode ter o tamanho/posição de antes de um monitor mudar
     Screen? _otherScreen;   // null = no principal
     IntPtr _fullWnd;        // janela em tela cheia no monitor principal que fez a ilha mudar de monitor
 
     void CheckScreen()
     {
         if (IsDisposed) return;
+        KeepOnTop(raise: false);
         // O Windows às vezes não avisa que o mouse saiu (a janela muda de tamanho embaixo dele): a ilha achava que ainda
         // estava com o mouse em cima, não fechava e não escondia em cima do navegador. Confere de verdade aqui.
         if (_hover && !_typing && MouseButtons == MouseButtons.None)
@@ -428,7 +482,7 @@ sealed class IslandForm : Form
             var fw = Fullscreen.ForegroundFullscreenWindow();
             bool fullThere = fw != IntPtr.Zero && Screen.FromHandle(fw).DeviceName == second.DeviceName;
             _fullWnd = IntPtr.Zero;
-            if (second.DeviceName != _otherScreen?.DeviceName)
+            if (second.DeviceName != _otherScreen?.DeviceName || second.Bounds != _otherScreen?.Bounds)
             {
                 _otherScreen = second;
                 Place(_mode);
@@ -440,7 +494,7 @@ sealed class IslandForm : Form
                 _hiddenByFullscreen = fullThere;
                 UpdateShown();
             }
-            var fg2 = fullThere || AtBottom ? IntPtr.Zero : ForegroundTouchingIsland();
+            var fg2 = fullThere || AtBottom ? IntPtr.Zero : WindowTouchingIsland();
             if (fg2 == IntPtr.Zero) { SetTuck(false); return; }
             CheckObstruction(fg2);
             return;
@@ -453,7 +507,7 @@ sealed class IslandForm : Form
         bool full = fullWnd != IntPtr.Zero;
 
         var other = full && AppSettings.Current.IslandOtherScreen ? Screen.AllScreens.FirstOrDefault(s => !s.Primary) : null;
-        if (other?.DeviceName != _otherScreen?.DeviceName)
+        if (other?.DeviceName != _otherScreen?.DeviceName || other?.Bounds != _otherScreen?.Bounds)
         {
             _otherScreen = other;
             Place(_mode);
@@ -467,7 +521,7 @@ sealed class IslandForm : Form
             _hiddenByFullscreen = hide;
             UpdateShown();
         }
-        var fg = full || AtBottom ? IntPtr.Zero : ForegroundTouchingIsland();   // embaixo não fica em cima de abas
+        var fg = full || AtBottom ? IntPtr.Zero : WindowTouchingIsland();   // embaixo não fica em cima de abas
         if (fg == IntPtr.Zero) { SetTuck(false); return; }   // ninguém encosta: ilha fechada normal
         CheckObstruction(fg);
     }
@@ -552,16 +606,83 @@ sealed class IslandForm : Form
         GetWindowThreadProcessId(fg, out uint pid);
         if (pid == Environment.ProcessId) return IntPtr.Zero;
         var cls = new System.Text.StringBuilder(64);
-        GetClassName(fg, cls, cls.Capacity);
-        // Área de trabalho, barras de tarefas e peças do próprio Windows (Iniciar, busca, central de notificações,
-        // avisos de volume, Alt+Tab, menus) não contam: elas aparecem e somem e faziam a ilha piscar
-        if (cls.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd" or "Windows.UI.Core.CoreWindow"
-            or "XamlExplorerHostIslandWindow" or "TopLevelWindowForOverflowXamlIsland" or "NotifyIconOverflowWindow"
-            or "MultitaskingViewFrame" or "ForegroundStaging" or "#32768") return IntPtr.Zero;
+        // Não deu para ler a janela (ex.: app como administrador fechando): "não sei" = não esconde
+        if (GetClassName(fg, cls, cls.Capacity) == 0) return IntPtr.Zero;
+        if (IsShellPart(cls.ToString())) return IntPtr.Zero;
         if (IsCloaked(fg)) return IntPtr.Zero;   // janela "escondida" pelo Windows (app suspenso, outra área de trabalho)
         var vis = VisibleRect(fg);
         if (vis.IsEmpty) return IntPtr.Zero;
         return vis.IntersectsWith(ClosedRect()) ? fg : IntPtr.Zero;
+    }
+
+    // Área de trabalho, barras de tarefas e peças do próprio Windows (Iniciar, busca, central de notificações,
+    // avisos de volume, Alt+Tab, menus, dicas) não contam: elas aparecem e somem e faziam a ilha piscar
+    static bool IsShellPart(string cls) => cls is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd"
+        or "Windows.UI.Core.CoreWindow" or "XamlExplorerHostIslandWindow" or "TopLevelWindowForOverflowXamlIsland"
+        or "NotifyIconOverflowWindow" or "MultitaskingViewFrame" or "ForegroundStaging" or "#32768" or "tooltips_class32"
+        or "NativeHWNDHost";
+
+    // Alguma janela (não só a da frente) ocupa o lugar da ilha? Ex.: navegador maximizado atrás de uma janelinha em foco.
+    // Percorre as janelas de cima para baixo (ordem Z) e para na primeira que encosta ou na área de trabalho.
+    // Custo: só roda quando a conferência já rodaria (a cada 1,5 s com a ilha ligada, troca de app, janela movida ou
+    // minimizada), e cada janela invisível sai na primeira pergunta. Fora da da frente, não contam janelas que não
+    // pegam foco nem clique (camadas de jogos/gravadores, outras "ilhas"), janelas de ferramenta e minimizadas.
+    IntPtr WindowTouchingIsland()
+    {
+        var fg = ForegroundTouchingIsland();
+        if (fg != IntPtr.Zero || !AppSettings.Current.IslandTuck) return fg;   // opção desligada: não precisa procurar
+        _touchZone = ClosedRect();
+        _touchFound = IntPtr.Zero;
+        _touchCount = 0;
+        _touchFg = GetForegroundWindow();
+        _enumProc ??= EnumTouching;
+        try { EnumWindows(_enumProc, IntPtr.Zero); } catch (Exception e) { DevLog.Write("ilha: EnumWindows " + e.Message); return IntPtr.Zero; }
+        return _touchFound;
+    }
+
+    Rectangle _touchZone;
+    IntPtr _touchFound, _touchFg;
+    int _touchCount;
+    EnumWindowsProc? _enumProc;   // guardado: não cria um delegate novo a cada conferência
+    readonly System.Text.StringBuilder _clsBuf = new(64);
+
+    bool EnumTouching(IntPtr hwnd, IntPtr _)
+    {
+        if (++_touchCount > 600) return false;                          // segurança: nunca passa disso
+        if (hwnd == Handle || hwnd == _touchFg || !IsWindowVisible(hwnd) || IsIconic(hwnd)) return true;
+        int ex = GetWindowLong(hwnd, GWL_EXSTYLE);
+        if ((ex & (0x80 /* TOOLWINDOW */ | 0x20 /* TRANSPARENT */ | WS_EX_NOACTIVATE)) != 0) return true;
+        if (!GetWindowRect(hwnd, out var wr) || !Rectangle.FromLTRB(wr.Left, wr.Top, wr.Right, wr.Bottom).IntersectsWith(_touchZone)) return true;
+        _clsBuf.Clear();
+        if (GetClassName(hwnd, _clsBuf, _clsBuf.Capacity) == 0) return true;   // não deu para ler: não conta
+        var cls = _clsBuf.ToString();
+        if (cls is "Progman" or "WorkerW") return false;                 // chegou na área de trabalho: ninguém por cima
+        if (IsShellPart(cls)) return true;
+        GetWindowThreadProcessId(hwnd, out uint pid);
+        if (pid == 0 || pid == Environment.ProcessId) return true;
+        if (IsCloaked(hwnd)) return true;
+        var vis = VisibleRect(hwnd);
+        if (vis.IsEmpty || !vis.IntersectsWith(_touchZone)) return true;
+        _touchFound = hwnd;
+        return false;
+    }
+
+    delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
+    [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc proc, IntPtr lParam);
+    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    // A ilha precisa continuar "sempre por cima". Relato de 20/11: depois de focar um app aberto como administrador
+    // (PowerToys), a ilha passou a ficar atrás das janelas e só aparecia na área de trabalho, como se tivesse perdido o
+    // "sempre por cima". Confere o estilo a cada conferência (uma pergunta ao Windows) e, quando o app da frente muda,
+    // sobe de novo para o topo da camada "sempre por cima" (outro app pode ter se colocado acima).
+    void KeepOnTop(bool raise)
+    {
+        if (!IsHandleCreated || !Visible) return;
+        bool lost = (GetWindowLong(Handle, GWL_EXSTYLE) & 0x8 /* WS_EX_TOPMOST */) == 0;
+        if (!lost && !raise) return;
+        if (lost) DevLog.Write("ilha: perdeu o \"sempre por cima\"; volta ao topo");
+        SetWindowPos(Handle, new IntPtr(-1) /* HWND_TOPMOST */, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x0200 /* NOSIZE|NOMOVE|NOACTIVATE|NOOWNERZORDER */);
     }
 
     // Retângulo que aparece de verdade na tela. O GetWindowRect inclui a borda invisível do Windows 10/11 (~7 px em volta,
@@ -644,7 +765,17 @@ sealed class IslandForm : Form
 
     void OnPowerChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
-        if (!IsDisposed) BeginInvoke(new Action(() => { PostBattery(); CheckCharger(); }));
+        if (IsDisposed) return;
+        BeginInvoke(new Action(() =>
+        {
+            PostBattery(); CheckCharger();
+            if (e.Mode == Microsoft.Win32.PowerModes.Resume)
+            {
+                // Acordou do sono: o gancho das teclas pode ter sido tirado pelo Windows e os monitores podem ter trocado de nome
+                if (_osdOn) MediaKeys.Restart();
+                ScheduleDisplayRecheck();
+            }
+        }));
     }
 
     // ---------- atividades: o que está acontecendo no PC aparece sozinho na ilha ----------
@@ -723,6 +854,8 @@ sealed class IslandForm : Form
             type = "devices",
             on = AppSettings.Current.DevicesEnabled,
             items = Devices.List.Select(d => new { id = d.Id, name = d.Name, battery = d.Battery, kind = d.Kind }).ToArray(),
+            // Reconhecidos sem bateria legível ("bateria ainda não suportada"): a ilha ainda não mostra; fica para a interface
+            unsupported = AppSettings.Current.DevicesEnabled ? UsbBattery.Unsupported.Select(d => new { id = d.Id, name = d.Name, battery = (int?)null, supported = false, kind = d.Kind }).ToArray() : Array.Empty<object>(),
         });
     }
 
@@ -998,13 +1131,75 @@ sealed class IslandForm : Form
     // ---------- esconder quando não estiver em uso (opção) ----------
 
     // Monitor escolhido nas configurações, se não for o principal (e ainda estiver conectado)
+    // Desconectado = null (a ilha vai para o principal), mas a escolha fica guardada: quando ele voltar, a ilha volta.
     static Screen? ChosenScreen()
     {
-        var m = AppSettings.Current.IslandMonitor;
+        var st = AppSettings.Current;
+        var m = st.IslandMonitor;
         if (m == "other") return Screen.AllScreens.FirstOrDefault(s => !s.Primary);
         if (string.IsNullOrEmpty(m) || m == "primary") return null;
-        return Screen.AllScreens.FirstOrDefault(s => s.DeviceName == m && !s.Primary);
+        if (m.StartsWith(@"\\.\", StringComparison.Ordinal))
+        {
+            // Versão antiga: guardava o nome \\.\DISPLAYn, que o Windows troca depois do sono ou ao ligar o PC.
+            // Troca uma vez pela identificação do monitor de verdade (enquanto o nome ainda é o dele).
+            var old = Screen.AllScreens.FirstOrDefault(s => s.DeviceName == m);
+            if (old == null) return null;
+            var id = MonitorId(old);
+            if (id != old.DeviceName) { st.IslandMonitor = id; st.Save(); DevLog.Write($"ilha: monitor {m} guardado como {id}"); }
+            return old.Primary ? null : old;
+        }
+        return Screen.AllScreens.FirstOrDefault(s => !s.Primary && MonitorId(s) == m);
     }
+
+    // ---------- identificação estável do monitor ----------
+    // O nome \\.\DISPLAYn é da saída da placa de vídeo e pode mudar de monitor depois do sono ou do boot. O caminho do
+    // monitor (EnumDisplayDevices com EDD_GET_DEVICE_INTERFACE_NAME: "\\?\DISPLAY#DEL40F2#5&...&UID4353#{...}") traz o
+    // modelo e a porta e não muda. Guardado em memória e relido quando os monitores mudam (aviso do Windows) ou quando a
+    // lista de telas fica diferente.
+    static string s_monSig = "";
+    static Dictionary<string, string> s_monIds = new();
+
+    /// <summary>Identificação do monitor para guardar nas configurações (ou o nome \\.\DISPLAYn, se o Windows não der).</summary>
+    public static string MonitorId(Screen s)
+    {
+        RefreshMonitorIds();
+        return s_monIds.TryGetValue(s.DeviceName, out var id) ? id : s.DeviceName;
+    }
+
+    static void RefreshMonitorIds(bool force = false)
+    {
+        var screens = Screen.AllScreens;
+        var sig = string.Join("|", screens.Select(s => s.DeviceName + s.Bounds));
+        if (!force && sig == s_monSig) return;
+        var map = new Dictionary<string, string>();
+        foreach (var s in screens)
+            try { if (MonitorPath(s.DeviceName) is { } p) map[s.DeviceName] = p; } catch { }
+        s_monIds = map;
+        s_monSig = sig;
+    }
+
+    static string? MonitorPath(string adapter)
+    {
+        var dd = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+        for (uint i = 0; i < 8 && EnumDisplayDevices(adapter, i, ref dd, 1 /* EDD_GET_DEVICE_INTERFACE_NAME */); i++)
+        {
+            if ((dd.StateFlags & 1 /* DISPLAY_DEVICE_ACTIVE */) != 0 && dd.DeviceID.StartsWith(@"\\?\", StringComparison.Ordinal)) return dd.DeviceID;
+            dd = new DISPLAY_DEVICE { cb = Marshal.SizeOf<DISPLAY_DEVICE>() };
+        }
+        return null;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct DISPLAY_DEVICE
+    {
+        public int cb;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
+        public int StateFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
+    }
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplayDevices(string device, uint index, ref DISPLAY_DEVICE dd, uint flags);
 
     bool CanAutoHide => AppSettings.Current.IslandAutoHide && _mode is Mode.Closed or Mode.Idle && !_hover && !_notice && !_hiddenByAuto;
 
@@ -1124,6 +1319,7 @@ sealed class IslandForm : Form
     {
         _lastBright = DateTime.UtcNow;
         if ((DateTime.UtcNow - _flyoutAt).TotalMilliseconds < 1500) HideFlyout();
+        else if (s_win10) FindWin10Flyout();
         ShowOsd("bright", Strings.Get(AppSettings.Current.Language, "osdBright"), $"{b}%", b / 100.0);
     }
 
@@ -1155,25 +1351,69 @@ sealed class IslandForm : Form
 
     void OnShellShow(IntPtr hook, uint ev, IntPtr hwnd, int obj, int child, uint thread, uint time)
     {
-        if (obj != 0 || hwnd == IntPtr.Zero || !IsOsdFlyout(hwnd)) return;
+        if (obj != 0 || hwnd == IntPtr.Zero) return;
+        bool osd = IsOsdFlyout(hwnd);
+        if ((DateTime.UtcNow - _lastBright).TotalMilliseconds < 1500) LogShellWindow(hwnd, osd);
+        if (!osd) return;
         _flyout = hwnd;
         _flyoutAt = DateTime.UtcNow;
         if ((DateTime.UtcNow - _lastBright).TotalMilliseconds < 1500) HideFlyout();
     }
 
     // O aviso do Windows: classe do Explorer, pequeno, centralizado e encostado embaixo (acima da barra de tarefas)
+    // Windows 10: o aviso de volume/brilho é outra janela do Explorer, "NativeHWNDHost" com uma filha "DirectUIHWND",
+    // estreita e alta (~65×140, mais larga com os controles de música), no canto de cima à esquerda (relato de 20/11,
+    // build 19045). Só é reconhecida no Windows 10 e só quando o Explorer a mostra junto com uma mudança de brilho
+    // (a regra de 1,5 s fica em OnShellShow/OnBrightness).
+    static readonly bool s_win10 = Environment.OSVersion.Version.Build < 22000;
+
     static bool IsOsdFlyout(IntPtr hwnd)
     {
         var cls = new System.Text.StringBuilder(64);
-        GetClassName(hwnd, cls, cls.Capacity);
-        if (cls.ToString() != "XamlExplorerHostIslandWindow") return false;
+        if (GetClassName(hwnd, cls, cls.Capacity) == 0) return false;
         if (!GetWindowRect(hwnd, out var r)) return false;
         float k = Math.Max(1, GetDpiForWindow(hwnd)) / 96f;
         var scr = Screen.FromHandle(hwnd).Bounds;
         int w = r.Right - r.Left, h = r.Bottom - r.Top;
+        if (s_win10 && cls.ToString() == "NativeHWNDHost")
+            return FindWindowEx(hwnd, IntPtr.Zero, "DirectUIHWND", null) != IntPtr.Zero
+                && w > 20 * k && w < 420 * k && h > 60 * k && h < 260 * k
+                && r.Left < scr.Left + 200 * k && r.Top < scr.Top + 200 * k;
+        if (cls.ToString() != "XamlExplorerHostIslandWindow") return false;
         return w < 420 * k && h < 140 * k
             && Math.Abs((r.Left + r.Right) / 2 - (scr.Left + scr.Right) / 2) < 60 * k
             && r.Bottom > scr.Bottom - 220 * k;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string cls, string? title);
+
+    // Windows 10: o aviso continua na tela entre duas mudanças seguidas de brilho (não "aparece" de novo, então não
+    // chega aviso de janela mostrada). Procura a janela do Explorer já visível e esconde.
+    void FindWin10Flyout()
+    {
+        IntPtr w = IntPtr.Zero;
+        for (int i = 0; i < 10 && (w = FindWindowEx(IntPtr.Zero, w, "NativeHWNDHost", null)) != IntPtr.Zero; i++)
+        {
+            GetWindowThreadProcessId(w, out uint pid);
+            if (pid != _explorerPid || !IsWindowVisible(w)) continue;
+            bool osd = IsOsdFlyout(w);
+            LogShellWindow(w, osd);
+            if (!osd) continue;
+            _flyout = w;
+            _flyoutAt = DateTime.UtcNow;
+            HideFlyout();
+            return;
+        }
+    }
+
+    // Só no --dev: o que o Explorer mostrou perto de uma mudança de brilho (para achar o aviso em outras versões do Windows)
+    static void LogShellWindow(IntPtr hwnd, bool matched)
+    {
+        if (!Program.DevMode) return;
+        var cls = new System.Text.StringBuilder(64);
+        GetClassName(hwnd, cls, cls.Capacity);
+        GetWindowRect(hwnd, out var r);
+        DevLog.Write($"brilho: Explorer mostrou {cls} {r.Left},{r.Top} {r.Right - r.Left}×{r.Bottom - r.Top} (build {Environment.OSVersion.Version.Build}) → {(matched ? "é o aviso" : "não é")}");
     }
 
     void HideFlyout()
@@ -1539,7 +1779,7 @@ sealed class IslandForm : Form
         int i = list.FindIndex(s => s.DeviceName == Screen.FromHandle(Handle).DeviceName);
         var next = list[(i + 1) % list.Count];
         var st = AppSettings.Current;
-        st.IslandMonitor = next.Primary ? "primary" : next.DeviceName;
+        st.IslandMonitor = next.Primary ? "primary" : MonitorId(next);
         st.Save();
         _hover = false;          // o mouse ficou no outro monitor: a ilha fecha lá
         _collapse.Stop();
@@ -1774,7 +2014,10 @@ sealed class IslandForm : Form
     {
         if (disposing)
         {
-            if (_winEventHook != IntPtr.Zero) UnhookWinEvent(_winEventHook);
+            foreach (var h in new[] { _winEventHook, _moveHook, _minHook }) if (h != IntPtr.Zero) UnhookWinEvent(h);
+            Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplayChanged;
+            Microsoft.Win32.SystemEvents.SessionSwitch -= OnSessionSwitch;
+            _displayRecheck.Dispose();
             Water.Changed -= OnWaterChanged;
             Todo.Changed -= PostTodo;
             Pomodoro.Changed -= PostPomodoro;

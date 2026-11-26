@@ -202,10 +202,11 @@ sealed class SettingsForm : Form
                 tuckLine = _settings.IslandTuckLine,
                 autoHide = _settings.IslandAutoHide,
                 autoHideSec = _settings.IslandAutoHideSec,
-                monitor = _settings.IslandMonitor ?? "primary",
+                monitor = _settings.IslandMonitor is { } im && im.StartsWith(@"\\.\") && Screen.AllScreens.FirstOrDefault(s => s.DeviceName == im) is { } os
+                    ? (os.Primary ? "primary" : IslandForm.MonitorId(os)) : _settings.IslandMonitor ?? "primary",   // nome antigo \\.\DISPLAYn: mostra pelo novo
                 // Monitores da esquerda para a direita (o principal vira "primary"), para os botões da página Ilha
                 monitors = Screen.AllScreens.OrderBy(s => s.Bounds.X).ThenBy(s => s.Bounds.Y)
-                    .Select(s => new { id = s.Primary ? "primary" : s.DeviceName, primary = s.Primary, w = s.Bounds.Width, h = s.Bounds.Height }).ToArray(),
+                    .Select(s => new { id = s.Primary ? "primary" : IslandForm.MonitorId(s), primary = s.Primary, w = s.Bounds.Width, h = s.Bounds.Height }).ToArray(),
                 screens = Screen.AllScreens.Length,
                 posH = _settings.IslandPosH,
                 posV = _settings.IslandPosV,

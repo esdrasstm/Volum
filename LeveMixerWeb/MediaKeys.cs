@@ -55,12 +55,31 @@ static class MediaKeys
         _onKey = null;
     }
 
-    // Precisa ser rápido (o Windows desiste do gancho se demorar): só confere a tecla e avisa a ilha
+    /// <summary>Tira e põe o gancho de novo. O Windows remove em silêncio um gancho que demorou a responder
+    /// (LowLevelHooksTimeout, ex.: PC travado ao acordar do sono), e não avisa; a ilha chama isto ao voltar do sono
+    /// e ao desbloquear a sessão, que é quando isso costuma acontecer.</summary>
+    public static void Restart()
+    {
+        var onKey = _onKey;
+        if (_thread == null || onKey == null) return;
+        Stop();
+        Start(onKey);
+        DevLog.Write("MediaKeys: gancho reinstalado");
+    }
+
+    const int LLKHF_LOWER_IL_INJECTED = 0x02, LLKHF_INJECTED = 0x10;
+
+    // Precisa ser rápido (o Windows desiste do gancho se demorar): só confere a tecla e avisa a ilha (BeginInvoke,
+    // nunca espera a ilha). Teclas simuladas por outro programa (PowerToys Keyboard Manager, AutoHotkey, macros)
+    // passam direto, sem o Volum engolir nem agir: quem remapeia é dono delas.
     static IntPtr Hook(int code, IntPtr wParam, IntPtr lParam)
     {
         if (code >= 0)
         {
             int vk = Marshal.ReadInt32(lParam);
+            int flags = Marshal.ReadInt32(lParam, 8);   // KBDLLHOOKSTRUCT: vkCode, scanCode, flags
+            if ((flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) != 0)
+                return CallNextHookEx(IntPtr.Zero, code, wParam, lParam);
             bool media = vk is >= Next and <= PlayPause;
             if (vk is >= VolMute and <= PlayPause && !(media && PassMedia))
             {

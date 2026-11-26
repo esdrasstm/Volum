@@ -976,19 +976,26 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .island.quick-pomo .pomo-chip { display: none; }
 
 /* ---------- Ilha aberta: configurações e trocar de monitor (embaixo à esquerda, discretos) ---------- */
-.full-tools { position: absolute; left: 14px; bottom: 10px; display: flex; gap: 2px; z-index: 3; }
+/* Moram na faixa das bolinhas (18 px, 8 px acima da borda; ver "Ilha aberta mais baixa"), centralizados nela:
+   botões de 22 px não alcançam o alto-falante do player (bug de 25/11: com 26 px a 10 px da borda ficavam por cima dele) */
+.full-tools { position: absolute; left: 14px; bottom: 6px; display: flex; gap: 2px; z-index: 3; }
 .full-tools button {
-  display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 8px;
+  display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 7px;
   background: none; color: var(--text); opacity: .38; cursor: pointer; transition: opacity .15s ease, background .15s ease;
 }
 .full-tools button:hover { opacity: 1; background: rgba(255, 255, 255, .08); }
 .full-tools button[hidden] { display: none; }
-.full-tools svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* Com uma página só (sem bolinhas) a faixa continua lá: é o lugar das ferramentas */
+.full .dots:empty { display: flex; }
+.full-tools svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .full-tools #gearBtn:hover svg { transform: rotate(60deg); transition: transform .5s var(--soft-spring); }
 /* Tema Vidro: a barra de abas ocupa a largura toda; abre espaço à esquerda e alinha as ferramentas com ela */
 :root[data-skin="glass"] .full .tabbar { padding-left: 40px; }
 :root[data-skin="glass"] .full:has(#monBtn:not([hidden])) .tabbar { padding-left: 68px; }
-:root[data-skin="glass"] .full-tools { bottom: 18px; }
+:root[data-skin="glass"] .full-tools { bottom: 16px; }   /* no meio da barra de abas (38 px, 8 px acima da borda) */
+/* Vidro com uma página só (sem barra de abas): volta a faixa vazia das bolinhas para as ferramentas */
+:root[data-skin="glass"] .full:has(.tabbar[hidden]) .dots { display: flex !important; }
+:root[data-skin="glass"] .full:has(.tabbar[hidden]) .full-tools { bottom: 6px; }
 
 /* ---------- Gota das páginas (indicador líquido; island.js, dotsTo) ---------- */
 .full { --dots-goo: 1; }
@@ -1155,6 +1162,10 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .devs-title { flex: 1; min-width: 0; display: grid; }
 .devs-title b { font-size: 16px; font-weight: 600; letter-spacing: -.4px; }
 .devs-title span { font-size: 12px; color: var(--subtext); }
+/* "Beta" bem discreto ao lado do título (a leitura da bateria 2.4 GHz ainda está em testes) */
+.devs-title b > span { font-size: inherit; color: inherit; }
+.dev-beta { display: inline-block; margin-left: 2px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 5px;
+  font-size: 9px; font-style: normal; font-weight: 500; letter-spacing: .3px; line-height: 14px; vertical-align: 2px; color: var(--subtext); }
 .devs-list { list-style: none; margin: 0; padding: 0 4px 0 0; display: grid; gap: 4px; max-height: 70px; overflow-y: auto;
   overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .2) transparent; }
 .devs-list li { display: flex; align-items: center; gap: 10px; min-height: 22px; }
@@ -1165,6 +1176,11 @@ html.at-bottom .island.pomo-on.open .pomo-bubble { transform: translate(-40px, -
 .dev-bar i { display: block; height: 100%; border-radius: 3px; transition: width .6s var(--spring), background-color .6s ease; }
 .dev-pct { flex: none; width: 38px; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .devs-list li.low .dev-pct { color: #ff6b6b; }
+/* Reconhecido, mas a bateria ainda não dá para ler: no lugar da barra e da %, um texto discreto */
+.dev-unsup { flex: 0 0 auto; max-width: 58%; font-size: 11.5px; color: var(--subtext); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.devs-list li.unsup { min-width: 0; overflow: hidden; }
+.devs-list li.unsup .dev-name { flex: 1 1 auto; }   /* o aviso fica inteiro (até 58%); quem encolhe é o nome */
+.devs-list li.unsup .dev-ico, .devs-list li.unsup .dev-name { opacity: .6; }
 .dev-notice-ico { display: grid; place-items: center; width: 100%; height: 100%; color: #fff; }
 .dev-notice-ico svg { width: 20px; height: 20px; }
 

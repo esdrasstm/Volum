@@ -175,7 +175,9 @@
     { id: 'b', name: 'MX Master 3S', battery: 82, kind: 'mouse' },
     { id: 'c', name: 'Pebble K380s', battery: 95, kind: 'keyboard' },
     { id: 'd', name: 'JBL Flip 6', battery: 14, kind: 'speaker' },
-  ] });
+  ],
+  // reconhecido, mas sem bateria legível ainda: a página mostra "Bateria ainda não suportada"
+  unsupported: [{ id: 'e', name: 'Attack Shark X11', battery: null, supported: false, kind: 'mouse' }] });
 
   function onUi(m) {
     switch (m.type) {

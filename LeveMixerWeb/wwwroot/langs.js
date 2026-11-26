@@ -132,6 +132,7 @@ Volum.addLangs({
     todoOn: "Aufgabenliste",
     todoOnHint: "Eine Seite auf der Insel, um schnelle Aufgaben zu notieren und abzuhaken",
     newsSoon: "Demnächst",
+    newsBeta: "Beta",
     langAuto: "Automatisch (Windows-Sprache)",
     devDiag: "Diagnose kopieren",
     devDiagHint: "Dein kabelloses Gerät erscheint nicht? Kopiere die Diagnose und schick sie über die Vorschlagsblase, damit wir seine Marke hinzufügen",
@@ -143,6 +144,7 @@ Volum.addLangs({
     tabDevices: "Geräte",
     devCount1: "1 verbunden",
     devCountN: "{0} verbunden",
+    devUnsupported: "Akku noch nicht unterstützt",
     islandAgenda: "Kalender",
     agendaEmpty: "Heute nichts im Kalender",
     agendaAllDay: "Ganztägig",
@@ -371,6 +373,7 @@ Volum.addLangs({
     todoOn: "Liste de tâches",
     todoOnHint: "Une page sur l’île pour noter des tâches rapides et les cocher",
     newsSoon: "Bientôt",
+    newsBeta: "Bêta",
     langAuto: "Automatique (langue de Windows)",
     devDiag: "Copier le diagnostic",
     devDiagHint: "Votre appareil sans fil n’apparaît pas ? Copiez le diagnostic et envoyez-le via la bulle de suggestions pour qu’on ajoute sa marque",
@@ -382,6 +385,7 @@ Volum.addLangs({
     tabDevices: "Appareils",
     devCount1: "1 connecté",
     devCountN: "{0} connectés",
+    devUnsupported: "Batterie non prise en charge",
     islandAgenda: "Agenda",
     agendaEmpty: "Rien à l’agenda aujourd’hui",
     agendaAllDay: "Toute la journée",
@@ -610,6 +614,7 @@ Volum.addLangs({
     todoOn: "Lista attività",
     todoOnHint: "Una pagina sull’isola per annotare attività veloci e spuntarle",
     newsSoon: "In arrivo",
+    newsBeta: "Beta",
     langAuto: "Automatica (lingua di Windows)",
     devDiag: "Copia diagnostica",
     devDiagHint: "Il tuo dispositivo wireless non compare? Copia la diagnostica e inviala con la bolla dei suggerimenti, così aggiungiamo la sua marca",
@@ -621,6 +626,7 @@ Volum.addLangs({
     tabDevices: "Dispositivi",
     devCount1: "1 connesso",
     devCountN: "{0} connessi",
+    devUnsupported: "Batteria non supportata",
     islandAgenda: "Calendario",
     agendaEmpty: "Niente in calendario oggi",
     agendaAllDay: "Tutto il giorno",
@@ -849,6 +855,7 @@ Volum.addLangs({
     todoOn: "Görev listesi",
     todoOnHint: "Hızlı görevleri not almak ve işaretlemek için adada bir sayfa",
     newsSoon: "Yakında",
+    newsBeta: "Beta",
     langAuto: "Otomatik (Windows dili)",
     devDiag: "Tanılamayı kopyala",
     devDiagHint: "Kablosuz cihazınız görünmüyor mu? Tanılamayı kopyalayıp öneri balonuyla gönderin, markasını ekleyelim",
@@ -860,6 +867,7 @@ Volum.addLangs({
     tabDevices: "Cihazlar",
     devCount1: "1 bağlı",
     devCountN: "{0} bağlı",
+    devUnsupported: "Pil henüz desteklenmiyor",
     islandAgenda: "Takvim",
     agendaEmpty: "Bugün takvimde bir şey yok",
     agendaAllDay: "Tüm gün",
@@ -1088,6 +1096,7 @@ Volum.addLangs({
     todoOn: "Lista zadań",
     todoOnHint: "Strona na wyspie do notowania szybkich zadań i odhaczania ich",
     newsSoon: "Wkrótce",
+    newsBeta: "Beta",
     langAuto: "Automatycznie (język Windows)",
     devDiag: "Kopiuj diagnostykę",
     devDiagHint: "Twoje urządzenie bezprzewodowe się nie pojawia? Skopiuj diagnostykę i wyślij ją przez dymek sugestii, a dodamy jego markę",
@@ -1099,6 +1108,7 @@ Volum.addLangs({
     tabDevices: "Urządzenia",
     devCount1: "1 połączone",
     devCountN: "Połączone: {0}",
+    devUnsupported: "Bateria nieobsługiwana",
     islandAgenda: "Kalendarz",
     agendaEmpty: "Dziś nic w kalendarzu",
     agendaAllDay: "Cały dzień",
@@ -1327,6 +1337,7 @@ Volum.addLangs({
     todoOn: "Daftar tugas",
     todoOnHint: "Halaman di pulau untuk mencatat tugas singkat dan mencentangnya",
     newsSoon: "Segera",
+    newsBeta: "Beta",
     langAuto: "Otomatis (bahasa Windows)",
     devDiag: "Salin diagnostik",
     devDiagHint: "Perangkat nirkabelmu tidak muncul? Salin diagnostiknya dan kirim lewat gelembung saran agar kami menambahkan mereknya",
@@ -1338,6 +1349,7 @@ Volum.addLangs({
     tabDevices: "Perangkat",
     devCount1: "1 terhubung",
     devCountN: "{0} terhubung",
+    devUnsupported: "Baterai belum didukung",
     islandAgenda: "Kalender",
     agendaEmpty: "Tidak ada acara hari ini",
     agendaAllDay: "Sepanjang hari",
@@ -1566,6 +1578,7 @@ Volum.addLangs({
     todoOn: "Danh sách việc",
     todoOnHint: "Một trang trên đảo để ghi nhanh việc cần làm và đánh dấu khi xong",
     newsSoon: "Sắp có",
+    newsBeta: "Beta",
     langAuto: "Tự động (ngôn ngữ của Windows)",
     devDiag: "Sao chép chẩn đoán",
     devDiagHint: "Thiết bị không dây của bạn không hiện? Sao chép chẩn đoán và gửi qua bong bóng góp ý để chúng tôi thêm hãng của nó",
@@ -1577,6 +1590,7 @@ Volum.addLangs({
     tabDevices: "Thiết bị",
     devCount1: "1 đã kết nối",
     devCountN: "{0} đã kết nối",
+    devUnsupported: "Chưa hỗ trợ pin",
     islandAgenda: "Lịch",
     agendaEmpty: "Hôm nay không có lịch",
     agendaAllDay: "Cả ngày",
@@ -1805,6 +1819,7 @@ Volum.addLangs({
     todoOn: "Список задач",
     todoOnHint: "Страница на острове, чтобы быстро записывать задачи и отмечать выполненные",
     newsSoon: "Скоро",
+    newsBeta: "Бета",
     langAuto: "Автоматически (язык Windows)",
     devDiag: "Скопировать диагностику",
     devDiagHint: "Ваше беспроводное устройство не отображается? Скопируйте диагностику и отправьте через пузырёк предложений, и мы добавим его марку",
@@ -1816,6 +1831,7 @@ Volum.addLangs({
     tabDevices: "Устройства",
     devCount1: "1 подключено",
     devCountN: "Подключено: {0}",
+    devUnsupported: "Заряд не поддерживается",
     islandAgenda: "Календарь",
     agendaEmpty: "Сегодня в календаре ничего нет",
     agendaAllDay: "Весь день",
@@ -2045,6 +2061,7 @@ Volum.addLangs({
     todoOn: "قائمة المهام",
     todoOnHint: "صفحة على الجزيرة لتدوين المهام السريعة وشطب المنجز منها",
     newsSoon: "قريبًا",
+    newsBeta: "تجريبي",
     langAuto: "تلقائي (لغة Windows)",
     devDiag: "نسخ التشخيص",
     devDiagHint: "جهازك اللاسلكي لا يظهر؟ انسخ التشخيص وأرسله عبر فقاعة الاقتراحات لنضيف علامته التجارية",
@@ -2056,6 +2073,7 @@ Volum.addLangs({
     tabDevices: "الأجهزة",
     devCount1: "جهاز متصل",
     devCountN: "المتصلة: {0}",
+    devUnsupported: "البطارية غير مدعومة بعد",
     islandAgenda: "التقويم",
     agendaEmpty: "لا شيء في التقويم اليوم",
     agendaAllDay: "طوال اليوم",
@@ -2284,6 +2302,7 @@ Volum.addLangs({
     todoOn: "タスクリスト",
     todoOnHint: "ちょっとしたタスクをメモしてチェックできるアイランドのページ",
     newsSoon: "近日公開",
+    newsBeta: "ベータ",
     langAuto: "自動 (Windows の言語)",
     devDiag: "診断をコピー",
     devDiagHint: "ワイヤレス機器が表示されませんか？診断をコピーして提案の吹き出しから送ってください。メーカーを追加します",
@@ -2295,6 +2314,7 @@ Volum.addLangs({
     tabDevices: "機器",
     devCount1: "1 台接続中",
     devCountN: "{0} 台接続中",
+    devUnsupported: "バッテリー未対応",
     islandAgenda: "カレンダー",
     agendaEmpty: "今日の予定はありません",
     agendaAllDay: "終日",
@@ -2523,6 +2543,7 @@ Volum.addLangs({
     todoOn: "할 일 목록",
     todoOnHint: "간단한 할 일을 적고 체크하는 아일랜드 페이지",
     newsSoon: "곧 출시",
+    newsBeta: "베타",
     langAuto: "자동 (Windows 언어)",
     devDiag: "진단 정보 복사",
     devDiagHint: "무선 기기가 표시되지 않나요? 진단 정보를 복사해 제안 말풍선으로 보내 주시면 브랜드를 추가할게요",
@@ -2534,6 +2555,7 @@ Volum.addLangs({
     tabDevices: "기기",
     devCount1: "1개 연결됨",
     devCountN: "{0}개 연결됨",
+    devUnsupported: "배터리 아직 미지원",
     islandAgenda: "캘린더",
     agendaEmpty: "오늘은 일정이 없습니다",
     agendaAllDay: "종일",
@@ -2762,6 +2784,7 @@ Volum.addLangs({
     todoOn: "待办清单",
     todoOnHint: "灵动岛上的一个页面，用来快速记录待办并勾选完成",
     newsSoon: "即将推出",
+    newsBeta: "测试版",
     langAuto: "自动（Windows 语言）",
     devDiag: "复制诊断信息",
     devDiagHint: "无线设备没有显示？复制诊断信息并通过建议气泡发给我们，我们会添加该品牌",
@@ -2773,6 +2796,7 @@ Volum.addLangs({
     tabDevices: "设备",
     devCount1: "已连接 1 台",
     devCountN: "已连接 {0} 台",
+    devUnsupported: "暂不支持电量",
     islandAgenda: "日历",
     agendaEmpty: "今天没有日程",
     agendaAllDay: "全天",
@@ -3001,6 +3025,7 @@ Volum.addLangs({
     todoOn: "待辦清單",
     todoOnHint: "動態島上的一個頁面，用來快速記下待辦並勾選完成",
     newsSoon: "即將推出",
+    newsBeta: "測試版",
     langAuto: "自動（Windows 語言）",
     devDiag: "複製診斷資訊",
     devDiagHint: "無線裝置沒有顯示？複製診斷資訊並透過建議泡泡傳給我們，我們會加入該品牌",
@@ -3012,6 +3037,7 @@ Volum.addLangs({
     tabDevices: "裝置",
     devCount1: "已連線 1 台",
     devCountN: "已連線 {0} 台",
+    devUnsupported: "暫不支援電量",
     islandAgenda: "行事曆",
     agendaEmpty: "今天沒有行程",
     agendaAllDay: "全天",
@@ -3426,6 +3452,153 @@ Volum.addNews('0.10.0', {
       "支持 Volum",
       "Volum 免費、沒有廣告，由一個人開發。如果它在日常中幫到了你，任何支持都能讓它繼續下去。沒有壓力：使用並推薦給別人就已經很有意義。",
       "支持 Volum"
+    ]
+  ]
+});
+
+// 0.10.1: bateria 2.4 GHz (beta) e correções de bugs (mesma ordem do NEWS.items)
+Volum.addNews('0.10.1', {
+  "de": [
+    [
+      "Akku kabelloser Geräte",
+      "Volum liest jetzt den Akku von mehr Geräten mit 2,4-GHz-Empfänger: Attack Shark, Ajazz, ATK, Logitech PRO X 2, PlayStation-Controller und ältere Logitech. Noch im Test, kann sich irren. Deins fehlt? Diagnose unter Einstellungen → Insel kopieren und uns schicken.",
+      "Diagnose senden"
+    ],
+    [
+      "Fehlerbehebungen",
+      "Die Insel-Tasten werden nicht mehr verdeckt, Volum verträgt sich besser mit PowerToys, die Insel kommt nach dem Ruhezustand auf dem richtigen Monitor zurück und die Helligkeitsanzeige klappt unter Windows 10."
+    ]
+  ],
+  "fr": [
+    [
+      "Batterie sans fil",
+      "Volum lit maintenant la batterie de plus d’appareils à récepteur 2,4 GHz : Attack Shark, Ajazz, ATK, Logitech PRO X 2, manettes PlayStation et anciens Logitech. C’est en test, ça peut se tromper. Le vôtre manque ? Copiez le diagnostic dans Paramètres → Île et envoyez-le-nous.",
+      "Envoyer le diagnostic"
+    ],
+    [
+      "Corrections de bugs",
+      "Les boutons de l’île ne sont plus cachés, Volum s’entend mieux avec PowerToys, l’île revient sur le bon écran après la veille et l’indicateur de luminosité marche sous Windows 10."
+    ]
+  ],
+  "it": [
+    [
+      "Batteria wireless",
+      "Ora Volum legge la batteria di più dispositivi con ricevitore 2,4 GHz: Attack Shark, Ajazz, ATK, Logitech PRO X 2, controller PlayStation e Logitech più vecchi. È in prova e può sbagliare. Il tuo manca? Copia la diagnostica in Impostazioni → Isola e mandacela.",
+      "Invia diagnostica"
+    ],
+    [
+      "Correzioni di bug",
+      "I pulsanti dell’isola non restano più coperti, Volum va d’accordo con PowerToys, l’isola torna sul monitor giusto dopo la sospensione e l’indicatore di luminosità funziona su Windows 10."
+    ]
+  ],
+  "tr": [
+    [
+      "Kablosuz cihaz pili",
+      "Volum artık 2.4 GHz alıcılı daha fazla cihazın pilini okuyor: Attack Shark, Ajazz, ATK, Logitech PRO X 2, PlayStation kolları ve eski Logitech'ler. Test aşamasında, yanılabilir. Seninki yok mu? Ayarlar → Ada'da tanılamayı kopyala ve bize gönder.",
+      "Tanılamayı gönder"
+    ],
+    [
+      "Hata düzeltmeleri",
+      "Adanın düğmeleri artık örtülmüyor, Volum PowerToys ile daha iyi anlaşıyor, ada uykudan sonra doğru monitöre dönüyor ve parlaklık göstergesi Windows 10'da çalışıyor."
+    ]
+  ],
+  "pl": [
+    [
+      "Bateria bezprzewodowa",
+      "Volum odczytuje teraz baterię większej liczby urządzeń z odbiornikiem 2,4 GHz: Attack Shark, Ajazz, ATK, Logitech PRO X 2, pady PlayStation i starsze Logitech. To testy, może się mylić. Twojego brak? Skopiuj diagnostykę w Ustawienia → Wyspa i wyślij nam.",
+      "Wyślij diagnostykę"
+    ],
+    [
+      "Poprawki błędów",
+      "Przyciski wyspy nie są już zasłonięte, Volum lepiej współpracuje z PowerToys, wyspa wraca na właściwy monitor po uśpieniu, a wskaźnik jasności działa w Windows 10."
+    ]
+  ],
+  "id": [
+    [
+      "Baterai nirkabel",
+      "Volum kini membaca baterai lebih banyak perangkat dengan receiver 2.4 GHz: Attack Shark, Ajazz, ATK, Logitech PRO X 2, stik PlayStation, dan Logitech lama. Masih diuji, bisa salah. Punyamu tidak ada? Salin diagnostik di Pengaturan → Pulau lalu kirim ke kami.",
+      "Kirim diagnostik"
+    ],
+    [
+      "Perbaikan bug",
+      "Tombol pulau tidak tertutup lagi, Volum lebih akur dengan PowerToys, pulau kembali ke monitor yang benar setelah tidur, dan indikator kecerahan berfungsi di Windows 10."
+    ]
+  ],
+  "vi": [
+    [
+      "Pin thiết bị không dây",
+      "Volum giờ đọc pin của nhiều thiết bị dùng đầu thu 2.4 GHz hơn: Attack Shark, Ajazz, ATK, Logitech PRO X 2, tay cầm PlayStation và Logitech đời cũ. Đang thử nghiệm nên có thể sai. Chưa thấy thiết bị của bạn? Sao chép chẩn đoán ở Cài đặt → Đảo rồi gửi cho chúng tôi.",
+      "Gửi chẩn đoán"
+    ],
+    [
+      "Sửa lỗi",
+      "Các nút của đảo không còn bị che, Volum chạy ổn hơn với PowerToys, đảo quay về đúng màn hình sau khi ngủ và chỉ báo độ sáng hoạt động trên Windows 10."
+    ]
+  ],
+  "ru": [
+    [
+      "Заряд беспроводных устройств",
+      "Теперь Volum читает заряд большего числа устройств с приёмником 2,4 ГГц: Attack Shark, Ajazz, ATK, Logitech PRO X 2, геймпады PlayStation и старые Logitech. Это тест, возможны ошибки. Вашего нет? Скопируйте диагностику в Настройки → Остров и пришлите нам.",
+      "Отправить диагностику"
+    ],
+    [
+      "Исправления ошибок",
+      "Кнопки острова больше не перекрываются, Volum лучше ладит с PowerToys, остров возвращается на нужный монитор после сна, а индикатор яркости работает в Windows 10."
+    ]
+  ],
+  "ar": [
+    [
+      "بطارية الأجهزة اللاسلكية",
+      "\u200FVolum يقرأ الآن بطارية أجهزة أكثر ذات مستقبل 2.4 GHz: Attack Shark وAjazz وATK وLogitech PRO X 2 وأذرع PlayStation وأجهزة Logitech الأقدم. ما زالت قيد التجربة وقد تخطئ. جهازك غير موجود؟ انسخ التشخيص من الإعدادات ← الجزيرة وأرسله إلينا.",
+      "أرسل التشخيص"
+    ],
+    [
+      "إصلاح الأخطاء",
+      "لم تعد أزرار الجزيرة مغطاة، ويعمل Volum بشكل أفضل مع PowerToys، وتعود الجزيرة إلى الشاشة الصحيحة بعد السكون، ومؤشر السطوع يعمل في Windows 10."
+    ]
+  ],
+  "ja": [
+    [
+      "ワイヤレス機器のバッテリー",
+      "2.4 GHz レシーバーの機器のバッテリーを読めるものが増えました（Attack Shark、Ajazz、ATK、Logitech PRO X 2、PlayStation のコントローラー、古い Logitech）。テスト中なので間違えることがあります。表示されないときは 設定 → アイランド で診断をコピーして送ってください。",
+      "診断を送る"
+    ],
+    [
+      "バグ修正",
+      "アイランドのボタンが隠れなくなり、PowerToys との相性が良くなり、スリープ後も正しいモニターに戻り、Windows 10 で明るさ表示が動くようになりました。"
+    ]
+  ],
+  "ko": [
+    [
+      "무선 기기 배터리",
+      "이제 2.4 GHz 수신기를 쓰는 더 많은 기기의 배터리를 읽어요: Attack Shark, Ajazz, ATK, Logitech PRO X 2, PlayStation 컨트롤러, 예전 Logitech. 테스트 중이라 틀릴 수 있어요. 내 기기가 없다면 설정 → 아일랜드에서 진단 정보를 복사해 보내 주세요.",
+      "진단 보내기"
+    ],
+    [
+      "버그 수정",
+      "아일랜드 버튼이 더 이상 가려지지 않고, PowerToys와 더 잘 어울리며, 절전 후에도 올바른 모니터로 돌아오고, Windows 10에서 밝기 표시가 작동해요."
+    ]
+  ],
+  "zh-CN": [
+    [
+      "无线设备电量",
+      "Volum 现在能读取更多 2.4 GHz 接收器设备的电量：Attack Shark、Ajazz、ATK、Logitech PRO X 2、PlayStation 手柄和较早的 Logitech。仍在测试中，可能出错。没有你的设备？在 设置 → 灵动岛 复制诊断信息并发给我们。",
+      "发送诊断"
+    ],
+    [
+      "问题修复",
+      "灵动岛按钮不再被遮挡，与 PowerToys 相处更好，睡眠后灵动岛回到正确的显示器，Windows 10 上的亮度提示也能正常显示。"
+    ]
+  ],
+  "zh-TW": [
+    [
+      "無線裝置電量",
+      "Volum 現在能讀取更多 2.4 GHz 接收器裝置的電量：Attack Shark、Ajazz、ATK、Logitech PRO X 2、PlayStation 手把和較舊的 Logitech。仍在測試中，可能出錯。沒有你的裝置？在 設定 → 動態島 複製診斷資訊並傳給我們。",
+      "傳送診斷"
+    ],
+    [
+      "錯誤修正",
+      "動態島按鈕不再被遮住，與 PowerToys 相處更好，睡眠後動態島回到正確的螢幕，Windows 10 的亮度提示也能正常顯示。"
     ]
   ]
 });

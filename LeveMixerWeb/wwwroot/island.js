@@ -763,6 +763,8 @@
     device: '<svg viewBox="0 0 24 24"><path d="M7 7.5l10 9-5 4.5V3l5 4.5-10 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   };
   let devicesOn = true, devices = [];
+  // Reconhecidos, mas sem bateria que o Volum saiba ler ainda: só listados na página (sem anel, sem aviso)
+  let devUnsup = [];
   // Cor da bateria igual à do notebook: verde (100%) → amarelo-laranja → vermelho (20% ou menos)
   const battColor = (p) => { const hue = Math.round(Math.max(0, Math.min(1, (p - 20) / 80)) * 110); return 'hsl(' + hue + ', 88%, ' + (hue > 60 ? 52 : 56) + '%)'; };
   // Ilha fechada: até 2 aparelhos, cada um com o ícone dentro de um anel que mostra a carga (como a bateria do notebook)
@@ -814,7 +816,8 @@
   function showDevices() {
     fitMiniDevices();
     $('devsIcon').innerHTML = DEV_ICONS.headphones;
-    $('devCount').textContent = devices.length === 1 ? t('devCount1') : t('devCountN').replace('{0}', devices.length);
+    const total = devices.length + devUnsup.length;   // conectados: com e sem bateria legível
+    $('devCount').textContent = total === 1 ? t('devCount1') : t('devCountN').replace('{0}', total);
     $('devList').replaceChildren(...devices.map((d) => {
       const li = document.createElement('li');
       const ico = document.createElement('span');
@@ -832,6 +835,18 @@
       pct.className = 'dev-pct'; pct.textContent = p + '%';
       if (p <= 20) li.classList.add('low');
       li.append(ico, name, bar, pct);
+      return li;
+    }), ...devUnsup.map((d) => {   // depois dos que têm bateria (a lista mostra 3 linhas e rola)
+      const li = document.createElement('li');
+      li.className = 'unsup';
+      const ico = document.createElement('span');
+      ico.className = 'dev-ico';
+      ico.innerHTML = DEV_ICONS[d.kind] || DEV_ICONS.device;
+      const name = document.createElement('span');
+      name.className = 'dev-name'; name.textContent = d.name; name.title = d.name;
+      const note = document.createElement('span');
+      note.className = 'dev-unsup'; note.textContent = t('devUnsupported'); note.title = note.textContent;
+      li.append(ico, name, note);
       return li;
     }));
   }
@@ -897,7 +912,7 @@
   /* ---------------- Páginas (setas ‹ › e bolinhas) ---------------- */
   let page = 0;
   const pages = () => [...document.querySelectorAll('.page')].filter((p) =>
-    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn) && (p.dataset.page !== 'weather' || weatherOn) && (p.dataset.page !== 'todo' || todoOn) && (p.dataset.page !== 'devices' || (devicesOn && devices.length > 0)));
+    (p.dataset.page !== 'water' || water.enabled) && (p.dataset.page !== 'focus' || pomoOn) && (p.dataset.page !== 'agenda' || agendaOn) && (p.dataset.page !== 'weather' || weatherOn) && (p.dataset.page !== 'todo' || todoOn) && (p.dataset.page !== 'devices' || (devicesOn && devices.length + devUnsup.length > 0)));
   function goToPage(name) {
     const i = pages().findIndex((p) => p.dataset.page === name);
     if (i >= 0) { page = i; showPages(); }
@@ -1591,7 +1606,7 @@
       case 'sound':   soundOn = m.on; showWave(); break;
       case 'notice':  showNotice(m); break;
       case 'todo':    todoOn = m.on !== false; todos = m.items || []; showTodo(); showPages(); break;
-      case 'devices': devicesOn = m.on !== false; devices = m.items || []; showDevices(); showPages(); break;
+      case 'devices': devicesOn = m.on !== false; devices = m.items || []; devUnsup = m.on !== false ? m.unsupported || [] : []; showDevices(); showPages(); break;
       case 'monitors': showMonitors(m); break;
       case 'hz':      monitorHz = m.hz || 60; lastFpsSent = 0; break;   // taxa do monitor onde a ilha está
     }

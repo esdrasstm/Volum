@@ -8,6 +8,9 @@ namespace Volum;
 /// <summary>Um aparelho sem fio conectado, com a bateria que ele informa ao Windows.</summary>
 sealed record WirelessDevice(string Id, string Name, int Battery, string Kind);
 
+/// <summary>Aparelho sem fio reconhecido cuja bateria ainda não dá para ler (a ilha pode mostrar "bateria ainda não suportada").</summary>
+sealed record UnsupportedDevice(string Id, string Name, string Kind);
+
 /// <summary>
 /// Bateria dos aparelhos sem fio (fone, mouse, teclado, caixinha, controle). Usa o que o próprio Windows mostra em
 /// Configurações → Bluetooth: a propriedade de bateria do aparelho ({104EA319-...} 2) e se ele está conectado
