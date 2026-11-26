@@ -34,6 +34,8 @@ sealed class TrayController : IDisposable
             KeyboardLock.Lock();
         };
         // Janela de configurações (a engrenagem do mixer abre a mesma)
+        var eq = new ToolStripMenuItem();
+        eq.Click += (_, _) => EqForm.ShowWindow();
         var settings = new ToolStripMenuItem();
         settings.Click += (_, _) => SettingsForm.ShowWindow();
         var exit = new ToolStripMenuItem();
@@ -49,6 +51,7 @@ sealed class TrayController : IDisposable
         void SyncMenu()
         {
             var lang = AppSettings.Current.Language;
+            eq.Text = Strings.Get(lang, "eq");
             settings.Text = Strings.Get(lang, "settings");
             autoStart.Text = Strings.Get(lang, "autostart");
             kbLock.Text = Strings.Get(lang, "kbLock");
@@ -64,6 +67,7 @@ sealed class TrayController : IDisposable
         // Versão no topo do menu (ajuda quem está testando a dizer qual versão tem)
         menu.Items.Add(new ToolStripMenuItem($"Volum {Updater.Version}") { Enabled = false });
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(eq);
         menu.Items.Add(settings);
         menu.Items.Add(autoStart);
         menu.Items.Add(kbLock);
